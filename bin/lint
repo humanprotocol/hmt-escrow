@@ -1,0 +1,17 @@
+#!/bin/sh
+set -exu
+
+FILES="*.py api/*.py basemodels/*.py"
+if [ -z ${CI+x} ]
+	then
+	yapf -i $FILES 
+	solhint het.sol
+	solium --fix -f het.sol
+	mypy $FILES --ignore-missing-imports
+else
+	yapf --diff $FILES 
+	# TODO RE-ENABLE 
+#	solhint het.sol
+#	solium -f het.sol
+	#mypy $FILES --ignore-missing-imports
+fi

@@ -1,0 +1,43 @@
+version: "2"
+services:
+  api:
+    stdin_open: true
+    tty: true
+    environment:
+      - HET_ETH_SERVER=http://ganache:8545
+      - HET_WAIT_FOR_SERVER=http://het:8000
+      - DEFAULT_GAS=6700000
+      - TESTADDR=0x1413862c2b7054cdbfdc181b83962cb0fc11fd92
+      - IPFS_HOSTNAME=ipfs
+    command: /work/bin/wait_then_run
+    build: .
+    image: hmtcentral.azurecr.io/contracts:latest
+    links: 
+      - ganache
+      - ipfs
+      - hmt
+    volumes:
+      - hmt_token_address:/deployed
+
+  ganache:
+    image: trufflesuite/ganache-cli:v6.1.0
+    command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
+    ports:
+      - 8545:8545
+  hmt:
+    image: hcaptcha/hmt-token
+    links:
+      - ganache
+    environment:
+      - ETH_HOST=ganache
+      - ETH_PORT=8545
+    command: sh -c "rm /deployed/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545 && npm run compile && python -m SimpleHTTPServer"
+    volumes:
+      - hmt_token_address:/deployed
+  ipfs:
+    image: ipfs/go-ipfs
+    ports:
+      - 5001:5001
+
+volumes:
+  hmt_token_address:

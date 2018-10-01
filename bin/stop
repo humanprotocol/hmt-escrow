@@ -1,0 +1,4 @@
+#!/bin/sh -ex
+set -ex
+docker-compose kill 
+yes | docker-compose rm

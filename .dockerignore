@@ -1,0 +1,13 @@
+node_modules
+build/
+build/**
+venv
+venv*
+src
+src/**
+.mypy_cache/
+.mypy_cache/**
+.git
+.git/**
+*.png
+docker-compose

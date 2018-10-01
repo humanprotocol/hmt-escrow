@@ -1,0 +1,5 @@
+#!/bin/bash
+set -eu
+CONTAINER=${1-"ganache ipfs hmt"}
+
+docker-compose up --build ${CONTAINER}
