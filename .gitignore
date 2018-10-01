@@ -109,14 +109,6 @@ het/secrets.json
 
 # Generated stuff
 # ================================================
-het/build
-het/node_modules
-het/contracts/Standard_Token/config/development/contracts.json
-het/contracts/Standard_Token/config/test/contracts.json
-het/contracts/Standard_Token_Factory/config/development/contracts.json
-het/contracts/Standard_Token_Factory/config/test/contracts.json
-het/Token_Contracts/environments/test/contracts/
-het/secrets.json
 src
 .vscode
 Pipfile
