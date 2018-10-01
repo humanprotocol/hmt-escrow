@@ -2,9 +2,11 @@
 
 This repository features the library for launching and writing to HMT solidity contracts.
 
-## Setup the library
-We support the current version through Docker. We will be adding the pip library in the near future.
-
+## Installation
+```
+pip install hmt-escrow
+```
+### Docker
 In order to build the image you need [Docker](https://www.docker.com/) installed on your computer.
 
 We have gathered relevant commands in the `bin/` folder.
