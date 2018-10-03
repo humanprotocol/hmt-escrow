@@ -3,6 +3,29 @@
 This repository features the library for launching and writing to HMT solidity contracts.
 
 ## Installation
+We run the following version on Python 3.
+
+### Manual
+You need few essential system requirements to successfully install our python package.
+#### Debian / Ubuntu
+```
+build-essential 
+libffi
+autoconf 
+libtool
+pkg-config
+```
+
+#### macOS
+```
+automake
+pkg-config
+libtool
+libffi
+gmp
+```
+
+After that the following command should install the package successfully.
 ```
 pip install hmt-escrow
 ```
