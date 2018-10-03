@@ -3,47 +3,65 @@ pragma solidity 0.4.24;
 
 /**
  * @title SafeMath
- * @dev Math operations with safety checks that throw on error
+ * @dev Math operations with safety checks that revert on error
  */
 library SafeMath {
 
     /**
-    * @dev Multiplies two numbers, throws on overflow.
+    * @dev Multiplies two numbers, reverts on overflow.
     */
-    function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
         if (a == 0) {
             return 0;
         }
-        c = a * b;
-        assert(c / a == b);
+
+        uint256 c = a * b;
+        require(c / a == b);
+
         return c;
     }
 
     /**
-    * @dev Integer division of two numbers, truncating the quotient.
+    * @dev Integer division of two numbers truncating the quotient, reverts on division by zero.
     */
     function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        // assert(b > 0); // Solidity automatically throws when dividing by 0
-        // uint256 c = a / b;
+        require(b > 0); // Solidity only automatically asserts when dividing by 0
+        uint256 c = a / b;
         // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-        return a / b;
+
+        return c;
     }
 
     /**
-    * @dev Subtracts two numbers, throws on overflow (i.e. if subtrahend is greater than minuend).
+    * @dev Subtracts two numbers, reverts on overflow (i.e. if subtrahend is greater than minuend).
     */
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        assert(b <= a);
-        return a - b;
+        require(b <= a);
+        uint256 c = a - b;
+
+        return c;
     }
 
     /**
-    * @dev Adds two numbers, throws on overflow.
+    * @dev Adds two numbers, reverts on overflow.
     */
-    function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
-        c = a + b;
-        assert(c >= a);
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a);
+
         return c;
+    }
+
+    /**
+    * @dev Divides two numbers and returns the remainder (unsigned integer modulo),
+    * reverts when dividing by zero.
+    */
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        require(b != 0);
+        return a % b;
     }
 }
 
@@ -135,6 +153,10 @@ contract Escrow {
 
     address private reporc;
     address private recorc;
+
+    uint256 private repfee;
+    uint256 private recfee;
+
     address private canceler;
     address private eip20;
 
@@ -195,14 +217,18 @@ contract Escrow {
     // The escrower puts the Token in the contract without an agentless
     // and assigs a reputation oracle to payout the bounty of size of the
     // amount specified
-    function setup(address reporcin, address recorcin, uint256 amount, string urlin, string hash) public {
+    function setup(address reporcin, address recorcin, uint256 recfeein, uint256 repfeein, uint256 amount, string urlin, string hash) public {
         require(expiration > block.timestamp);  // solhint-disable-line not-rely-on-time
         require(msg.sender == canceler);
+        require(recfeein.add(repfeein) >= 0 && recfeein.add(repfeein) <= 100);
         require(getBalance() >= amount);
         require(status == EscrowStatuses.Launched);
 
         reporc = reporcin;
         recorc = recorcin;
+        repfee = repfeein;
+        recfee = recfeein;
+
         manifestUrl = urlin;
         manifestHash = hash;
         status = EscrowStatuses.Pending;
@@ -250,7 +276,8 @@ contract Escrow {
         require(status != EscrowStatuses.Paid);
         resultsManifestUrl = uriin;
         resultsManifestHash = hashin;
-        bool success = partialPayout(amount, destination);
+
+        bool success = partialPayout(amount, destination, reporc, recorc);
         uint256 balance = getBalance();
         if (success) {
             if (status == EscrowStatuses.Pending) {
@@ -270,9 +297,15 @@ contract Escrow {
     }
 
     // Nthing about this function actually requires a payout
-    function partialPayout(uint256 amount, address destination) internal returns (bool) {
+    function partialPayout(uint256 _amount, address _destination, address _reporc, address _recorc) internal returns (bool) {
         EIP20Interface token = EIP20Interface(eip20);
-        return token.transfer(destination, amount);
+        uint256 repAmount = repfee.div(100).mul(_amount);
+        uint256 recAmount = recfee.div(100).mul(_amount);
+        uint256 amount = _amount.sub(repAmount).sub(recAmount);
+        token.transfer(reporc, repAmount);
+        token.transfer(recorc, recAmount);
+        token.transfer(_destination, amount);
+        return true;
     }
 
     event Pending(string manifest, string hash);
