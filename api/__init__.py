@@ -26,6 +26,7 @@ REP_ORACLE = Web3.toChecksumAddress(
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 WEIGHT = float(os.getenv("PAY_WEIGHT", 1))
+ORACLE_FEE = (os.getenv("ORACLE_FEE", 5))
 
 # The address of the escrow factory
 ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
@@ -166,6 +167,8 @@ def _abort_sol(contract: WContract, gas: int) -> bool:
 def _setup_sol(contract: WContract,
                reporacle: str,
                escrower: str,
+               repfee: int,
+               recfee: int,
                amount: int,
                manifest_url: str,
                manifest_hash: str,
@@ -174,7 +177,7 @@ def _setup_sol(contract: WContract,
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
-    tx_dict = contract.functions.setup(reporacle, escrower, amount,
+    tx_dict = contract.functions.setup(reporacle, escrower, repfee, recfee, amount,
                                        manifest_url,
                                        manifest_hash).buildTransaction({
                                            'from':
@@ -399,7 +402,9 @@ def setup_job(contract: WContract, amount: int, manifest_url: str,
             bool: True if the contract is pending """
     reporacle = GAS_PAYER
     escrower = GAS_PAYER
-    return _setup_sol(contract, reporacle, escrower, amount, manifest_url,
+    repfee = ORACLE_FEE
+    recfee = ORACLE_FEE
+    return _setup_sol(contract, reporacle, escrower, repfee, recfee, amount, manifest_url,
                       manifest_hash)
 
 
