@@ -26,5 +26,4 @@ setuptools.setup(
     ],
     dependency_links=[
         "git://github.com/mfranciszkiewicz/pyelliptic.git@1.5.10#egg=pyelliptic",
-    ]
-)
+    ])
