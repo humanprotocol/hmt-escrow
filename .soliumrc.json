@@ -2,6 +2,8 @@
   "extends": "solium:all",
   "plugins": ["security"],
   "rules": {
-    "indentation": ["error", 4]
+    "indentation": ["error", 4],
+    "error-reason": "off",
+    "security/no-block-members": "off"
   }
 }
