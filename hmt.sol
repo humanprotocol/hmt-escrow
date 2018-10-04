@@ -217,10 +217,23 @@ contract Escrow {
     // The escrower puts the Token in the contract without an agentless
     // and assigsn a reputation oracle to payout the bounty of size of the
     // amount specified
-    function setup(address _reputationOracle, address _recordingOracle, uint256 _reputationOracleStake, uint256 _recordingOracleStake, uint256 _amount, string _url, string _hash) public {
+    function setup(
+        address _reputationOracle, 
+        address _recordingOracle, 
+        uint256 _reputationOracleStake, 
+        uint256 _recordingOracleStake, 
+        uint256 _amount, 
+        string _url, 
+        string _hash
+    ) public 
+    {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == canceler, "Address calling not the canceler");
-        require(_reputationOracleStake.add(_recordingOracleStake) >= 0 && reputationOracleStake.add(_recordingOracleStake) <= 100, "Stake out of bounds");
+        require(
+            _reputationOracleStake.add(_recordingOracleStake) >= 0 && 
+            reputationOracleStake.add(_recordingOracleStake) <= 100, 
+            "Stake out of bounds"
+        );
         require(getBalance() >= _amount, "Amount too high");
         require(status == EscrowStatuses.Launched, "Escrow not in Launched status state");
 
@@ -260,13 +273,23 @@ contract Escrow {
     function storeResults(string _url, string _hash) public {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == recordingOracle, "Address calling not the recording oracle");
-        require(status == EscrowStatuses.Pending || status == EscrowStatuses.Partial, "Escrow not in Pending or Partial status state");
+        require(
+            status == EscrowStatuses.Pending || 
+            status == EscrowStatuses.Partial, 
+            "Escrow not in Pending or Partial status state"
+        );
         intermediateManifestUrl = _url;
         intermediateManifestHash = _hash;
         emit IntermediateStorage(_url, _hash);
     }
 
-    function payOut(uint256 _amount, address _recipient, string _url, string _hash) public returns (bool) {
+    function payOut(
+        uint256 _amount, 
+        address _recipient, 
+        string _url, 
+        string _hash
+    ) public returns (bool) 
+    {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
         uint256 balance = getBalance();
@@ -277,7 +300,11 @@ contract Escrow {
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
 
-        bool success = partialPayout(_amount, _recipient, reputationOracle, recordingOracle);
+        bool success = partialPayout(
+            _amount, _recipient, 
+            reputationOracle, 
+            recordingOracle
+        );
         balance = getBalance();
         if (success) {
             if (status == EscrowStatuses.Pending) {
@@ -295,7 +322,13 @@ contract Escrow {
         selfdestruct(canceler);
     }
 
-    function partialPayout(uint256 _amount, address _recipient, address _reputationOracle, address _recordingOracle) internal returns (bool) {
+    function partialPayout(
+        uint256 _amount, 
+        address _recipient, 
+        address _reputationOracle, 
+        address _recordingOracle
+    ) internal returns (bool) 
+    {
         EIP20Interface token = EIP20Interface(eip20);
         uint256 reputationOracleFee = reputationOracleStake.div(100).mul(_amount);
         uint256 recordingOracleFee = recordingOracleStake.div(100).mul(_amount);
