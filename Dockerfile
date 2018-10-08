@@ -7,8 +7,8 @@ COPY requirements.txt ./
 ENV LANG C.UTF-8
 
 RUN pip3 install -r requirements.txt
-RUN python3 -m solc.install v0.4.25
-ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.25/bin/solc"
+RUN python3 -m solc.install v0.4.24
+ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
 
 COPY *.sol /work/
 COPY *.py /work/
