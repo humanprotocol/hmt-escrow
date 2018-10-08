@@ -165,10 +165,10 @@ def _abort_sol(contract: WContract, gas: int) -> bool:
 
 
 def _setup_sol(contract: WContract,
-               reporacle: str,
-               escrower: str,
-               repfee: int,
-               recfee: int,
+               reputation_oracle: str,
+               recording_oracle: str,
+               reputation_oracle_stake: int,
+               recording_oracle_stake: int,
                amount: int,
                manifest_url: str,
                manifest_hash: str,
@@ -177,7 +177,7 @@ def _setup_sol(contract: WContract,
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
-    tx_dict = contract.functions.setup(reporacle, escrower, repfee, recfee, amount,
+    tx_dict = contract.functions.setup(reputation_oracle, recording_oracle, reputation_oracle_stake, recording_oracle_stake, amount,
                                        manifest_url,
                                        manifest_hash).buildTransaction({
                                            'from':
@@ -400,11 +400,11 @@ def setup_job(contract: WContract, amount: int, manifest_url: str,
 
         Returns:
             bool: True if the contract is pending """
-    reporacle = GAS_PAYER
-    escrower = GAS_PAYER
-    repfee = ORACLE_FEE
-    recfee = ORACLE_FEE
-    return _setup_sol(contract, reporacle, escrower, repfee, recfee, amount, manifest_url,
+    reputation_oracle = GAS_PAYER
+    recording_oracle = GAS_PAYER
+    reputation_oracle_fee = ORACLE_FEE
+    recording_oracle_fee = ORACLE_FEE
+    return _setup_sol(contract, reputation_oracle, recording_oracle, reputation_oracle_fee, recording_oracle_fee, amount, manifest_url,
                       manifest_hash)
 
 
