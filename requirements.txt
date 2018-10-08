@@ -2,7 +2,6 @@ devp2p==0.9.3
 hypothesis
 ipfsapi==0.4.2.post1
 mypy
--e git://github.com/mfranciszkiewicz/pyelliptic.git@1.5.10#egg=pyelliptic
 py-solc==3.0.0
 schematics
 setuptools

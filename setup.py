@@ -23,7 +23,5 @@ setuptools.setup(
         "schematics",
         "secp256k1==0.13.2",
         "web3==v4.2.0",
-    ],
-    dependency_links=[
-        "git://github.com/mfranciszkiewicz/pyelliptic.git@1.5.10#egg=pyelliptic",
-    ])
+    ]
+)
