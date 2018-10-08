@@ -1,4 +1,4 @@
-pragma solidity 0.4.25;
+pragma solidity 0.4.24;
 
 
 /**
@@ -190,6 +190,19 @@ contract Escrow {
         return EIP20Interface(eip20).balanceOf(address(this));
     }
 
+    function getAddressBalance(address _address) public view returns (uint256) {
+        require(_address != address(0), "Token spender is an uninitialized address");
+        return EIP20Interface(eip20).balanceOf(address(_address));
+    }
+
+    function getReputationOracle() public view returns (address) {
+        return reputationOracle;
+    } 
+
+    function getRecordingOracle() public view returns (address) {
+        return recordingOracle;
+    }
+
     function getHash() public view returns (string) {
         return manifestHash;
     }
@@ -229,9 +242,11 @@ contract Escrow {
     {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == canceler, "Address calling not the canceler");
+        require(_reputationOracle != address(0), "Token spender is an uninitialized address");
+        require(_recordingOracle != address(0), "Token spender is an uninitialized address");
         require(
             _reputationOracleStake.add(_recordingOracleStake) >= 0 && 
-            reputationOracleStake.add(_recordingOracleStake) <= 100, 
+            _reputationOracleStake.add(_recordingOracleStake) <= 100, 
             "Stake out of bounds"
         );
         require(getBalance() >= _amount, "Amount too high");
@@ -300,11 +315,7 @@ contract Escrow {
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
 
-        bool success = partialPayout(
-            _amount, _recipient, 
-            reputationOracle, 
-            recordingOracle
-        );
+        bool success = partialPayout(_amount, _recipient);
         balance = getBalance();
         if (success) {
             if (status == EscrowStatuses.Pending) {
@@ -322,19 +333,13 @@ contract Escrow {
         selfdestruct(canceler);
     }
 
-    function partialPayout(
-        uint256 _amount, 
-        address _recipient, 
-        address _reputationOracle, 
-        address _recordingOracle
-    ) internal returns (bool) 
-    {
+    function partialPayout(uint256 _amount, address _recipient) internal returns (bool) {
         EIP20Interface token = EIP20Interface(eip20);
-        uint256 reputationOracleFee = reputationOracleStake.div(100).mul(_amount);
-        uint256 recordingOracleFee = recordingOracleStake.div(100).mul(_amount);
+        uint256 reputationOracleFee = reputationOracleStake.mul(_amount).div(100);
+        uint256 recordingOracleFee = recordingOracleStake.mul(_amount).div(100);
         uint256 amount = _amount.sub(reputationOracleFee).sub(recordingOracleFee);
-        token.transfer(_reputationOracle, reputationOracleFee);
-        token.transfer(_recordingOracle, recordingOracleFee);
+        token.transfer(reputationOracle, reputationOracleFee);
+        token.transfer(recordingOracle, recordingOracleFee);
         token.transfer(_recipient, amount);
         return true;
     }
