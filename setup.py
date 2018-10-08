@@ -23,5 +23,4 @@ setuptools.setup(
         "schematics",
         "secp256k1==0.13.2",
         "web3==v4.2.0",
-    ]
-)
+    ])
