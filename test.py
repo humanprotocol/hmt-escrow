@@ -33,9 +33,9 @@ FAKE_URL = 'http://google.com/fake'
 IMAGE_LABEL_BINARY = 'image_label_binary'
 
 REP_ORACLE = Web3.toChecksumAddress(
-    os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
+    os.getenv("REP_ORACLE", "0x61F9F0B31eacB420553da8BCC59DC617279731Ac"))
 REC_ORACLE = Web3.toChecksumAddress(
-    os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
+    os.getenv("REC_ORACLE", "0xD979105297fB0eee83F7433fC09279cb5B94fFC6"))
 
 
 def a_manifest(number_of_tasks=100,
@@ -116,10 +116,6 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertFalse(
             api.setup_job(contract, self.amount, manifest, Web3.toBytes(0)))
 
-    # IN FUTURE RELEASES THIS WILL THROW THIS
-    #   self.assertRaises(ValueError, api.setup_job, contract, self.from_address,
-    #                     self.amount, manifest, Web3.toBytes(0))
-
     def test_create_start_contract(self):
         # We shouldn't test this on our internal blockchain because it's slow
         manifest = REQ_JSON
@@ -184,9 +180,6 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertEqual(self.contract.status(), api.Status.Paid)
         self.assertTrue(contract2.complete())
         self.assertEqual(self.contract.status(), api.Status.Complete)
-
-
-# TODO test cancel
 
 
 class EncryptionTest(unittest.TestCase):
