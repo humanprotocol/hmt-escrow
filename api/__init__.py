@@ -26,7 +26,7 @@ REP_ORACLE = Web3.toChecksumAddress(
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 WEIGHT = float(os.getenv("PAY_WEIGHT", 1))
-ORACLE_FEE = (os.getenv("ORACLE_FEE", 5))
+ORACLE_STAKE = (os.getenv("ORACLE_STAKE", 5))
 
 # The address of the escrow factory
 ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
@@ -402,9 +402,9 @@ def setup_job(contract: WContract, amount: int, manifest_url: str,
             bool: True if the contract is pending """
     reputation_oracle = GAS_PAYER
     recording_oracle = GAS_PAYER
-    reputation_oracle_fee = ORACLE_FEE
-    recording_oracle_fee = ORACLE_FEE
-    return _setup_sol(contract, reputation_oracle, recording_oracle, reputation_oracle_fee, recording_oracle_fee, amount, manifest_url,
+    reputation_oracle_stake = ORACLE_STAKE
+    recording_oracle_stake = ORACLE_STAKE
+    return _setup_sol(contract, reputation_oracle, recording_oracle, reputation_oracle_stake, recording_oracle_stake, amount, manifest_url,
                       manifest_hash)
 
 
