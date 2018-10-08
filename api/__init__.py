@@ -177,16 +177,14 @@ def _setup_sol(contract: WContract,
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
-    tx_dict = contract.functions.setup(reputation_oracle, recording_oracle, reputation_oracle_stake, recording_oracle_stake, amount,
-                                       manifest_url,
-                                       manifest_hash).buildTransaction({
-                                           'from':
-                                           GAS_PAYER,
-                                           'gas':
-                                           gas,
-                                           'nonce':
-                                           nonce
-                                       })
+    tx_dict = contract.functions.setup(
+        reputation_oracle, recording_oracle, reputation_oracle_stake,
+        recording_oracle_stake, amount, manifest_url,
+        manifest_hash).buildTransaction({
+            'from': GAS_PAYER,
+            'gas': gas,
+            'nonce': nonce
+        })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
 
@@ -404,8 +402,9 @@ def setup_job(contract: WContract, amount: int, manifest_url: str,
     recording_oracle = GAS_PAYER
     reputation_oracle_stake = ORACLE_STAKE
     recording_oracle_stake = ORACLE_STAKE
-    return _setup_sol(contract, reputation_oracle, recording_oracle, reputation_oracle_stake, recording_oracle_stake, amount, manifest_url,
-                      manifest_hash)
+    return _setup_sol(contract, reputation_oracle, recording_oracle,
+                      reputation_oracle_stake, recording_oracle_stake, amount,
+                      manifest_url, manifest_hash)
 
 
 def abort_job(contract: WContract, gas=DEFAULT_GAS) -> bool:
