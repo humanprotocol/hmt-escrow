@@ -152,7 +152,7 @@ class LocalBlockchainTest(unittest.TestCase):
         api.partial_payout(contract, self.amount, to_address, manifest,
                            Web3.toBytes(0))
         self.assertEquals(manifest, api._getFURL(contract))
-    
+
     def test_create_start_contract_spend_to_oracle_fees(self):
         manifest = REQ_JSON
         escrow = api.get_job()
@@ -161,11 +161,12 @@ class LocalBlockchainTest(unittest.TestCase):
         to_address = TO_ADDR
         to_address_balance = escrow.call().getAddressBalance(to_address)
 
-        self.assertTrue(
-            api._transfer_to_contract(escrow.address, self.amount))
+        self.assertTrue(api._transfer_to_contract(escrow.address, self.amount))
 
-        address_balance_after_transfer = escrow.call().getAddressBalance(address)
-        self.assertEqual(address_balance_after_transfer, address_balance - 1000)
+        address_balance_after_transfer = escrow.call().getAddressBalance(
+            address)
+        self.assertEqual(address_balance_after_transfer,
+                         address_balance - 1000)
 
         self.assertTrue(
             api.setup_job(escrow, self.amount, manifest, Web3.toBytes(0)))
@@ -177,10 +178,13 @@ class LocalBlockchainTest(unittest.TestCase):
 
         # Stake has been set to 5% which in these tests is 50.
         # 100 is the correct fee because our address is both the reputation and recording oracle.
-        self.assertEqual(address_balance_after_payout, address_balance_after_transfer + 100)
+        self.assertEqual(address_balance_after_payout,
+                         address_balance_after_transfer + 100)
 
-        to_address_balance_after_payout = escrow.call().getAddressBalance(to_address)
-        self.assertEqual(to_address_balance_after_payout, to_address_balance + 900)
+        to_address_balance_after_payout = escrow.call().getAddressBalance(
+            to_address)
+        self.assertEqual(to_address_balance_after_payout,
+                         to_address_balance + 900)
 
     def test_oo(self):
         to_address = TO_ADDR
