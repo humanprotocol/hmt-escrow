@@ -10,6 +10,8 @@ from eth_keys import keys
 from p2p import ecies
 
 API = None
+SHARED_MAC_DATA = os.getenv("SHARED_MAC", b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
+
 if not os.getenv("IPFS_DISABLE"):
     _host = os.getenv("IPFS_HOSTNAME", 'localhost')
     # Stupid name so not to fight with k8s
@@ -47,11 +49,11 @@ def upload(msg: dict, public_key: bytes) -> Tuple[Any, Any]:
 
 def _decrypt(private_key: bytes, msg: bytes):
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
-    e = ecies.decrypt(msg, priv_key)
+    e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
     return e.decode(encoding='utf-8')
 
 
 def _encrypt(public_key: bytes, msg: str):
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
     msg_bytes = msg.encode(encoding='utf-8')
-    return ecies.encrypt(msg_bytes, pub_key)
+    return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
