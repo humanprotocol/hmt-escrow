@@ -244,8 +244,7 @@ class Contract(Manifest):
         self.number_of_answers = int(serialized_manifest['job_total_tasks'])
         self.amount = per_job_cost * self.number_of_answers
         self.initialize(job, self.amount, self.number_of_answers)
-        (hash_, manifest_url) = upload(serialized_manifest, public_key,
-                                       private_key)
+        (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
@@ -275,12 +274,12 @@ class Contract(Manifest):
 
     def store_intermediate(self, results: dict, public_key: bytes,
                            private_key: bytes) -> bool:
-        (hash_, url) = upload(results, public_key, private_key)
+        (hash_, url) = upload(results, public_key)
         return store_results(self.job_contract, url, hash_)
 
     def payout(self, amount: int, to_address: str, results: dict,
                public_key: bytes, private_key: bytes):
-        (hash_, url) = upload(results, public_key, private_key)
+        (hash_, url) = upload(results, public_key)
         return partial_payout(self.job_contract, amount, to_address, url,
                               hash_)
 
