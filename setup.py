@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="hmt-escrow",
-    version=.1,
+    version=.2,
     author="HUMAN Protocol",
     description=
     "A python library to launch escrow contracts to the HUMAN network.",
@@ -15,12 +15,13 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(),
     install_requires=[
-        "devp2p==0.9.3",
-        "hypothesis",
-        "ipfsapi==0.4.2.post1",
-        "mypy",
-        "py-solc==3.0.0",
-        "schematics",
-        "secp256k1==0.13.2",
-        "web3==v4.2.0",
+        "hypothesis==3.75.3",
+        "ipfsapi==0.4.3",
+        "mypy==0.630",
+        "py-solc==3.2.0",
+        "schematics==2.1.0",
+        "setuptools",
+        "trinity==0.1.0a16",
+        "web3==4.4.1",
+        "yapf==0.24.0",
     ])
