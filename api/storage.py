@@ -6,7 +6,8 @@ from typing import Any, Tuple
 import ipfsapi
 import os
 
-from devp2p import crypto
+from eth_keys import keys
+from p2p import ecies
 
 API = None
 if not os.getenv("IPFS_DISABLE"):
@@ -24,12 +25,11 @@ def download(key: str, private_key: bytes) -> dict:
     :return: The contents of the filename which was previously uploaded
     """
     ciphertext = API.cat(key)
-    msg = _decrypt(private_key, ciphertext).decode('unicode_escape')
+    msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
 
-def upload(msg: dict, public_key: bytes,
-           private_key: bytes) -> Tuple[Any, Any]:
+def upload(msg: dict, public_key: bytes) -> Tuple[Any, Any]:
     """
     Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
@@ -41,16 +41,17 @@ def upload(msg: dict, public_key: bytes,
     """
     manifest_ = json.dumps(msg, sort_keys=True, ensure_ascii=True)
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
-    key = API.add_bytes(_encrypt(private_key, public_key, manifest_))
+    key = API.add_bytes(_encrypt(public_key, manifest_))
     return hash_, key
 
 
-def _decrypt(private_key: bytes, msg: str):
-    priv_key = codecs.decode(private_key, 'hex')
-    e = crypto.ECCx(raw_privkey=priv_key)
-    return e.decrypt(msg)
+def _decrypt(private_key: bytes, msg: bytes):
+    priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
+    e = ecies.decrypt(msg, priv_key)
+    return e.decode(encoding='utf-8')
 
 
-def _encrypt(private_key: bytes, public_key: bytes, msg: str):
-    e = crypto.ECCx(raw_privkey=codecs.decode(private_key, 'hex'))
-    return e.encrypt(msg, codecs.decode(public_key, 'hex'))
+def _encrypt(public_key: bytes, msg: str):
+    pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
+    msg_bytes = msg.encode(encoding='utf-8')
+    return ecies.encrypt(msg_bytes, pub_key)
