@@ -218,15 +218,15 @@ class LocalBlockchainTest(unittest.TestCase):
 class EncryptionTest(unittest.TestCase):
     def test_encryption_decryption_identity(self):
         plaintext = 'asdfasdf'
-        cipher = _encrypt(PRIV1, PUB2, plaintext)
-        self.assertEqual(_decrypt(PRIV2, cipher).decode('ascii'), plaintext)
+        cipher = _encrypt(PUB2, plaintext)
+        self.assertEqual(_decrypt(PRIV2, cipher), plaintext)
 
 
 def add_bytes(args):
     pass
 
 
-def encrypt(private_key, public_key, msg):
+def encrypt(public_key, msg):
     pass
 
 
@@ -234,7 +234,7 @@ class StorageTest(unittest.TestCase):
     @patch('api.storage.API.add_bytes', side_effect=add_bytes)
     @patch('api.storage._encrypt', side_effect=encrypt)
     def test_upload(self, add_bytes, _encrypt):
-        upload(a_manifest().serialize(), PUB1, PRIV2)
+        upload(a_manifest().serialize(), PUB1)
 
 
 if __name__ == "__main__":
