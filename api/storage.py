@@ -10,9 +10,7 @@ from eth_keys import keys
 from p2p import ecies
 
 API = None
-SHARED_MAC_DATA = os.getenv(
-    "SHARED_MAC",
-    b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
+SHARED_MAC_DATA = os.getenv("SHARED_MAC", b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
 
 if not os.getenv("IPFS_DISABLE"):
     _host = os.getenv("IPFS_HOSTNAME", 'localhost')
