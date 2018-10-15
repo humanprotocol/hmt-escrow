@@ -1,3 +1,10 @@
+deploy:
+  provider: pypi
+  user: rbval
+  password:
+    secure: nzfKAbu23npmH6k8UaFbL0+KoiAULm3vzv0hpr6Zsk8OjvMmzu29e50sNNj63BAj9p8ljdE7BHdrs1Z2tKJDpDCyIhxXESKQSOzQO/M0Xrr3+SImfYhNrfBnVKIMDslunMq5fp6eN0UvfmNQwO2Xdsn1ZLjiV0UXuWN5/2MAeVxuxfNXGbKloVe4ddyXCzVgZeuSgjZyqDWZiNtye/+41UrYX0FxgSHd0w/O8zOkc+b+Tiq/MDU1nIzOEA/Trgnhqa5bNikIq1KmT88vx8v/NMJ9vHfxB4J2WNNFXB0w5kJ9i+tE2YNgHebBZXhNPpSIzX8qLfw1ZHxgFV3XPhMTp6rrhax9faAOKMNzX9U1WbnSRYfu9TN9qflcfTq9zntfS8wrM0rZmwyIH6sjMqjBjnYDIV4iYT3g59wz0WWrs5U2fEQyCWgv7tz6xF/pGqojhWxUkWd7nTos6hNxLLp1UpzwrcPOMavfIZREDtPyJcR23nnR0S9lM3xUXc7fNLuhRQzIxblGRug30Q3KPVC31CHa2CFlmnoX1vQX35sZXFKL9HISkFFDLd9TMc+sISkdF8cz64/DksH6LPmGG5aVlPDKcswxFAqkAYiZW1t+WvV1TVGkSA1fIVMyULzaKm/3qi4L5gMKjHqHTZoVcZwhZBPIMGjXjgjB/Zlrple4teQ=
+  on:
+    tags: true
 sudo: required
 services:
 - docker
