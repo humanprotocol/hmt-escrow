@@ -51,7 +51,7 @@ def a_manifest(number_of_tasks=100,
             },
             '1': {
                 'en': 'English Answer 2',
-                'answer_example_uri': 
+                'answer_example_uri':
                 'https://hcaptcha.com/example_answer2.jpg'
             }
         },
