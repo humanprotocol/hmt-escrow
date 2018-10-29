@@ -247,7 +247,6 @@ class StorageTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(stream=sys.stderr)
-    logging.getLogger().setLevel(logging.DEBUG)
+    logging.basicConfig()
     logging.getLogger("urllib3").setLevel(logging.INFO)
     unittest.main()
