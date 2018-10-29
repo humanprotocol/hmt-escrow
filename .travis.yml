@@ -12,6 +12,8 @@ script:
 deploy:
   provider: pypi
   user: rbval
+  # This edge argument is intended to work around issue:
+  # https://github.com/travis-ci/dpl/pull/834#issuecomment-434036325
   edge:
     source: ssbarnea/dpl
     branch: master
