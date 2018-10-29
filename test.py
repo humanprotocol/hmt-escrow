@@ -45,7 +45,16 @@ def a_manifest(number_of_tasks=100,
                request_type=IMAGE_LABEL_BINARY,
                job_mode='batch') -> basemodels.Manifest:
     manifest = basemodels.Manifest({
-        'requester_restricted_answer_set': ['asdf', 'asdf'],
+        'requester_restricted_answer_set': {
+            '0': {
+                'en': 'English Answer 1'
+            },
+            '1': {
+                'en': 'English Answer 2',
+                'answer_example_uri':
+                'https://hcaptcha.com/example_answer2.jpg'
+            }
+        },
         'job_mode':
         job_mode,
         'request_type':

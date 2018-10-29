@@ -19,7 +19,7 @@ class Manifest(Model):
     job_id = UUIDType(default=uuid.uuid4)
     job_total_tasks = IntType()
 
-    requester_restricted_answer_set = ListType(StringType)
+    requester_restricted_answer_set = DictType(DictType(StringType))
     requester_description = StringType()
     requester_max_repeats = IntType()
     requester_min_repeats = IntType()
