@@ -6,6 +6,7 @@ services:
 script:
 - "./bin/ci"
 
+before_deploy: pip3 install -r requirements.txt
 deploy:
   provider: pypi
   user: rbval

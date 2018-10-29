@@ -44,7 +44,7 @@ You can run the project with `bin/prelaunch`.
 
 ## Deploying to PyPi
 
-A build will automatically be deployed to PyPi from master if tagged with a version number.  
+A build will automatically be deployed to PyPi from master if tagged with a version number.  This version number should also match the version in the `setup.py` file.
 
 The tags will need to be pushed via a user that has the proper privileges to master (see the contributors of this repo).  
 
