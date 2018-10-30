@@ -16,8 +16,8 @@ In order to build the image you need [Docker](https://www.docker.com/) installed
 
 Run these commands in order to get going:
 ```
-git clone https://github.com/IntuitionMachines/hmt-contracts
-cd hmt-contracts
+git clone https://github.com/hCaptcha/hmt-escrow
+cd hmt-escrow
 bin/test
 ```
 
