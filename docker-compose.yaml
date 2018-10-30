@@ -1,5 +1,6 @@
 version: "2"
 services:
+
   api:
     stdin_open: true
     tty: true
@@ -24,6 +25,7 @@ services:
     command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
     ports:
       - 8545:8545
+
   hmt:
     image: hcaptcha/hmt-token
     links:
@@ -34,6 +36,7 @@ services:
     command: sh -c "rm /deployed/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545 && npm run compile && python -m SimpleHTTPServer"
     volumes:
       - hmt_token_address:/deployed
+
   ipfs:
     image: ipfs/go-ipfs
     ports:

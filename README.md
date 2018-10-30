@@ -62,7 +62,7 @@ Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties).
 
 ## Contributions
 
-Interesting in contributing to the project? Please see our [Contributing guidelines](https://github.com/IntuitionMachines/hmt-contracts/blob/master/CONTRIBUTING.md) and check our instructions for setting up the project and getting your commits to the codebase.
+Interesting in contributing to the project? Please see our [Contributing guidelines](CONTRIBUTING.md) and check our instructions for setting up the project and getting your commits to the codebase.
 
 ## License
 
