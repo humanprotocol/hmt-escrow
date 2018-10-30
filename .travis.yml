@@ -1,15 +1,27 @@
+sudo: required
+language: python
+python:
+  - "3.6"
+
+services:
+- docker
+
+script:
+- "./bin/ci"
+
 deploy:
   provider: pypi
   user: rbval
+  # This edge argument is intended to work around issue:
+  # https://github.com/travis-ci/dpl/pull/834#issuecomment-434036325
+  edge:
+    source: ssbarnea/dpl
+    branch: master
   password:
     secure: nzfKAbu23npmH6k8UaFbL0+KoiAULm3vzv0hpr6Zsk8OjvMmzu29e50sNNj63BAj9p8ljdE7BHdrs1Z2tKJDpDCyIhxXESKQSOzQO/M0Xrr3+SImfYhNrfBnVKIMDslunMq5fp6eN0UvfmNQwO2Xdsn1ZLjiV0UXuWN5/2MAeVxuxfNXGbKloVe4ddyXCzVgZeuSgjZyqDWZiNtye/+41UrYX0FxgSHd0w/O8zOkc+b+Tiq/MDU1nIzOEA/Trgnhqa5bNikIq1KmT88vx8v/NMJ9vHfxB4J2WNNFXB0w5kJ9i+tE2YNgHebBZXhNPpSIzX8qLfw1ZHxgFV3XPhMTp6rrhax9faAOKMNzX9U1WbnSRYfu9TN9qflcfTq9zntfS8wrM0rZmwyIH6sjMqjBjnYDIV4iYT3g59wz0WWrs5U2fEQyCWgv7tz6xF/pGqojhWxUkWd7nTos6hNxLLp1UpzwrcPOMavfIZREDtPyJcR23nnR0S9lM3xUXc7fNLuhRQzIxblGRug30Q3KPVC31CHa2CFlmnoX1vQX35sZXFKL9HISkFFDLd9TMc+sISkdF8cz64/DksH6LPmGG5aVlPDKcswxFAqkAYiZW1t+WvV1TVGkSA1fIVMyULzaKm/3qi4L5gMKjHqHTZoVcZwhZBPIMGjXjgjB/Zlrple4teQ=
   on:
     tags: true
-sudo: required
-services:
-- docker
-script:
-- "./bin/ci"
+
 notifications:
   slack:
     secure: dZRSuoImcjxOKrsMDhVJo2CfbkVwp77P9tlOLmRhbSVBytdcMCPx39pZHKM87PTSAkyep5UnTQfZUiscwMF4UZMNB4pgFL8tnLYX0iM90mMbUFZFhrCX7dsgqT5rdMvulMb/MC55AGrU6BDOoheOAho0xtr5gZtlkfsHBS+FPIlY1NvPse8/4srzt34fMQef9GZYkZDs4xDUvO7dnoBnuiTMGErLdoSn6Qp8C9Q2v0CB4V6w9Tv2Ox8gKhyB5QYXBptprAvUiZ3hRCkNKaByd1GZXbtZNv4GPcsnMSlef4g4EK8ZgPicsXAi6Sxg+UG3mXlTIDZq0XqhJT8GBPoW0b0hLsgyyaGSD85SOf25z9JnrUZWp1iBM2Ydjp9Dd4RBwmC036BQOhjgVzYX5BH31YpIm4tjlTKWoAi2Pz2/F+L8NdqQR1bdDTb98uQzqFQtcf64alZz++KIFAWPaH0DCsGtskilx52Kr9TiTKeTim4IaHe/fpvwmNYX2kAzMQKDMuh5rU9iUUu4pKXipuJPKHgbi2bnGDLJ0Bt2YpAiRtz2Z9ZSdlNMiIHIRxH+PGD2jEMJpblWxIH432gJCX8rKvL7FelMBLWxNAzzsT1ox7q87SyXdLb/lI8xRwpJXcr9zzUoB8zY0UlJO/UkwrWC5RjB18UfDkbUEwHRrckwAGY=
