@@ -222,11 +222,12 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertEqual(self.contract.status(), api.Status.Paid)
         self.assertTrue(contract2.complete())
         self.assertEqual(self.contract.status(), api.Status.Complete)
-    
+
     def test_hmt_amount_convertion(self):
         per_job_cost = int(self.manifest['task_bid_price'])
         number_of_answers = int(self.manifest['job_total_tasks'])
-        hmt_amount = api._handle_hmt_job_convertion(per_job_cost, number_of_answers)
+        hmt_amount = api._handle_hmt_job_convertion(per_job_cost,
+                                                    number_of_answers)
         self.assertEqual(hmt_amount, 10000)
 
 
