@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 
+from decimal import *
 from web3 import Web3
 from web3.contract import Contract as WContract
 from enum import Enum
@@ -25,7 +26,6 @@ REP_ORACLE = Web3.toChecksumAddress(
     os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-WEIGHT = float(os.getenv("PAY_WEIGHT", 1))
 ORACLE_STAKE = (os.getenv("ORACLE_STAKE", 5))
 
 # The address of the escrow factory
@@ -223,13 +223,13 @@ class Contract(Manifest):
     number_of_answers = None
     initialized = False
 
-    def initialize(self, job_contract: WContract, amount: int,
+    def initialize(self, job_contract: WContract, amount: Decimal,
                    number_of_answers: int):
         if self.initialized:
             raise Exception("Unable to reinitialize if we already are")
         self.job_contract = job_contract
         self.number_of_answers = number_of_answers
-        self.amount = int(WEIGHT * amount)
+        self.amount = amount
         self.initialized = True
 
     def deploy(self, public_key: bytes, private_key: bytes) -> bool:
@@ -240,10 +240,15 @@ class Contract(Manifest):
         """
         job = get_job()
         serialized_manifest = self.serialize()
-        per_job_cost = int(serialized_manifest['task_bid_price'])
-        self.number_of_answers = int(serialized_manifest['job_total_tasks'])
-        self.amount = per_job_cost * self.number_of_answers
-        self.initialize(job, self.amount, self.number_of_answers)
+
+        # Round to two digits
+        per_job_cost = round(Decimal(serialized_manifest['task_bid_price']), 2)
+        number_of_answers = int(serialized_manifest['job_total_tasks'])
+
+        # Convert to HMT-level escrow amount
+        hmt_amount = int(per_job_cost * number_of_answers * 100)
+
+        self.initialize(job, hmt_amount, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
@@ -310,9 +315,9 @@ def get_contract_from_address(escrow_address: str,
     contract_m = Manifest(manifest_dict)
     contract = Contract(contract_m)
     number_of_tasks = int(manifest_dict['job_total_tasks'])
-    task_bid = int(manifest_dict['task_bid_price'])
-    contract.amount = number_of_tasks * task_bid
-    contract.initialize(wcontract, (number_of_tasks * task_bid),
+    task_bid = round(Decimal(manifest_dict['task_bid_price']), 2)
+    contract.amount = int(number_of_tasks * task_bid * 100)
+    contract.initialize(wcontract, contract.amount,
                         number_of_tasks)
     return contract
 
