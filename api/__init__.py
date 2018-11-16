@@ -214,10 +214,13 @@ def _transfer_to_contract(contract_address: str, amount: int,
     # Smart contract returns True if transaction completes successfully
     return wait_on_transaction(tx_hash)
 
-def _handle_hmt_job_convertion(per_job_cost: str, number_of_answers: int) -> int:
+
+def _handle_hmt_job_convertion(per_job_cost: str,
+                               number_of_answers: int) -> int:
     rounded_per_job_cost = round(Decimal(per_job_cost), 2)
     hmt_amount = int(rounded_per_job_cost * number_of_answers * 100)
     return hmt_amount
+
 
 class Contract(Manifest):
     job_contract = None
@@ -248,7 +251,8 @@ class Contract(Manifest):
         number_of_answers = int(serialized_manifest['job_total_tasks'])
 
         # Convert to HMT-level escrow amount
-        hmt_amount = _handle_hmt_job_convertion(per_job_cost, number_of_answers)
+        hmt_amount = _handle_hmt_job_convertion(per_job_cost,
+                                                number_of_answers)
 
         self.initialize(job, hmt_amount, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
@@ -319,8 +323,7 @@ def get_contract_from_address(escrow_address: str,
     task_bid = manifest_dict['task_bid_price']
     number_of_tasks = int(manifest_dict['job_total_tasks'])
     contract.amount = _handle_hmt_job_convertion(task_bid, number_of_tasks)
-    contract.initialize(wcontract, contract.amount,
-                        number_of_tasks)
+    contract.initialize(wcontract, contract.amount, number_of_tasks)
     return contract
 
 
