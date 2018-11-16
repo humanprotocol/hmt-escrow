@@ -39,7 +39,7 @@ REC_ORACLE = Web3.toChecksumAddress(
 
 
 def a_manifest(number_of_tasks=100,
-               bid_amount=1,
+               bid_amount=1.0,
                expiration_date=0,
                minimum_trust=.1,
                request_type=IMAGE_LABEL_BINARY,
