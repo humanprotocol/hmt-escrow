@@ -26,7 +26,6 @@ REP_ORACLE = Web3.toChecksumAddress(
     os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-ORACLE_STAKE = (os.getenv("ORACLE_STAKE", 5))
 
 # The address of the escrow factory
 ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
@@ -225,18 +224,20 @@ def _handle_hmt_job_convertion(per_job_cost: str,
 class Contract(Manifest):
     job_contract = None
     amount = None
+    oracle_stake = None
     manifest_url = None
     manifest_hash = None
     number_of_answers = None
     initialized = False
 
     def initialize(self, job_contract: WContract, amount: Decimal,
-                   number_of_answers: int):
+                   oracle_stake: Decimal, number_of_answers: int):
         if self.initialized:
             raise Exception("Unable to reinitialize if we already are")
         self.job_contract = job_contract
         self.number_of_answers = number_of_answers
         self.amount = amount
+        self.oracle_fee = oracle_stake
         self.initialized = True
 
     def deploy(self, public_key: bytes, private_key: bytes) -> bool:
@@ -249,12 +250,13 @@ class Contract(Manifest):
         serialized_manifest = self.serialize()
         per_job_cost = serialized_manifest['task_bid_price']
         number_of_answers = int(serialized_manifest['job_total_tasks'])
+        oracle_stake = Decimal(serialized_manifest['oracle_stake'])
 
         # Convert to HMT-level escrow amount
         hmt_amount = _handle_hmt_job_convertion(per_job_cost,
                                                 number_of_answers)
 
-        self.initialize(job, hmt_amount, number_of_answers)
+        self.initialize(job, hmt_amount, oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
@@ -409,8 +411,8 @@ def setup_job(contract: WContract, amount: int, manifest_url: str,
             bool: True if the contract is pending """
     reputation_oracle = GAS_PAYER
     recording_oracle = GAS_PAYER
-    reputation_oracle_stake = ORACLE_STAKE
-    recording_oracle_stake = ORACLE_STAKE
+    reputation_oracle_stake = self.oracle_stake
+    recording_oracle_stake = self.oracle_stake
     return _setup_sol(contract, reputation_oracle, recording_oracle,
                       reputation_oracle_stake, recording_oracle_stake, amount,
                       manifest_url, manifest_hash)
