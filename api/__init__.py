@@ -275,8 +275,8 @@ class Contract(Manifest):
 
         :return: Returns if the job is pending
         """
-        return setup_job(self.job_contract, self.amount, self.oracle_stake, self.manifest_url,
-                         self.manifest_hash)
+        return setup_job(self.job_contract, self.amount, self.oracle_stake,
+                         self.manifest_url, self.manifest_hash)
 
     def status(self) -> Enum:
         """
@@ -325,7 +325,8 @@ def get_contract_from_address(escrow_address: str,
     task_bid = manifest_dict['task_bid_price']
     number_of_tasks = int(manifest_dict['job_total_tasks'])
     contract.amount = _handle_hmt_job_convertion(task_bid, number_of_tasks)
-    contract.initialize(wcontract, contract.amount, contract.oracle_stake, number_of_tasks)
+    contract.initialize(wcontract, contract.amount, contract.oracle_stake,
+                        number_of_tasks)
     return contract
 
 
