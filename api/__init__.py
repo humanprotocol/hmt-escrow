@@ -237,7 +237,7 @@ class Contract(Manifest):
         self.job_contract = job_contract
         self.number_of_answers = number_of_answers
         self.amount = amount
-        self.oracle_fee = oracle_stake
+        self.oracle_stake = oracle_stake
         self.initialized = True
 
     def deploy(self, public_key: bytes, private_key: bytes) -> bool:
