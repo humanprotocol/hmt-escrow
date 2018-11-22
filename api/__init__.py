@@ -231,7 +231,7 @@ class Contract(Manifest):
     initialized = False
 
     def initialize(self, job_contract: WContract, amount: Decimal,
-                   oracle_stake: Decimal, number_of_answers: int):
+                   oracle_stake: int, number_of_answers: int):
         if self.initialized:
             raise Exception("Unable to reinitialize if we already are")
         self.job_contract = job_contract
@@ -250,7 +250,7 @@ class Contract(Manifest):
         serialized_manifest = self.serialize()
         per_job_cost = serialized_manifest['task_bid_price']
         number_of_answers = int(serialized_manifest['job_total_tasks'])
-        oracle_stake = Decimal(serialized_manifest['oracle_stake'])
+        oracle_stake = int(serialized_manifest['oracle_stake'])
 
         # Convert to HMT-level escrow amount
         hmt_amount = _handle_hmt_job_convertion(per_job_cost,
@@ -275,7 +275,7 @@ class Contract(Manifest):
 
         :return: Returns if the job is pending
         """
-        return setup_job(self.job_contract, self.amount, self.manifest_url,
+        return setup_job(self.job_contract, self.amount, self.oracle_stake, self.manifest_url,
                          self.manifest_hash)
 
     def status(self) -> Enum:
@@ -325,7 +325,7 @@ def get_contract_from_address(escrow_address: str,
     task_bid = manifest_dict['task_bid_price']
     number_of_tasks = int(manifest_dict['job_total_tasks'])
     contract.amount = _handle_hmt_job_convertion(task_bid, number_of_tasks)
-    contract.initialize(wcontract, contract.amount, number_of_tasks)
+    contract.initialize(wcontract, contract.amount, contract.oracle_stake, number_of_tasks)
     return contract
 
 
@@ -393,8 +393,8 @@ def get_job_from_address(escrow_address: str) -> WContract:
     return escrow
 
 
-def setup_job(contract: WContract, amount: int, manifest_url: str,
-              manifest_hash: str) -> bool:
+def setup_job(contract: WContract, amount: int, oracle_stake: Decimal,
+              manifest_url: str, manifest_hash: str) -> bool:
     """ Once a job is started we can start a job to be processing.
 
 
@@ -411,8 +411,8 @@ def setup_job(contract: WContract, amount: int, manifest_url: str,
             bool: True if the contract is pending """
     reputation_oracle = GAS_PAYER
     recording_oracle = GAS_PAYER
-    reputation_oracle_stake = self.oracle_stake
-    recording_oracle_stake = self.oracle_stake
+    reputation_oracle_stake = oracle_stake
+    recording_oracle_stake = oracle_stake
     return _setup_sol(contract, reputation_oracle, recording_oracle,
                       reputation_oracle_stake, recording_oracle_stake, amount,
                       manifest_url, manifest_hash)
