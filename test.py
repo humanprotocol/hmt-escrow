@@ -40,6 +40,7 @@ REC_ORACLE = Web3.toChecksumAddress(
 
 def a_manifest(number_of_tasks=100,
                bid_amount=1.0,
+               oracle_stake=5,
                expiration_date=0,
                minimum_trust=.1,
                request_type=IMAGE_LABEL_BINARY,
@@ -63,6 +64,8 @@ def a_manifest(number_of_tasks=100,
         False,
         'task_bid_price':
         bid_amount,
+        'oracle_stake':
+        oracle_stake,
         'expiration_date':
         expiration_date,
         'minimum_trust_server':
@@ -117,13 +120,14 @@ class LocalBlockchainTest(unittest.TestCase):
         self.manifest = a_manifest()
         self.contract = api.Contract(self.manifest)
         self.amount = 1000
+        self.oracle_stake = 5
 
     def test_contract_needs_funding(self):
         # We shouldn't test this on our internal blockchain because it's slow
         manifest = REQ_JSON
         contract = api.get_job()
         self.assertFalse(
-            api.setup_job(contract, self.amount, manifest, Web3.toBytes(0)))
+            api.setup_job(contract, self.amount, self.oracle_stake, manifest, Web3.toBytes(0)))
 
     def test_create_start_contract(self):
         # We shouldn't test this on our internal blockchain because it's slow
@@ -133,7 +137,7 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertTrue(
             api._transfer_to_contract(contract.address, self.amount))
         self.assertTrue(
-            api.setup_job(contract, self.amount, manifest, Web3.toBytes(0)))
+            api.setup_job(contract, self.amount, self.oracle_stake, manifest, Web3.toBytes(0)))
         self.assertEqual(api._balance(contract), self.amount)
 
     def test_intermediate_results(self):
@@ -144,7 +148,7 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertTrue(
             api._transfer_to_contract(contract.address, self.amount))
         self.assertTrue(
-            api.setup_job(contract, self.amount, manifest, Web3.toBytes(0)))
+            api.setup_job(contract, self.amount, self.oracle_stake, manifest, Web3.toBytes(0)))
         api.store_results(contract, manifest, "0")
         self.assertEquals(manifest, api._getIURL(contract))
 
@@ -155,7 +159,7 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertTrue(
             api._transfer_to_contract(contract.address, self.amount))
         self.assertTrue(
-            api.setup_job(contract, self.amount, manifest, Web3.toBytes(0)))
+            api.setup_job(contract, self.amount, self.oracle_stake, manifest, Web3.toBytes(0)))
         self.assertEqual(api._balance(contract), self.amount)
         to_address = TO_ADDR
         api.partial_payout(contract, self.amount, to_address, manifest,
@@ -178,7 +182,7 @@ class LocalBlockchainTest(unittest.TestCase):
                          address_balance - 1000)
 
         self.assertTrue(
-            api.setup_job(escrow, self.amount, manifest, Web3.toBytes(0)))
+            api.setup_job(escrow, self.amount, self.oracle_stake, manifest, Web3.toBytes(0)))
         self.assertEqual(api._balance(escrow), self.amount)
         api.partial_payout(escrow, self.amount, to_address, manifest,
                            Web3.toBytes(0))
