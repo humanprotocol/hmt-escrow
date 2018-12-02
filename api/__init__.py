@@ -214,11 +214,8 @@ def _transfer_to_contract(contract_address: str, amount: int,
     return wait_on_transaction(tx_hash)
 
 
-def _handle_hmt_job_convertion(per_job_cost: str,
-                               number_of_answers: int) -> int:
-    rounded_per_job_cost = round(Decimal(per_job_cost), 2)
-    hmt_amount = int(rounded_per_job_cost * number_of_answers * 100)
-    return hmt_amount
+def _convert_to_hmt_cents(amount: int) -> int:
+    return amount * 100
 
 
 class Contract(Manifest):
@@ -248,15 +245,15 @@ class Contract(Manifest):
         """
         job = get_job()
         serialized_manifest = self.serialize()
-        per_job_cost = serialized_manifest['task_bid_price']
+        per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
-        oracle_stake = int(serialized_manifest['oracle_stake'])
+        oracle_stake = Decimal(serialized_manifest['oracle_stake'])
 
-        # Convert to HMT-level escrow amount
-        hmt_amount = _handle_hmt_job_convertion(per_job_cost,
-                                                number_of_answers)
+        # Convert to HMT cents
+        hmt_amount = int(_convert_to_hmt_cents(per_job_cost) * number_of_answers)
+        hmt_oracle_stake = int(_convert_to_hmt_cents(oracle_stake))
 
-        self.initialize(job, hmt_amount, oracle_stake, number_of_answers)
+        self.initialize(job, hmt_amount, hmt_oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
@@ -293,7 +290,9 @@ class Contract(Manifest):
     def payout(self, amount: int, to_address: str, results: dict,
                public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
-        return partial_payout(self.job_contract, amount, to_address, url,
+        hmt_amount = _convert_to_hmt_cents(amount)
+        LOG.info("We payout: {}".format(hmt_amount))
+        return partial_payout(self.job_contract, hmt_amount, to_address, url,
                               hash_)
 
     def complete(self) -> bool:
@@ -322,9 +321,10 @@ def get_contract_from_address(escrow_address: str,
     manifest_dict = download(url, private_key)
     contract_m = Manifest(manifest_dict)
     contract = Contract(contract_m)
-    task_bid = manifest_dict['task_bid_price']
+    task_bid = Decimal(manifest_dict['task_bid_price'])
     number_of_tasks = int(manifest_dict['job_total_tasks'])
-    contract.amount = _handle_hmt_job_convertion(task_bid, number_of_tasks)
+    contract.oracle_stake = int(_convert_to_hmt_cents(Decimal(manifest_dict['oracle_stake'])))
+    contract.amount = int(_convert_to_hmt_cents(task_bid) * number_of_tasks)
     contract.initialize(wcontract, contract.amount, contract.oracle_stake,
                         number_of_tasks)
     return contract
