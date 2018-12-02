@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import unittest
+from decimal import *
 
 import schematics
 from unittest.mock import patch
@@ -40,7 +41,7 @@ REC_ORACLE = Web3.toChecksumAddress(
 
 def a_manifest(number_of_tasks=100,
                bid_amount=1.0,
-               oracle_stake=5,
+               oracle_stake=0.05,
                expiration_date=0,
                minimum_trust=.1,
                request_type=IMAGE_LABEL_BINARY,
@@ -226,18 +227,16 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertFalse(contract2.complete())
         self.assertEqual({}, contract2.get_results(PRIV2))
 
-        amount_to_payout = contract2.amount - amount_to_payout
+        amount_to_payout = 99
         contract2.payout(amount_to_payout, to_address, {}, PUB2, PRIV1)
         self.assertEqual(self.contract.status(), api.Status.Paid)
         self.assertTrue(contract2.complete())
         self.assertEqual(self.contract.status(), api.Status.Complete)
 
     def test_hmt_amount_convertion(self):
-        per_job_cost = int(self.manifest['task_bid_price'])
-        number_of_answers = int(self.manifest['job_total_tasks'])
-        hmt_amount = api._handle_hmt_job_convertion(per_job_cost,
-                                                    number_of_answers)
-        self.assertEqual(hmt_amount, 10000)
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost)
+        self.assertEqual(hmt_amount, 100)
 
 
 class EncryptionTest(unittest.TestCase):
