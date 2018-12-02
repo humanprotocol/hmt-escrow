@@ -51,7 +51,7 @@ def wait_on_transaction(tx_hash: str) -> bool:
     return W3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
 
 
-def sign_and_send_transaction(tx_hash: str, private_key: bytes) -> str:
+def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
     signed_txn = W3.eth.account.signTransaction(
         tx_hash, private_key=private_key)
     return W3.eth.sendRawTransaction(signed_txn.rawTransaction)
