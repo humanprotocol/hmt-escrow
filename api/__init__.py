@@ -214,8 +214,8 @@ def _transfer_to_contract(contract_address: str, amount: int,
     return wait_on_transaction(tx_hash)
 
 
-def _convert_to_hmt_cents(amount: int) -> int:
-    return amount * 100
+def _convert_to_hmt_cents(amount: Decimal) -> int:
+    return int(amount * 100)
 
 
 class Contract(Manifest):
@@ -227,7 +227,7 @@ class Contract(Manifest):
     number_of_answers = None
     initialized = False
 
-    def initialize(self, job_contract: WContract, amount: Decimal,
+    def initialize(self, job_contract: WContract, amount: int,
                    oracle_stake: int, number_of_answers: int):
         if self.initialized:
             raise Exception("Unable to reinitialize if we already are")
@@ -250,8 +250,8 @@ class Contract(Manifest):
         oracle_stake = Decimal(serialized_manifest['oracle_stake'])
 
         # Convert to HMT cents
-        hmt_amount = int(_convert_to_hmt_cents(per_job_cost) * number_of_answers)
-        hmt_oracle_stake = int(_convert_to_hmt_cents(oracle_stake))
+        hmt_amount = _convert_to_hmt_cents(per_job_cost) * number_of_answers
+        hmt_oracle_stake = _convert_to_hmt_cents(oracle_stake)
 
         self.initialize(job, hmt_amount, hmt_oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
@@ -287,7 +287,7 @@ class Contract(Manifest):
         (hash_, url) = upload(results, public_key)
         return store_results(self.job_contract, url, hash_)
 
-    def payout(self, amount: int, to_address: str, results: dict,
+    def payout(self, amount: Decimal, to_address: str, results: dict,
                public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
         hmt_amount = _convert_to_hmt_cents(amount)
@@ -323,7 +323,8 @@ def get_contract_from_address(escrow_address: str,
     contract = Contract(contract_m)
     task_bid = Decimal(manifest_dict['task_bid_price'])
     number_of_tasks = int(manifest_dict['job_total_tasks'])
-    contract.oracle_stake = int(_convert_to_hmt_cents(Decimal(manifest_dict['oracle_stake'])))
+    contract.oracle_stake = int(
+        _convert_to_hmt_cents(Decimal(manifest_dict['oracle_stake'])))
     contract.amount = int(_convert_to_hmt_cents(task_bid) * number_of_tasks)
     contract.initialize(wcontract, contract.amount, contract.oracle_stake,
                         number_of_tasks)
@@ -394,7 +395,7 @@ def get_job_from_address(escrow_address: str) -> WContract:
     return escrow
 
 
-def setup_job(contract: WContract, amount: int, oracle_stake: Decimal,
+def setup_job(contract: WContract, amount: int, oracle_stake: int,
               manifest_url: str, manifest_hash: str) -> bool:
     """ Once a job is started we can start a job to be processing.
 
