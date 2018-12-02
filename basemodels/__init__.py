@@ -27,7 +27,7 @@ class Manifest(Model):
     requester_question_example = URLType()
     unsafe_content = BooleanType(default=False)
     task_bid_price = DecimalType(required=True)
-    oracle_stake = IntType(required=True)
+    oracle_stake = DecimalType(required=True)
     expiration_date = IntType()
     requester_accuracy_target = FloatType(default=.1)
     manifest_smart_bounty_addr = StringType()
