@@ -107,9 +107,11 @@ ENV/
 venv*
 het/secrets.json
 
+# requirements (we use Pipfile)
+requirements.txt
+
 # Generated stuff
 # ================================================
 src
 .vscode
-Pipfile
 docker-compose
