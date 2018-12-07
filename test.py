@@ -137,7 +137,7 @@ class LocalBlockchainTest(unittest.TestCase):
 
         contract = api.get_job()
         self.assertTrue(
-            api._transfer_to_contract(contract.address, self.amount))
+            api._transfer_to_address(contract.address, self.amount))
         self.assertTrue(
             api.setup_job(contract, self.amount, self.oracle_stake, manifest,
                           Web3.toBytes(0)))
@@ -149,7 +149,7 @@ class LocalBlockchainTest(unittest.TestCase):
 
         contract = api.get_job()
         self.assertTrue(
-            api._transfer_to_contract(contract.address, self.amount))
+            api._transfer_to_address(contract.address, self.amount))
         self.assertTrue(
             api.setup_job(contract, self.amount, self.oracle_stake, manifest,
                           Web3.toBytes(0)))
@@ -161,7 +161,7 @@ class LocalBlockchainTest(unittest.TestCase):
         manifest = REQ_JSON
         contract = api.get_job()
         self.assertTrue(
-            api._transfer_to_contract(contract.address, self.amount))
+            api._transfer_to_address(contract.address, self.amount))
         self.assertTrue(
             api.setup_job(contract, self.amount, self.oracle_stake, manifest,
                           Web3.toBytes(0)))
@@ -179,7 +179,7 @@ class LocalBlockchainTest(unittest.TestCase):
         to_address = TO_ADDR
         to_address_balance = escrow.call().getAddressBalance(to_address)
 
-        self.assertTrue(api._transfer_to_contract(escrow.address, self.amount))
+        self.assertTrue(api._transfer_to_address(escrow.address, self.amount))
 
         address_balance_after_transfer = escrow.call().getAddressBalance(
             address)
