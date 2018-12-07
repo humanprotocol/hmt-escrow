@@ -265,6 +265,12 @@ class Contract(Manifest):
         Actually transfer ethereum to the contract.
         """
         return _transfer_to_contract(self.job_contract.address, self.amount)
+    
+    def refund(self, hmt_cents) -> bool:
+        """
+        Refund the HMT cents that were left on the contract after the payout.
+        """
+        return _transfer_to_contract(GAS_PAYER, hmt_cents)
 
     def launch(self) -> bool:
         """
