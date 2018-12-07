@@ -193,13 +193,12 @@ def _setup_sol(contract: WContract,
     }) == 1  # 1 Is pending 5 is Launched
 
 
-def _transfer_to_contract(contract_address: str, amount: int,
-                          gas=DEFAULT_GAS) -> bool:
+def _transfer_to_address(address: str, amount: int, gas=DEFAULT_GAS) -> bool:
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
     eip20_contract = get_eip20()
 
-    tx_dict = eip20_contract.functions.transfer(contract_address,
+    tx_dict = eip20_contract.functions.transfer(address,
                                                 amount).buildTransaction({
                                                     'from':
                                                     GAS_PAYER,
@@ -264,13 +263,13 @@ class Contract(Manifest):
         """
         Actually transfer ethereum to the contract.
         """
-        return _transfer_to_contract(self.job_contract.address, self.amount)
-    
+        return _transfer_to_address(self.job_contract.address, self.amount)
+
     def refund(self, hmt_cents) -> bool:
         """
         Refund the HMT cents that were left on the contract after the payout.
         """
-        return _transfer_to_contract(GAS_PAYER, hmt_cents)
+        return _transfer_to_address(GAS_PAYER, hmt_cents)
 
     def launch(self) -> bool:
         """
