@@ -15,10 +15,11 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(),
     install_requires=[
+        "eth-abi==1.2.2",
         "hypothesis==3.75.3",
         "ipfsapi==0.4.3",
         "py-solc==3.2.0",
         "schematics==2.1.0",
-        "trinity==0.1.0a16",
+        "py-evm==0.2.0a33",
         "web3==4.4.1",
     ])
