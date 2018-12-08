@@ -6,16 +6,15 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-eth-abi = "==1.2.2"
-hypothesis = "==3.75.3"
-ipfsapi = "==0.4.3"
-mypy = "==0.630"
-pipenv = "*"
-py-evm = "==0.2.0a33"
-py-solc = "==3.2.0"
+web3 = "==4.8.2"
+ipfsapi = "*"
+py-solc = "*"
+yapf = "*"
 schematics = "==2.1.0"
-web3 = "==4.4.1"
-yapf = "==0.24.0"
+py-evm = "*"
 
 [requires]
 python_version = "3.6"
+
+[pipenv]
+allow_prereleases = true
