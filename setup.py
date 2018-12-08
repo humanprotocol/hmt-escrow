@@ -15,11 +15,6 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(),
     install_requires=[
-        "eth-abi==1.2.2",
-        "hypothesis==3.75.3",
-        "ipfsapi==0.4.3",
-        "py-solc==3.2.0",
-        "schematics==2.1.0",
-        "py-evm==0.2.0a33",
-        "web3==4.4.1",
+        "ipfsapi==0.4.3", "py-evm==0.2.0a34", "py-solc==3.2.0",
+        "schematics==2.1.0", "web3==4.8.2", "yapf==0.25.0"
     ])
