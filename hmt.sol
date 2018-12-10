@@ -296,6 +296,7 @@ contract EscrowFactory {
 
 // An agentless escrow contract
 contract Escrow {
+    HMToken hmt;
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
@@ -449,8 +450,8 @@ contract Escrow {
     }
 
     function payOut(
-        uint256 _amount, 
-        address _recipient, 
+        address[] _recipients, 
+        uint256[] _amounts, 
         string _url, 
         string _hash
     ) public returns (bool) 
@@ -459,14 +460,16 @@ contract Escrow {
         require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
         uint256 balance = getBalance();
         require(balance > 0, "EIP20 contract out of funds");
-        require(balance >= _amount, "Amount too high");
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
 
-        bool success = partialPayout(_amount, _recipient);
+        bool success = hmt.transferBulk(_recipients, _amounts, _hash);
         balance = getBalance();
+        if (balance > 0) {
+            success = hmt.transfer(canceler, balance);
+        }
         if (success) {
             if (status == EscrowStatuses.Pending) {
                 status = EscrowStatuses.Partial;
