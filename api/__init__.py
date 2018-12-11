@@ -39,6 +39,26 @@ def _unlock_account_or_raise(account: str) -> None:
 def _validate_account_or_raise(account: str) -> str:
     return account
 
+def _bulk_payout_sol(contract: WContract,
+                     addresses: list,
+                     amounts: list,
+                     uri: str,
+                     hash_: str,
+                     gas=DEFAULT_GAS):
+    W3 = get_w3()
+    nonce = W3.eth.getTransactionCount(GAS_PAYER)
+
+    tx_dict = contract.functions.payOut(addresses, amounts, uri,
+                                        hash_).buildTransaction({
+                                            'from':
+                                            GAS_PAYER,
+                                            'gas':
+                                            gas,
+                                            'nonce':
+                                            nonce
+                                        })
+    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
+    wait_on_transaction(tx_hash)
 
 def _partial_payout_sol(contract: WContract,
                         amount: int,
