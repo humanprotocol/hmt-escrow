@@ -319,6 +319,14 @@ class Contract(Manifest):
         LOG.info("We payout: {}".format(hmt_amount))
         return partial_payout(self.job_contract, hmt_amount, to_address, url,
                               hash_)
+    
+    def bulk_payout(self, addresses: list, amounts: list, results: dict,
+                    public_key: bytes, private_key: bytes):
+        (hash_, url) = upload(results, public_key)
+        hmt_amounts = [_convert_to_hmt_cents(amount) for amount in amounts]
+        LOG.info("HMT amounts for bulk payout: {}".format(hmt_amounts))
+        return _bulk_payout_sol(self.job_contract, addresses, hmt_amounts, url,
+                              hash_)
 
     def complete(self) -> bool:
         try:
