@@ -49,7 +49,7 @@ def _bulk_payout_sol(contract: WContract,
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
-    tx_dict = contract.functions.payOut(addresses, amounts, uri,
+    tx_dict = contract.functions.bulkPayOut(addresses, amounts, uri,
                                         hash_).buildTransaction({
                                             'from':
                                             GAS_PAYER,
