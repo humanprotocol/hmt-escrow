@@ -50,14 +50,14 @@ def _bulk_payout_sol(contract: WContract,
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
     tx_dict = contract.functions.bulkPayOut(addresses, amounts, uri,
-                                        hash_).buildTransaction({
-                                            'from':
-                                            GAS_PAYER,
-                                            'gas':
-                                            gas,
-                                            'nonce':
-                                            nonce
-                                        })
+                                            hash_).buildTransaction({
+                                                'from':
+                                                GAS_PAYER,
+                                                'gas':
+                                                gas,
+                                                'nonce':
+                                                nonce
+                                            })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
 
