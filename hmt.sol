@@ -329,6 +329,15 @@ contract Escrow {
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
     }
 
+    function getBulkValue(_values) public view returns(uint256) {
+        uint256 bulkAmount = 0;
+        for (uint j = 0; j < _values.length; ++j) {
+            require(_values[j] > 0);
+            bulkAmount = bulkAmount.add(_values[j]);
+        }
+        return bulkAmount;
+    }
+
     function getStatus() public view returns (EscrowStatuses) {
         return status;
     }
@@ -462,6 +471,9 @@ contract Escrow {
         require(balance > 0, "EIP20 contract out of funds");
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+        uint256 bulkAmount = getBulkValue();
+        require(bulkAmount <= balance);
+
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
 
