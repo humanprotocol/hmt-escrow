@@ -326,8 +326,11 @@ class Contract(Manifest):
                     public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
         hmt_amounts = [_convert_to_hmt_cents(amount) for amount in amounts]
+        hmt_rep_oracle_fee = _convert_to_hmt_cents(self.oracle_stake)
+        hmt_rec_oracle_fee = _convert_to_hmt_cents(self.oracle_stake)
         LOG.info("HMT amounts for bulk payout: {}".format(hmt_amounts))
-        return _bulk_payout_sol(self.job_contract, addresses, hmt_amounts, url,
+        return _bulk_payout_sol(self.job_contract, addresses, hmt_amounts,
+                                hmt_rep_oracle_fee, hmt_rec_oracle_fee, url,
                                 hash_)
 
     def complete(self) -> bool:
