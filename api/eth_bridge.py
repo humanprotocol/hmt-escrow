@@ -73,7 +73,7 @@ def get_contract_interface(contract_entrypoint):
 
 def get_eip20():
     global EIP20ADDR, CONTRACT
-    contract_interface = get_contract_interface('<stdin>:EIP20Interface')
+    contract_interface = get_contract_interface('<stdin>:HMTokenInterface')
     contract = W3.eth.contract(
         address=EIP20ADDR, abi=contract_interface['abi'])
     return contract
