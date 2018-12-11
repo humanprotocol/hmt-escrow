@@ -459,6 +459,36 @@ contract Escrow {
     }
 
     function payOut(
+        uint256 _amount, 
+        address _recipient, 
+        string _url, 
+        string _hash
+    ) public returns (bool) 
+    {
+        require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
+        require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
+        uint256 balance = getBalance();
+        require(balance > 0, "EIP20 contract out of funds");
+        require(balance >= _amount, "Amount too high");
+        require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
+        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+        resultsManifestUrl = _url;
+        resultsManifestHash = _hash;
+
+        bool success = partialPayout(_amount, _recipient);
+        balance = getBalance();
+        if (success) {
+            if (status == EscrowStatuses.Pending) {
+                status = EscrowStatuses.Partial;
+            }
+            if (balance == 0 && status != EscrowStatuses.Paid) {
+                status = EscrowStatuses.Paid;
+            }
+        }
+        return success;
+    }
+
+    function bulkPayOut(
         address[] _recipients, 
         uint256[] _amounts, 
         string _url, 
