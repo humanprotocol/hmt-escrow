@@ -338,6 +338,10 @@ contract Escrow {
         return bulkAmount;
     }
 
+    function getOracleFee(uint256 _amount, uint256 _oracleStake) public view returns(uint256) {
+        return _oracleStake.mul(_amount).div(100);
+    }
+
     function getStatus() public view returns (EscrowStatuses) {
         return status;
     }
@@ -490,7 +494,9 @@ contract Escrow {
 
     function bulkPayOut(
         address[] _recipients, 
-        uint256[] _amounts, 
+        uint256[] _amounts,
+        uint256 _reputationOracleFee,
+        uint256 _recordingOracleFee,
         string _url, 
         string _hash,
         uint256 _txId
@@ -504,29 +510,15 @@ contract Escrow {
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
         uint256 bulkAmount = getBulkValue(_amounts);
         require(bulkAmount <= balance);
+        require(_reputationOracleFee == getOracleFee(balance, reputationOracleStake));
+        require(_recordingOracleFee == getOracleFee(balance, recordingOracleStake));
 
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
-        uint256 reputationOracleFee = 0;
-        uint256 recordingOracleFee = 0;
-
-        for (uint j = 0; j < _amounts.length; ++j) {
-            require(_amounts[j] > 0);
-            uint256 reputationOracleCut = reputationOracleStake.mul(_amounts[j]).div(100);
-            uint256 recordingOracleCut = recordingOracleStake.mul(_amounts[j]).div(100);
-            require(reputationOracleCut < _amounts[j] && reputationOracleCut >= 0);
-            require(recordingOracleCut < _amounts[j] && reputationOracleCut >= 0);
-            _amounts[j] = _amounts[j].sub(reputationOracleCut).sub(recordingOracleCut);
-            reputationOracleFee.add(reputationOracleCut);
-            recordingOracleFee.add(recordingOracleCut);
-        }
-
-        _recipients.push(reputationOracle);
-        _amounts.push(reputationOracleFee);
-        _recipients.push(recordingOracle);
-        _amounts.push(recordingOracleFee);
-
-        bool success = hmt.transferBulk(_recipients, _amounts, _txId) == _recipients.length;
+        
+        bool success = hmt.transfer(reputationOracle, _reputationOracleFee);
+        success = hmt.transfer(recordingOracle, _recordingOracleFee);
+        success = hmt.transferBulk(_recipients, _amounts, _txId) == _recipients.length;
         balance = getBalance();
         if (balance > 0) {
             success = hmt.transfer(canceler, balance);
