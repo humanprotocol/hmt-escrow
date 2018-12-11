@@ -329,7 +329,7 @@ contract Escrow {
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
     }
 
-    function getBulkValue(_values) public view returns(uint256) {
+    function getBulkValue(uint256[] _values) public view returns(uint256) {
         uint256 bulkAmount = 0;
         for (uint j = 0; j < _values.length; ++j) {
             require(_values[j] > 0);
@@ -462,7 +462,8 @@ contract Escrow {
         address[] _recipients, 
         uint256[] _amounts, 
         string _url, 
-        string _hash
+        string _hash,
+        uint256 _txId
     ) public returns (bool) 
     {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
@@ -471,13 +472,13 @@ contract Escrow {
         require(balance > 0, "EIP20 contract out of funds");
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-        uint256 bulkAmount = getBulkValue();
+        uint256 bulkAmount = getBulkValue(_amounts);
         require(bulkAmount <= balance);
 
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
 
-        bool success = hmt.transferBulk(_recipients, _amounts, _hash);
+        bool success = hmt.transferBulk(_recipients, _amounts, _txId) == _recipients.length;
         balance = getBalance();
         if (balance > 0) {
             success = hmt.transfer(canceler, balance);
