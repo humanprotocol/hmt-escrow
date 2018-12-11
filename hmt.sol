@@ -507,6 +507,24 @@ contract Escrow {
 
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
+        uint256 reputationOracleFee = 0;
+        uint256 recordingOracleFee = 0;
+
+        for (uint j = 0; j < _values.length; ++j) {
+            require(_values[j] > 0);
+            uint256 reputationOracleCut = reputationOracleStake.mul(_values[j]).div(100);
+            uint256 recordingOracleCut = recordingOracleStake.mul(_values[j]).div(100);
+            require(reputationOracleCut < _values[j] && reputationOracleCut >= 0);
+            require(recordingOracleCut < _values[j] && reputationOracleCut >= 0);
+            _values[j] = _values[j].sub(reputationOracleCut).sub(recordingOracleCut);
+            reputationOracleFee.add(reputationOracleCut);
+            recordingOracleFee.add(recordingOracleCut);
+        }
+
+        _recipients.push(reputationOracle);
+        _amounts.push(reputationOracleFee);
+        _recipients.push(recordingOracle);
+        _amounts.push(recordingOracleFee);
 
         bool success = hmt.transferBulk(_recipients, _amounts, _txId) == _recipients.length;
         balance = getBalance();
