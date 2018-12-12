@@ -331,11 +331,7 @@ contract Escrow {
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
     }
-
-    function getOracleFee(uint256 _amount, uint256 _oracleStake) public pure returns(uint256) {
-        return _oracleStake.mul(_amount).div(100);
-    }
-
+    
     function getStatus() public view returns (EscrowStatuses) {
         return status;
     }
