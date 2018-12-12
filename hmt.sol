@@ -99,6 +99,8 @@ contract HMTokenInterface {
     /// @return Whether the transfer was successful or not
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success);
 
+    function transferBulk(address[] memory _tos, uint256[] memory _values, uint256 _txId) public returns (uint256 _bulkCount);
+
     /// @notice `msg.sender` approves `_spender` to spend `_value` tokens
     /// @param _spender The address of the account able to transfer the tokens
     /// @param _value The amount of tokens to be approved for transfer
@@ -296,7 +298,6 @@ contract EscrowFactory {
 
 // An agentless escrow contract
 contract Escrow {
-    HMToken hmt;
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
@@ -322,20 +323,13 @@ contract Escrow {
 
     uint private expiration;
 
+    uint256[] private finalAmounts;
+
     constructor(address _eip20, address _canceler, uint _expiration) public {
         eip20 = _eip20;
         canceler = _canceler;
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
-    }
-
-    function getBulkValue(uint256[] _values) public pure returns(uint256) {
-        uint256 bulkAmount = 0;
-        for (uint j = 0; j < _values.length; ++j) {
-            require(_values[j] > 0);
-            bulkAmount = bulkAmount.add(_values[j]);
-        }
-        return bulkAmount;
     }
 
     function getOracleFee(uint256 _amount, uint256 _oracleStake) public pure returns(uint256) {
@@ -495,8 +489,6 @@ contract Escrow {
     function bulkPayOut(
         address[] _recipients, 
         uint256[] _amounts,
-        uint256 _reputationOracleFee,
-        uint256 _recordingOracleFee,
         string _url, 
         string _hash,
         uint256 _txId
@@ -508,20 +500,19 @@ contract Escrow {
         require(balance > 0, "EIP20 contract out of funds");
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-        uint256 bulkAmount = getBulkValue(_amounts);
-        require(bulkAmount <= balance);
-        require(_reputationOracleFee == getOracleFee(bulkAmount, reputationOracleStake));
-        require(_recordingOracleFee == getOracleFee(bulkAmount, recordingOracleStake));
 
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
-        
-        bool success = hmt.transfer(reputationOracle, _reputationOracleFee);
-        success = hmt.transfer(recordingOracle, _recordingOracleFee);
-        success = hmt.transferBulk(_recipients, _amounts, _txId) == _recipients.length;
+
+        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
+        HMTokenInterface token = HMTokenInterface(eip20);
+        token.transferBulk(_recipients, finalAmounts, _txId);
+        bool success = token.transfer(reputationOracle, reputationOracleFee);
+        success = token.transfer(recordingOracle, recordingOracleFee);
+
         balance = getBalance();
         if (balance > 0) {
-            success = hmt.transfer(canceler, balance);
+            success = token.transfer(canceler, balance);
         }
         if (success) {
             if (status == EscrowStatuses.Pending) {
@@ -537,6 +528,20 @@ contract Escrow {
     function killContract() internal {
         status = EscrowStatuses.Cancelled;
         selfdestruct(canceler);
+    }
+
+    function finalizePayouts(uint256[] _amounts) public returns (uint256, uint256) {
+        uint256 reputationOracleFee = 0;
+        uint256 recordingOracleFee = 0;
+        for (uint256 j; j < _amounts.length; j++) {
+            uint256 singleReputationOracleFee = reputationOracleStake.mul(_amounts[j]).div(100);
+            uint256 singleRecordingOracleFee = recordingOracleStake.mul(_amounts[j]).div(100);
+            uint256 amount = _amounts[j].sub(singleReputationOracleFee).sub(singleRecordingOracleFee);
+            reputationOracleFee = reputationOracleFee.add(singleReputationOracleFee);
+            recordingOracleFee = recordingOracleFee.add(singleRecordingOracleFee);
+            finalAmounts.push(amount);
+        }
+        return (reputationOracleFee, recordingOracleFee);
     }
 
     function partialPayout(uint256 _amount, address _recipient) internal returns (bool) {
