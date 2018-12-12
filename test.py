@@ -23,6 +23,7 @@ CALLBACK_URL = 'http://google.com/webback'
 ADDR = Web3.toChecksumAddress(
     os.getenv("TESTADDR", '0x1413862c2b7054cdbfdc181b83962cb0fc11fd92'))
 TO_ADDR = '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
+TO_ADDR2 = '0xa30E4681db25f0f32E8C79b28F2A80A653A556A2'
 
 PUB1 = b'b1bd4192dd7134d869f992fafcf4ed60ef8c566f2649b773f5562bc6736ff8dd8c459b36201dd8ce417cc96275a11f209942eacb14aef5b91a8e6ea0703b4bf8'
 PRIV1 = b'657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8'
@@ -223,6 +224,29 @@ class LocalBlockchainTest(unittest.TestCase):
 
         amount_to_payout = [100]
         contract2.bulk_payout(to_address, amount_to_payout, {}, PUB2, PRIV1)
+        self.assertEqual(self.contract.status(), api.Status.Paid)
+        self.assertTrue(contract2.complete())
+        self.assertEqual(self.contract.status(), api.Status.Complete)
+
+    def test_oo_bulk_multiple_addrs(self):
+        to_address = TO_ADDR
+        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
+        self.assertEqual(self.contract.status(), api.Status.Launched)
+        contract_address = self.contract.job_contract.address
+        self.assertTrue(self.contract.fund())
+        self.assertEqual(self.contract.status(), api.Status.Launched)
+        self.assertTrue(self.contract.launch())
+        self.assertEqual(self.contract.status(), api.Status.Pending)
+        contract2 = api.get_contract_from_address(contract_address, PRIV2)
+        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
+        contract2.store_intermediate({}, PUB1, PRIV2)
+        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
+
+        self.assertEqual(self.contract.status(), api.Status.Pending)
+
+        addresses = [TO_ADDR, TO_ADDR2]
+        payouts = [50, 50]
+        contract2.bulk_payout(addresses, payouts, {}, PUB2, PRIV1)
         self.assertEqual(self.contract.status(), api.Status.Paid)
         self.assertTrue(contract2.complete())
         self.assertEqual(self.contract.status(), api.Status.Complete)
