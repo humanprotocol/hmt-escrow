@@ -329,7 +329,7 @@ contract Escrow {
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
     }
 
-    function getBulkValue(uint256[] _values) public view returns(uint256) {
+    function getBulkValue(uint256[] _values) public pure returns(uint256) {
         uint256 bulkAmount = 0;
         for (uint j = 0; j < _values.length; ++j) {
             require(_values[j] > 0);
@@ -338,7 +338,7 @@ contract Escrow {
         return bulkAmount;
     }
 
-    function getOracleFee(uint256 _amount, uint256 _oracleStake) public view returns(uint256) {
+    function getOracleFee(uint256 _amount, uint256 _oracleStake) public pure returns(uint256) {
         return _oracleStake.mul(_amount).div(100);
     }
 
