@@ -205,6 +205,28 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertEqual(to_address_balance_after_payout,
                          to_address_balance + 900)
 
+    def test_oo_bulk(self):
+        to_address = [TO_ADDR]
+        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
+        self.assertEqual(self.contract.status(), api.Status.Launched)
+        contract_address = self.contract.job_contract.address
+        self.assertTrue(self.contract.fund())
+        self.assertEqual(self.contract.status(), api.Status.Launched)
+        self.assertTrue(self.contract.launch())
+        self.assertEqual(self.contract.status(), api.Status.Pending)
+        contract2 = api.get_contract_from_address(contract_address, PRIV2)
+        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
+        contract2.store_intermediate({}, PUB1, PRIV2)
+        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
+
+        self.assertEqual(self.contract.status(), api.Status.Pending)
+
+        amount_to_payout = [100]
+        contract2.bulk_payout(to_address, amount_to_payout, {}, PUB2, PRIV1)
+        self.assertEqual(self.contract.status(), api.Status.Paid)
+        self.assertTrue(contract2.complete())
+        self.assertEqual(self.contract.status(), api.Status.Complete)
+
     def test_oo(self):
         to_address = TO_ADDR
         self.assertTrue(self.contract.deploy(PUB2, PRIV1))
