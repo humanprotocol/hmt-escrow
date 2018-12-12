@@ -510,8 +510,8 @@ contract Escrow {
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
         uint256 bulkAmount = getBulkValue(_amounts);
         require(bulkAmount <= balance);
-        require(_reputationOracleFee == getOracleFee(balance, reputationOracleStake));
-        require(_recordingOracleFee == getOracleFee(balance, recordingOracleStake));
+        require(_reputationOracleFee == getOracleFee(bulkAmount, reputationOracleStake));
+        require(_recordingOracleFee == getOracleFee(bulkAmount, recordingOracleStake));
 
         resultsManifestUrl = _url;
         resultsManifestHash = _hash;
