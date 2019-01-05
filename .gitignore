@@ -115,3 +115,6 @@ requirements.txt
 src
 .vscode
 docker-compose
+build/
+node_modules/
+package-lock.json
