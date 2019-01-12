@@ -10,10 +10,8 @@
     "compile": "truffle compile; truffle migrate",
     "fix:js": "eslint --fix test/** migrations/**",
     "lint:js": "eslint test/** migrations/**",
-    "lint:sol": "solhint contracts/*.sol contracts/*/*.sol test/*.sol test/*/*.sol",
-    "lint": "npm run lint:js && npm run lint:sol",
+    "lint": "npm run lint:js",
     "publish": "truffle publish",
-    "pretest": "npm run lint",
     "test": "truffle test",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
