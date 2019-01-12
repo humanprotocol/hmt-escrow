@@ -14,7 +14,8 @@
     "lint": "npm run lint:js && npm run lint:sol",
     "publish": "truffle publish",
     "pretest": "npm run lint",
-    "test": "truffle test"
+    "test": "truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
     "type": "git",
@@ -42,6 +43,7 @@
     "eslint-plugin-mocha": "4.11.0",
     "eslint-plugin-node": "5.1.0",
     "eslint-plugin-react": "7.5.1",
-    "solhint": "^1.2.1"
+    "solhint": "^1.2.1",
+    "solidity-coverage": "^0.5.11"
   }
 }
