@@ -53,7 +53,10 @@ class Manifest(Model):
             "image_label_binary", "image_label_multiple_choice_one_option",
             "image_label_multiple_choice_multiple_options", "text_free_entry",
             "text_multiple_choice_one_option",
-            "text_multiple_choice_multiple_options"
+            "text_multiple_choice_multiple_options",
+            "image_label_area_select_one_option",
+            "image_label_area_select_multiple_options",
+            "image_label_area_adjust"
         ])
     # if taskdata is directly provided
     taskdata = ListType(ModelType(TaskData))  # ListType(DictType(StringType))
