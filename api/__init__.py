@@ -287,11 +287,11 @@ class Contract(Manifest):
         """
         return _transfer_to_address(self.job_contract.address, self.amount)
 
-    def refund(self, hmt_cents) -> bool:
+    def abort(self, gas=DEFAULT_GAS) -> bool:
         """
-        Refund the HMT cents that were left on the contract after the payout.
+        Transfer back the money to the funder of the contract
         """
-        return _transfer_to_address(GAS_PAYER, hmt_cents)
+        return _abort_sol(self.job_contract, gas)
 
     def launch(self) -> bool:
         """
