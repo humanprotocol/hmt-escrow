@@ -279,6 +279,24 @@ class LocalBlockchainTest(unittest.TestCase):
         self.assertTrue(contract2.complete())
         self.assertEqual(self.contract.status(), api.Status.Complete)
 
+    def test_refund(self):
+        to_address = TO_ADDR
+        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
+        self.assertEqual(self.contract.status(), api.Status.Launched)
+        contract_address = self.contract.job_contract.address
+        self.assertTrue(self.contract.fund())
+        self.assertEqual(self.contract.status(), api.Status.Launched)
+        self.assertTrue(self.contract.launch())
+        self.assertEqual(self.contract.status(), api.Status.Pending)
+        contract2 = api.get_contract_from_address(contract_address, PRIV2)
+        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
+        contract2.store_intermediate({}, PUB1, PRIV2)
+        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
+
+        self.assertEqual(self.contract.status(), api.Status.Pending)
+        contract2.refund()
+        self.assertEqual(self.contract.status(), api.Status.Cancelled)
+
     def test_hmt_amount_convertion(self):
         per_job_cost = Decimal(self.manifest['task_bid_price'])
         hmt_amount = api._convert_to_hmt_cents(per_job_cost)
