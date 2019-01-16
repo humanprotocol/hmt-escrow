@@ -182,7 +182,7 @@ def _abort_sol(contract: WContract, gas: int) -> bool:
     return contract.functions.getStatus().call({
         'from': GAS_PAYER,
         'gas': gas
-    }) == 5  # 1 Is pending 5 is Launched
+    }) == 5  # Cancelled
 
 
 def _setup_sol(contract: WContract,
@@ -212,7 +212,25 @@ def _setup_sol(contract: WContract,
     return contract.functions.getStatus().call({
         'from': GAS_PAYER,
         'gas': gas
-    }) == 1  # 1 Is pending 5 is Launched
+    }) == 1  # Pending
+
+
+def _refund_sol(contract: WContract, gas: int) -> bool:
+    W3 = get_w3()
+    nonce = W3.eth.getTransactionCount(GAS_PAYER)
+
+    tx_dict = contract.functions.refund().buildTransaction({
+        'from': GAS_PAYER,
+        'gas': gas,
+        'nonce': nonce
+    })
+    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
+    wait_on_transaction(tx_hash)
+
+    return contract.functions.getStatus().call({
+        'from': GAS_PAYER,
+        'gas': gas
+    }) == 5  # Cancelled
 
 
 def _transfer_to_address(address: str, amount: int, gas=DEFAULT_GAS) -> bool:
@@ -286,12 +304,12 @@ class Contract(Manifest):
         Actually transfer ether to the contract.
         """
         return _transfer_to_address(self.job_contract.address, self.amount)
-    
-    def refund(self) -> bool:
+
+    def refund(self, gas=DEFAULT_GAS) -> bool:
         """
         Transfer ether back to the contract initiator.
         """
-        return _transfer_to_address(GAS_PAYER_PRIV, self.amount)
+        return _refund_sol(self.job_contract, gas)
 
     def abort(self, gas=DEFAULT_GAS) -> bool:
         """
