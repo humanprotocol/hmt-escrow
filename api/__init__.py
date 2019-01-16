@@ -286,6 +286,12 @@ class Contract(Manifest):
         Actually transfer ethereum to the contract.
         """
         return _transfer_to_address(self.job_contract.address, self.amount)
+    
+    def refund(self) -> bool:
+        """
+        Transfer ether back to the contract initiator.
+        """
+        return _transfer_to_address(GAS_PAYER_PRIV, self.amount)
 
     def abort(self, gas=DEFAULT_GAS) -> bool:
         """
