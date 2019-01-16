@@ -283,7 +283,7 @@ class Contract(Manifest):
 
     def fund(self) -> bool:
         """
-        Actually transfer ethereum to the contract.
+        Actually transfer ether to the contract.
         """
         return _transfer_to_address(self.job_contract.address, self.amount)
     
