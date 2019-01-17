@@ -355,10 +355,10 @@ contract('Escrow', (accounts) => {
       const initialStatus = await Escrow.getStatus.call();
       assert.equal(initialStatus, 0);
 
-      //Transer funds to escrow
+      // Transer funds to escrow
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
 
-      //Setup escrow
+      // Setup escrow
       await Escrow.setup(reputationOracle, recordingOracle, 10, 10, 0, url, hash, { from: accounts[0] });
       const setupStatus = await Escrow.getStatus.call();
       assert.equal(setupStatus, 1);
@@ -368,7 +368,7 @@ contract('Escrow', (accounts) => {
       const paidStatus = await Escrow.getStatus.call();
       assert.equal(paidStatus, 3);
 
-      //Complete escrowe
+      // Complete escrowe
       await Escrow.complete({ from: reputationOracle });
       const completeStatus = await Escrow.getStatus.call();
       assert.equal(completeStatus, 4);
@@ -383,10 +383,10 @@ contract('Escrow', (accounts) => {
       const initialStatus = await Escrow.getStatus.call();
       assert.equal(initialStatus, 0);
 
-      //Transer funds to escrow
+      // Transer funds to escrow
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
 
-      //Setup escrow
+      // Setup escrow
       await Escrow.setup(reputationOracle, recordingOracle, 10, 10, 0, url, hash, { from: accounts[0] });
       const setupStatus = await Escrow.getStatus.call();
       assert.equal(setupStatus, 1);
@@ -396,7 +396,7 @@ contract('Escrow', (accounts) => {
       const paidStatus = await Escrow.getStatus.call();
       assert.equal(paidStatus, 3);
 
-      //Complete escrowe
+      // Complete escrow
       await Escrow.complete({ from: reputationOracle });
       const completeStatus = await Escrow.getStatus.call();
       assert.equal(completeStatus, 4);
@@ -411,27 +411,27 @@ contract('Escrow', (accounts) => {
       const initialStatus = await Escrow.getStatus.call();
       assert.equal(initialStatus, 0);
 
-      //Transer funds to escrow
+      // Transer funds to escrow
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
 
-      //Setup escrow
+      // Setup escrow
       await Escrow.setup(reputationOracle, recordingOracle, 10, 10, 0, url, hash, { from: accounts[0] });
       const setupStatus = await Escrow.getStatus.call();
       assert.equal(setupStatus, 1);
 
-      //Pay out partial amount of contract funds
-      const amountToPay = 1
+      // Pay out partial amount of contract funds
+      const amountToPay = 1;
       await Escrow.payOut(amountToPay, toAddress, url, hash, { from: reputationOracle });
       const partialStatus = await Escrow.getStatus.call();
       assert.equal(partialStatus, 2);
 
-      //Pay out all funds contract has left
-      const amountToPay2 = 99
+      // Pay out all funds contract has left
+      const amountToPay2 = 99;
       await Escrow.payOut(amountToPay2, toAddress, url, hash, { from: reputationOracle });
       const paidStatus = await Escrow.getStatus.call();
       assert.equal(paidStatus, 3);
 
-      //Complete escrowe
+      // Complete escrowe
       await Escrow.complete({ from: reputationOracle });
       const completeStatus = await Escrow.getStatus.call();
       assert.equal(completeStatus, 4);
@@ -440,33 +440,4 @@ contract('Escrow', (accounts) => {
       assert(false);
     }
   });
-
-  /*
-  to_address = TO_ADDR
-    self.assertTrue(self.contract.deploy(PUB2, PRIV1))
-    self.assertEqual(self.contract.status(), api.Status.Launched)
-    contract_address = self.contract.job_contract.address
-    self.assertTrue(self.contract.fund())
-    self.assertEqual(self.contract.status(), api.Status.Launched)
-    self.assertTrue(self.contract.launch())
-    self.assertEqual(self.contract.status(), api.Status.Pending)
-    contract2 = api.get_contract_from_address(contract_address, PRIV2)
-    self.assertNotEqual({}, contract2.get_manifest(PRIV2))
-    contract2.store_intermediate({}, PUB1, PRIV2)
-    self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
-
-    self.assertEqual(self.contract.status(), api.Status.Pending)
-
-    amount_to_payout = 1
-    contract2.payout(amount_to_payout, to_address, {}, PUB2, PRIV1)
-    self.assertEqual(self.contract.status(), api.Status.Partial)
-    self.assertFalse(contract2.complete())
-    self.assertEqual({}, contract2.get_results(PRIV2))
-
-    amount_to_payout = 99
-    contract2.payout(amount_to_payout, to_address, {}, PUB2, PRIV1)
-    self.assertEqual(self.contract.status(), api.Status.Paid)
-    self.assertTrue(contract2.complete())
-    self.assertEqual(self.contract.status(), api.Status.Complete)
-  */
 });
