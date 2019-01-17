@@ -1,3 +1,3 @@
 module.exports = {
-    skipFiles: ['HMToken.sol', 'HMToken.sol', 'HMTokenInterface.sol']
+    skipFiles: ['HMToken.sol', 'HMTokenInterface.sol']
 };

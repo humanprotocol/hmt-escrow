@@ -182,7 +182,7 @@ def _abort_sol(contract: WContract, gas: int) -> bool:
     return contract.functions.getStatus().call({
         'from': GAS_PAYER,
         'gas': gas
-    }) == 5  # Cancelled
+    }) == 5  # 1 Is pending 5 is Launched
 
 
 def _setup_sol(contract: WContract,
@@ -212,25 +212,7 @@ def _setup_sol(contract: WContract,
     return contract.functions.getStatus().call({
         'from': GAS_PAYER,
         'gas': gas
-    }) == 1  # Pending
-
-
-def _refund_sol(contract: WContract, gas: int) -> bool:
-    W3 = get_w3()
-    nonce = W3.eth.getTransactionCount(GAS_PAYER)
-
-    tx_dict = contract.functions.refund().buildTransaction({
-        'from': GAS_PAYER,
-        'gas': gas,
-        'nonce': nonce
-    })
-    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
-    wait_on_transaction(tx_hash)
-
-    return contract.functions.getStatus().call({
-        'from': GAS_PAYER,
-        'gas': gas
-    }) == 5  # Cancelled
+    }) == 1  # 1 Is pending 5 is Launched
 
 
 def _transfer_to_address(address: str, amount: int, gas=DEFAULT_GAS) -> bool:
@@ -301,25 +283,20 @@ class Contract(Manifest):
 
     def fund(self) -> bool:
         """
-        Actually transfer ether to the contract.
+        Actually transfer ethereum to the contract.
         """
         return _transfer_to_address(self.job_contract.address, self.amount)
 
-    def refund(self, gas=DEFAULT_GAS) -> bool:
+    def refund(self, hmt_cents) -> bool:
         """
-        Transfer ether back to the contract initiator.
+        Refund the HMT cents that were left on the contract after the payout.
         """
-        return _refund_sol(self.job_contract, gas)
-
-    def abort(self, gas=DEFAULT_GAS) -> bool:
-        """
-        Transfer back the money to the funder of the contract
-        """
-        return _abort_sol(self.job_contract, gas)
+        return _transfer_to_address(GAS_PAYER, hmt_cents)
 
     def launch(self) -> bool:
         """
         Actually launch the ethereum contract to the blockchain
+
         :return: Returns if the job is pending
         """
         return setup_job(self.job_contract, self.amount, self.oracle_stake,
@@ -391,8 +368,10 @@ def get_contract_from_address(escrow_address: str,
 
 def get_job(gas=DEFAULT_GAS) -> WContract:
     """ Get a new job and launch it without funds on the blockchain.
+
         This is the first step of putting a new job on the blockchain.
         After this function is called the user can add funds, abort, or set the job up for pending.
+
         Args:
             gas (int): How much gas to get on the contract.
         Returns:
@@ -454,13 +433,17 @@ def get_job_from_address(escrow_address: str) -> WContract:
 def setup_job(contract: WContract, amount: int, oracle_stake: int,
               manifest_url: str, manifest_hash: str) -> bool:
     """ Once a job is started we can start a job to be processing.
+
+
         Once a job hash been put on blockchain, and is funded, this function will
         setup the job for labeling (Pending):
+
         Args:
             contract (WContract): The actual ethereum contract instantiated.
             amount (int): The amount of token that the job represents.
             manifest_url (str): The url to the questions to be answered.
             manifest_hash: The hash of the plaintext of the manifest.
+
         Returns:
             bool: True if the contract is pending """
     reputation_oracle = GAS_PAYER
@@ -474,9 +457,11 @@ def setup_job(contract: WContract, amount: int, oracle_stake: int,
 
 def abort_job(contract: WContract, gas=DEFAULT_GAS) -> bool:
     """ Return all leftover funds to the contract launcher
+
         Once a job hash been put on blockchain, and is funded, this function can return
         the money to the funder of the contract. This function cannot run if the contract has
         already been partially paid.
+
         Args:
             contract (WContract): The actual ethereum contract instantiated.
             gas (int): The amount of gas to run the transaction with.
@@ -488,8 +473,10 @@ def abort_job(contract: WContract, gas=DEFAULT_GAS) -> bool:
 def partial_payout(contract: WContract, amount: int, to_account: str,
                    manifest_url: str, manifest_hash: str):
     """ Pay out the specified funds to the specified account
+
         Once the reputation oracle has decided to pay money it can call this function to pay out
         to mining servers.
+
         Args:
             contract (WContract): The actual ethereum contract instantiated.
             amount (int): Amount of contract money to pay out
@@ -508,7 +495,9 @@ def store_results(contract: WContract,
                   manifest_hash: str,
                   gas=DEFAULT_GAS) -> bool:
     """ Store intermediate results in the contract
+
         Store intermediate manifest results
+
         Args:
             contract (WContract): The actual ethereum contract instantiated.
             manifest_url (str): The url of the answers to the questions
@@ -524,9 +513,11 @@ Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 def status(contract: WContract, gas=DEFAULT_GAS) -> Enum:
     """ User friendly status.
+
     Returns the status of a contract
     From solidity
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
+
     Args:
         contract (WContract): The actual ethereum contract instantiated.
         gas (int): The amount of gas to run the transaction with.
