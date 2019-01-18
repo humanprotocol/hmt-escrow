@@ -57,23 +57,24 @@ def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
     return W3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
 
-def get_contract():
+def get_contract(filename):
     global CONTRACT
-    if CONTRACT is None:
-        with open(os.getenv("CONTRACT", "hmt.sol"), 'r') as f:
-            CONTRACT = f.read()
-    return CONTRACT
+    file = open(os.getenv("CONTRACT", filename), 'r')
+    return file.read()
 
 
-def get_contract_interface(contract_entrypoint):
-    compiled_sol = compile_source(get_contract())  # Compiled source code
+def get_contract_interface(filename, contract_entrypoint):
+    compiled_sol = compile_source(
+        get_contract(filename),  # Compiled source code
+        import_remappings=['=./', '-'])
     contract_interface = compiled_sol[contract_entrypoint]
     return contract_interface
 
 
 def get_eip20():
     global EIP20ADDR, CONTRACT
-    contract_interface = get_contract_interface('<stdin>:HMTokenInterface')
+    contract_interface = get_contract_interface('HMTokenInterface.sol',
+                                                '<stdin>:HMTokenInterface')
     contract = W3.eth.contract(
         address=EIP20ADDR, abi=contract_interface['abi'])
     return contract
@@ -116,7 +117,8 @@ def get_factory(gas: int,
     contract = input path into sol contract
     """
 
-    contract_interface = get_contract_interface(contract_entrypoint)
+    contract_interface = get_contract_interface('EscrowFactory.sol',
+                                                contract_entrypoint)
     (contract, contract_address) = deploy_contract(
         contract_interface, gas, args=[EIP20ADDR])
     return contract

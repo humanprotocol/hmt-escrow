@@ -6,6 +6,7 @@ import sys
 import unittest
 from decimal import *
 
+from unittest.mock import MagicMock, ANY
 import schematics
 from unittest.mock import patch
 from web3 import Web3
@@ -20,11 +21,17 @@ REQ_JSON = 'file:///tmp/req.json'
 ANS_JSON = 'file:///tmp/ans.json'
 CALLBACK_URL = 'http://google.com/webback'
 
+ADDR = Web3.toChecksumAddress(
+    os.getenv("TESTADDR", '0x1413862c2b7054cdbfdc181b83962cb0fc11fd92'))
+TO_ADDR = '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
+TO_ADDR2 = '0xa30E4681db25f0f32E8C79b28F2A80A653A556A2'
+
 PUB1 = b'b1bd4192dd7134d869f992fafcf4ed60ef8c566f2649b773f5562bc6736ff8dd8c459b36201dd8ce417cc96275a11f209942eacb14aef5b91a8e6ea0703b4bf8'
 PRIV1 = b'657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8'
 PUB2 = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 PRIV2 = b'f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1'
 
+FAKE_ORACLE = ADDR
 FAKE_URL = 'http://google.com/fake'
 IMAGE_LABEL_BINARY = 'image_label_binary'
 
@@ -95,7 +102,7 @@ def a_manifest(number_of_tasks=100,
 class ContractTest(unittest.TestCase):
     # TODO bid amount should require positive values,
     # expiration date should require a reasonable date
-    # i.e. this test should fai
+    # i.e. this test should fail
     def test_basic_construction(self):
         a_manifest()
 
@@ -109,6 +116,59 @@ class ContractTest(unittest.TestCase):
         mani = a_manifest()
         mani.taskdata_uri = 'test'
         self.assertRaises(schematics.exceptions.DataError, mani.validate)
+
+    def test_deploy_calls_initialize_with_correct_values(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        contract.initialize = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        total_tasks = self.manifest['job_total_tasks']
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost) * total_tasks
+        oracle_stake = api._convert_to_hmt_cents(
+            Decimal(self.manifest['oracle_stake']))
+        contract.initialize.assert_called_once_with(ANY, hmt_amount,
+                                                    oracle_stake, total_tasks)
+
+    def test_after_deploy_contract_values_are_set_correctly(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        contract.deploy(PUB2, PRIV1)
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        total_tasks = self.manifest['job_total_tasks']
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost) * total_tasks
+        oracle_stake = api._convert_to_hmt_cents(
+            Decimal(self.manifest['oracle_stake']))
+        self.assertEqual(contract.amount, hmt_amount)
+        self.assertEqual(contract.oracle_stake, oracle_stake)
+        self.assertEqual(contract.number_of_answers, total_tasks)
+
+    def test_fund_sends_correct_amount_to_correct_address(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._transfer_to_address = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        total_tasks = self.manifest['job_total_tasks']
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost) * total_tasks
+        oracle_stake = api._convert_to_hmt_cents(
+            Decimal(self.manifest['oracle_stake']))
+        contract.fund()
+        api._transfer_to_address.assert_called_once_with(
+            contract.job_contract.address, contract.amount)
+
+
+class LocalBlockchainTest(unittest.TestCase):
+    def setUp(self):
+        self.manifest = a_manifest()
+        self.contract = api.Contract(self.manifest)
+        self.amount = 1000
+        self.oracle_stake = 5
+
+    def test_hmt_amount_convertion(self):
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost)
+        self.assertEqual(hmt_amount, 100)
 
 
 class EncryptionTest(unittest.TestCase):
