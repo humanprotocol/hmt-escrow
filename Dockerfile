@@ -12,6 +12,7 @@ RUN pipenv install --system --deploy
 RUN python3 -m solc.install v0.4.24
 ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
 
+COPY contracts /work/
 COPY *.py /work/
 COPY api /work/api/
 COPY basemodels /work/basemodels

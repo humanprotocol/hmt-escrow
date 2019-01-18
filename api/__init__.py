@@ -387,7 +387,8 @@ def get_job(gas=DEFAULT_GAS) -> WContract:
             raise Exception("Unable to get address from factory")
 
     if factory is None:
-        contract_interface = get_contract_interface('<stdin>:EscrowFactory')
+        contract_interface = get_contract_interface('EscrowFactory.sol',
+                                                    '<stdin>:EscrowFactory')
         factory = get_w3().eth.contract(
             address=ESCROW_FACTORY, abi=contract_interface['abi'])
         counter = factory.functions.getCounter().call({
@@ -417,14 +418,14 @@ def get_job(gas=DEFAULT_GAS) -> WContract:
     })
 
     LOG.info("New pokemon!:{}".format(escrow_address))
-    contract_interface = get_contract_interface('<stdin>:Escrow')
+    contract_interface = get_contract_interface('Escrow.sol', '<stdin>:Escrow')
     escrow = get_w3().eth.contract(
         address=escrow_address, abi=contract_interface['abi'])
     return escrow
 
 
 def get_job_from_address(escrow_address: str) -> WContract:
-    contract_interface = get_contract_interface('<stdin>:Escrow')
+    contract_interface = get_contract_interface('Escrow.sol', '<stdin>:Escrow')
     escrow = get_w3().eth.contract(
         address=escrow_address, abi=contract_interface['abi'])
     return escrow
