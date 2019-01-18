@@ -321,7 +321,6 @@ contract('Escrow', (accounts) => {
       assert.equal(amountOfPaidToAccountFour, 16);
       assert.equal(amountOfPaidToAccountFive, 24);
     } catch (ex) {
-      console.log(ex);
       assert(false);
     }
   });
@@ -344,7 +343,6 @@ contract('Escrow', (accounts) => {
       assert.equal(amountOfPaidToRecordingOracle, 6);
       assert.equal(amountOfPaidToReputationOracle, 6);
     } catch (ex) {
-      console.log(ex);
       assert(false);
     }
   });
@@ -436,7 +434,6 @@ contract('Escrow', (accounts) => {
       const completeStatus = await Escrow.getStatus.call();
       assert.equal(completeStatus, 4);
     } catch (ex) {
-      console.log(ex);
       assert(false);
     }
   });
