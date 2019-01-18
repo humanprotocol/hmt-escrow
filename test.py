@@ -157,6 +157,29 @@ class ContractTest(unittest.TestCase):
         api._transfer_to_address.assert_called_once_with(
             contract.job_contract.address, contract.amount)
 
+    def test_payout_calls_partial_payout_once_with_correct_params(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api.partial_payout = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost)
+        contract.payout(per_job_cost, TO_ADDR, {}, PUB2, PRIV1)
+        api.partial_payout.assert_called_once_with(
+            contract.job_contract, hmt_amount, TO_ADDR, ANY, ANY)
+
+    def test_bulk_payout_calls_bulk_payout_sol_once_with_correct_params(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._bulk_payout_sol = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        addresses = [TO_ADDR, TO_ADDR2]
+        amounts = [10, 20]
+        hmt_amounts = [1000, 2000]
+        contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
+        api._bulk_payout_sol.assert_called_once_with(
+            contract.job_contract, addresses, hmt_amounts, ANY, ANY)
+
 
 class LocalBlockchainTest(unittest.TestCase):
     def setUp(self):
