@@ -17,15 +17,10 @@ from basemodels import Manifest
 from api.storage import download, upload
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
-GAS_PAYER = Web3.toChecksumAddress(
-    os.getenv("GAS_PAYER", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-GAS_PAYER_PRIV = os.getenv(
-    "GAS_PAYER_PRIV",
-    "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
-REP_ORACLE = Web3.toChecksumAddress(
-    os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-REC_ORACLE = Web3.toChecksumAddress(
-    os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
+GAS_PAYER = Web3.toChecksumAddress("GAS_PAYER")
+GAS_PAYER_PRIV = os.getenv("GAS_PAYER_PRIV")
+REP_ORACLE = Web3.toChecksumAddress("REP_ORACLE")
+REC_ORACLE = Web3.toChecksumAddress("REC_ORACLE")
 
 # The address of the escrow factory
 ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
