@@ -21,8 +21,8 @@ class Manifest(Model):
 
     requester_restricted_answer_set = DictType(DictType(StringType))
     requester_description = StringType()
-    requester_max_repeats = IntType()
-    requester_min_repeats = IntType()
+    requester_max_repeats = IntType(default=100)
+    requester_min_repeats = IntType(default=1)
     requester_question = DictType(StringType)
     requester_question_example = URLType()
     unsafe_content = BooleanType(default=False)
@@ -53,7 +53,10 @@ class Manifest(Model):
             "image_label_binary", "image_label_multiple_choice_one_option",
             "image_label_multiple_choice_multiple_options", "text_free_entry",
             "text_multiple_choice_one_option",
-            "text_multiple_choice_multiple_options"
+            "text_multiple_choice_multiple_options",
+            "image_label_area_select_one_option",
+            "image_label_area_select_multiple_options",
+            "image_label_area_adjust"
         ])
     # if taskdata is directly provided
     taskdata = ListType(ModelType(TaskData))  # ListType(DictType(StringType))
