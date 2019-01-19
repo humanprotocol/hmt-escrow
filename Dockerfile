@@ -1,24 +1,34 @@
 FROM ubuntu:artful
-RUN sed -i 's/archive/us-west-2\.ec2\.archive/' /etc/apt/sources.list
-RUN apt-get update -y && apt-get install -y python3-dev python3-pip postgresql-client python-virtualenv git curl wget bash pandoc pkg-config libffi-dev build-essential autoconf libtool jq
-RUN pip3 install pipenv
+
 WORKDIR /work
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y build-essential libffi-dev autoconf libtool \
+    python3-dev python3-pip \
+    git curl wget bash pandoc pkg-config jq && \
+    curl -sL https://deb.nodesource.com/setup_8.x | bash -  && \
+    apt-get install -y nodejs && \
+    npm install -g yarn && \
+    yarn global add truffle
 
 ENV LANG C.UTF-8
 
+COPY package.json /work/
+COPY yarn.lock /work/
+RUN yarn
+
 COPY Pipfile Pipfile.lock /work/
+RUN pip3 install pipenv
 RUN pipenv install --system --deploy
 
 RUN python3 -m solc.install v0.4.24
 ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
 
-COPY contracts /work/
 COPY *.py /work/
 COPY api /work/api/
-COPY basemodels /work/basemodels
-COPY bin /work/bin
-ENV HET_ETH_SERVER http://localhost:7545
+COPY basemodels /work/basemodels/
+COPY bin /work/bin/
+COPY contracts/* /work/
 RUN python3 setup.py install
-
 
 CMD ./test.py
