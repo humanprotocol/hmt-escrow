@@ -58,8 +58,7 @@ def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
 
 
 def get_contract(filename):
-    global CONTRACT
-    file = open(os.getenv("CONTRACT", filename), 'r')
+    file = open(filename, 'r')
     return file.read()
 
 
@@ -72,7 +71,6 @@ def get_contract_interface(filename, contract_entrypoint):
 
 
 def get_eip20():
-    global EIP20ADDR, CONTRACT
     contract_interface = get_contract_interface('HMTokenInterface.sol',
                                                 '<stdin>:HMTokenInterface')
     contract = W3.eth.contract(
