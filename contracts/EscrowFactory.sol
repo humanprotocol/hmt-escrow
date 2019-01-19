@@ -1,5 +1,6 @@
 pragma solidity 0.4.24;
 import "./Escrow.sol";
+
 contract EscrowFactory {
     uint private counter;
     address private lastAddress;

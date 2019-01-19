@@ -1,8 +1,7 @@
 pragma solidity 0.4.24;
 import "./HMTokenInterface.sol";
-import "./helpers/SafeMath.sol";
+import "./SafeMath.sol";
 
-// An agentless escrow contract
 contract Escrow {
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
@@ -129,6 +128,21 @@ contract Escrow {
         require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
         killContract();
+    }
+
+    function refund() public returns (bool) {
+        require(msg.sender == canceler, "Address calling not the canceler");
+        require(status != EscrowStatuses.Partial, "Escrow in Partial status state");
+        require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
+        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+        uint256 balance = getBalance();
+        require(balance > 0, "EIP20 contract out of funds");
+
+        HMTokenInterface token = HMTokenInterface(eip20);
+        bool success = token.transfer(canceler, balance);
+        status = EscrowStatuses.Cancelled;
+
+        return success;
     }
 
     function complete() public returns (bool success) {
