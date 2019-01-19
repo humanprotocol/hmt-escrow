@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 import "./HMTokenInterface.sol";
-import "./helpers/SafeMath.sol";
+import "./SafeMath.sol";
 
 contract HMToken is HMTokenInterface {
     using SafeMath for uint256;
