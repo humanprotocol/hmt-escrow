@@ -1,7 +1,7 @@
 {
-  "name": "hmt-token",
+  "name": "hmt-escrow",
   "version": "0.0.1",
-  "description": "Human Token (HMT) powering HUMAN Protocol",
+  "description": "Launch escrow contracts to the HUMAN network",
   "main": "truffle.js",
   "directories": {
     "test": "test"
