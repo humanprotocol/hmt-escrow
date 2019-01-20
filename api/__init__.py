@@ -12,7 +12,7 @@ from enum import Enum
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # local
-from api.eth_bridge import get_eip20, get_contract_interface, get_contract, wait_on_transaction, get_factory, get_w3, sign_and_send_transaction
+from api.eth_bridge import get_eip20, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
 from basemodels import Manifest
 from api.storage import download, upload
 
@@ -405,16 +405,13 @@ def get_job(gas=DEFAULT_GAS) -> WContract:
     global ESCROW_FACTORY
     factory = None
     if not ESCROW_FACTORY:
-        factory = get_factory(gas)
+        factory = deploy_factory(gas)
         ESCROW_FACTORY = factory.address
         if not ESCROW_FACTORY:
             raise Exception("Unable to get address from factory")
 
     if factory is None:
-        contract_interface = get_contract_interface('EscrowFactory.sol',
-                                                    '<stdin>:EscrowFactory')
-        factory = get_w3().eth.contract(
-            address=ESCROW_FACTORY, abi=contract_interface['abi'])
+        factory = get_factory(ESCROW_FACTORY)
         counter = factory.functions.getCounter().call({
             'from': GAS_PAYER,
             'gas': gas
@@ -442,17 +439,11 @@ def get_job(gas=DEFAULT_GAS) -> WContract:
     })
 
     LOG.info("New pokemon!:{}".format(escrow_address))
-    contract_interface = get_contract_interface('Escrow.sol', '<stdin>:Escrow')
-    escrow = get_w3().eth.contract(
-        address=escrow_address, abi=contract_interface['abi'])
-    return escrow
+    return get_escrow(escrow_address)
 
 
 def get_job_from_address(escrow_address: str) -> WContract:
-    contract_interface = get_contract_interface('Escrow.sol', '<stdin>:Escrow')
-    escrow = get_w3().eth.contract(
-        address=escrow_address, abi=contract_interface['abi'])
-    return escrow
+    return get_escrow(escrow_address)
 
 
 def setup_job(contract: WContract, amount: int, oracle_stake: int,
