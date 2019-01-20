@@ -35,7 +35,5 @@ COPY *.py /work/
 COPY api /work/api/
 COPY basemodels /work/basemodels/
 COPY bin /work/bin/
-COPY contracts /work/
-RUN python3 setup.py install
 
 CMD ./test.py
