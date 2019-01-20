@@ -5,13 +5,13 @@ FILES="*.py api/*.py basemodels/*.py"
 if [ -z ${CI+x} ]
 	then
 	yapf -i $FILES 
-	solhint hmt.sol
-	solium --fix -f hmt.sol
+	solhint contracts/*
+	solium --fix -f contracts/*
 	mypy $FILES --ignore-missing-imports
 else
 	yapf --diff $FILES 
 	# TODO RE-ENABLE 
-#	solhint hmt.sol
-#	solium -f hmt.sol
+	# solhint contracts/*
+	# solium --fix -f contracts/*
 	#mypy $FILES --ignore-missing-imports
 fi
