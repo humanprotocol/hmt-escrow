@@ -26,8 +26,15 @@ except Exception as e:
 
 COUNTER = int(os.getenv("TIMEOUT_COUNTER", "10"))
 
-CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'contracts')
-CONTRACTS = compile_files(["{}/Escrow.sol".format(CONTRACT_FOLDER), "{}/EscrowFactory.sol".format(CONTRACT_FOLDER), "{}/HMToken.sol".format(CONTRACT_FOLDER), "{}/HMTokenInterface.sol".format(CONTRACT_FOLDER), "{}/SafeMath.sol".format(CONTRACT_FOLDER)])
+CONTRACT_FOLDER = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), 'contracts')
+CONTRACTS = compile_files([
+    "{}/Escrow.sol".format(CONTRACT_FOLDER),
+    "{}/EscrowFactory.sol".format(CONTRACT_FOLDER),
+    "{}/HMToken.sol".format(CONTRACT_FOLDER),
+    "{}/HMTokenInterface.sol".format(CONTRACT_FOLDER),
+    "{}/SafeMath.sol".format(CONTRACT_FOLDER)
+])
 
 
 def _get_w3():
@@ -65,24 +72,28 @@ def get_contract_interface(contract_entrypoint):
 
 
 def get_eip20():
-    contract_interface = get_contract_interface('{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
+    contract_interface = get_contract_interface(
+        '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
     contract = W3.eth.contract(
         address=EIP20ADDR, abi=contract_interface['abi'])
     return contract
 
 
 def get_escrow(escrow_address, gas=DEFAULT_GAS) -> WContract:
-    contract_interface = get_contract_interface('{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
+    contract_interface = get_contract_interface(
+        '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
     escrow = get_w3().eth.contract(
         address=escrow_address, abi=contract_interface['abi'])
     return escrow
 
 
 def get_factory(factory_address, gas=DEFAULT_GAS) -> WContract:
-    contract_interface = get_contract_interface('{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
+    contract_interface = get_contract_interface(
+        '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     escrow_factory = get_w3().eth.contract(
         address=factory_address, abi=contract_interface['abi'])
     return escrow_factory
+
 
 def deploy_contract(contract_interface, gas, args=[]):
     contract = W3.eth.contract(
@@ -120,7 +131,8 @@ def deploy_factory(gas=DEFAULT_GAS) -> WContract:
     contract = input path into sol contract
     """
 
-    contract_interface = get_contract_interface('{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
+    contract_interface = get_contract_interface(
+        '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     (contract, contract_address) = deploy_contract(
         contract_interface, gas, args=[EIP20ADDR])
     return contract
