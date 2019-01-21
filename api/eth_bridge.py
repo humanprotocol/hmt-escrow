@@ -2,7 +2,7 @@ import logging
 import os
 import time
 
-from solc import compile_source, compile_files
+from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract as WContract
 from web3.middleware import geth_poa_middleware
