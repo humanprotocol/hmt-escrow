@@ -182,6 +182,71 @@ contract('Escrow', (accounts) => {
     }
   });
 
+  it('fails to refund if caller is not contract canceler', async () => {
+    try {
+      await Escrow.refund({ from: accounts[1] });
+      assert(false);
+    } catch (ex) {
+      assert(true);
+    }
+  });
+
+  it('fails to refund if contract status is partial', async () => {
+    try {
+      await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
+      await Escrow.payOut(10, accounts[3], url, hash, { from: reputationOracle });
+      const contractStatus = await Escrow.getStatus.call();
+      assert.equal(contractStatus.toNumber(), 2);
+      await Escrow.refund({ from: accounts[0] });
+      assert(false);
+    } catch (ex) {
+      assert(true);
+    }
+  });
+
+  it('fails to refund if contrac status is paid', async () => {
+    try {
+      await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
+      await Escrow.payOut(100, accounts[3], url, hash, { from: reputationOracle });
+      const contractStatus = await Escrow.getStatus.call();
+      assert.equal(contractStatus.toNumber(), 3);
+      await Escrow.refund({ from: accounts[0] });
+      assert(false);
+    } catch (ex) {
+      assert(true);
+    }
+  });
+
+  it('refund transfers all tokens back to canceler', async () => {
+    try {
+      const initialAccountBalance = await Escrow.getAddressBalance.call(accounts[0]);
+      await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
+      await Escrow.refund({ from: accounts[0] });
+      const accountBalance = await Escrow.getAddressBalance.call(accounts[0]);
+      assert.equal(accountBalance.toNumber(), initialAccountBalance.toNumber());
+    } catch (ex) {
+      assert(false);
+    }
+  });
+
+  it('fails to refund if contract status is complete', async () => {
+    try {
+      await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
+      await Escrow.payOut(100, accounts[3], url, hash, { from: reputationOracle });
+      await Escrow.complete({ from: reputationOracle });
+      const contractStatus = await Escrow.getStatus.call();
+      assert.equal(contractStatus.toNumber(), 4);
+      await Escrow.refund({ from: accounts[0] });
+      assert(false);
+    } catch (ex) {
+      assert(true);
+    }
+  });
+
   it('succesfully pays recipient', async () => {
     try {
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
