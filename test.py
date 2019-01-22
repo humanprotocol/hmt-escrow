@@ -157,15 +157,62 @@ class ContractTest(unittest.TestCase):
         api._transfer_to_address.assert_called_once_with(
             contract.job_contract.address, contract.amount)
 
+    def test_abort_calls_abort_sol_once(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._abort_sol = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        contract.abort()
+        api._abort_sol.assert_called_once_with(contract.job_contract, ANY)
+
+    def test_complete_calls_complete_once(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._complete = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        contract.complete()
+        api._complete.assert_called_once_with(contract.job_contract)
+
+    def test_launch_calls_setup_sol_once_with_correct_params(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._setup_sol = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        contract.launch()
+        per_job_cost = Decimal(self.manifest['task_bid_price'])
+        total_tasks = self.manifest['job_total_tasks']
+        hmt_amount = api._convert_to_hmt_cents(per_job_cost) * total_tasks
+        oracle_stake = api._convert_to_hmt_cents(
+            Decimal(self.manifest['oracle_stake']))
+        api._setup_sol.assert_called_once_with(
+            contract.job_contract, ANY, ANY, oracle_stake, oracle_stake,
+            hmt_amount, contract.manifest_url, contract.manifest_hash)
+
+    def test_store_intermediate_calls_store_results_once(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._store_results = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        contract.store_intermediate({}, PUB2, PRIV1)
+        api._store_results.assert_called_once()
+
+    def test_refund_calls_refund_sol_once(self):
+        self.manifest = a_manifest()
+        contract = api.Contract(self.manifest)
+        api._refund_sol = MagicMock()
+        contract.deploy(PUB2, PRIV1)
+        contract.refund()
+        api._refund_sol.assert_called_once_with(contract.job_contract, ANY)
+
     def test_payout_calls_partial_payout_once_with_correct_params(self):
         self.manifest = a_manifest()
         contract = api.Contract(self.manifest)
-        api.partial_payout = MagicMock()
+        api._partial_payout_sol = MagicMock()
         contract.deploy(PUB2, PRIV1)
         per_job_cost = Decimal(self.manifest['task_bid_price'])
         hmt_amount = api._convert_to_hmt_cents(per_job_cost)
         contract.payout(per_job_cost, TO_ADDR, {}, PUB2, PRIV1)
-        api.partial_payout.assert_called_once_with(
+        api._partial_payout_sol.assert_called_once_with(
             contract.job_contract, hmt_amount, TO_ADDR, ANY, ANY)
 
     def test_bulk_payout_calls_bulk_payout_sol_once_with_correct_params(self):
