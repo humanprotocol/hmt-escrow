@@ -18,24 +18,40 @@ contract('Escrow', (accounts) => {
   });
 
   it('returns correct token address', async () => {
-    const address = await Escrow.getTokenAddress.call();
-    assert.equal(address, HMT.address);
+    try {
+      const address = await Escrow.getTokenAddress.call();
+      assert.equal(address, HMT.address);
+    } catch (ex) {
+      assert(false);
+    }
   });
 
   it('initial status is launched', async () => {
-    const initialStatus = await Escrow.getStatus.call();
-    assert.equal(0, initialStatus);
+    try {
+      const initialStatus = await Escrow.getStatus.call();
+      assert.equal(0, initialStatus);
+    } catch (ex) {
+      assert(false);
+    }
   });
 
   it('initial balance is 0', async () => {
-    const initialBalance = await Escrow.getBalance.call();
-    assert.equal(initialBalance.toNumber(), 0);
+    try {
+      const initialBalance = await Escrow.getBalance.call();
+      assert.equal(initialBalance.toNumber(), 0);
+    } catch (ex) {
+      assert(false);
+    }
   });
 
   it('transfering money to escrow increases balance', async () => {
-    await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-    const balance = await Escrow.getBalance.call();
-    assert.equal(balance.toNumber(), 100);
+    try {
+      await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
+      const balance = await Escrow.getBalance.call();
+      assert.equal(balance.toNumber(), 100);
+    } catch (ex) {
+      assert(false);
+    }
   });
 
   it('aborting succeeds when aborting with same address', async () => {
@@ -424,7 +440,7 @@ contract('Escrow', (accounts) => {
     }
   });
 
-  it('end2end bulk', async () => {
+  it('runs from setup to bulkPayOut to complete correctly', async () => {
     try {
       const toAddress = [accounts[0]];
       const initialStatus = await Escrow.getStatus.call();
@@ -452,7 +468,7 @@ contract('Escrow', (accounts) => {
     }
   });
 
-  it('end2end bulk multiple addresses', async () => {
+  it('runs from setup to bulkPayOut to complete correctly with multiple addresses', async () => {
     try {
       const toAddresses = [accounts[0], accounts[1]];
       const initialStatus = await Escrow.getStatus.call();
@@ -480,7 +496,7 @@ contract('Escrow', (accounts) => {
     }
   });
 
-  it('end2end payout', async () => {
+  it('runs from setup to payout to complete correctly', async () => {
     try {
       const toAddress = accounts[1];
       const initialStatus = await Escrow.getStatus.call();
