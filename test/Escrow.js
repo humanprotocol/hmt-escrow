@@ -205,7 +205,7 @@ contract('Escrow', (accounts) => {
     }
   });
 
-  it('fails to refund if contrac status is paid', async () => {
+  it('fails to refund if contract status is paid', async () => {
     try {
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
       await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
@@ -229,6 +229,18 @@ contract('Escrow', (accounts) => {
       assert.equal(accountBalance.toNumber(), initialAccountBalance.toNumber());
     } catch (ex) {
       assert(false);
+    }
+  });
+
+  it('successful refund sets status to canceled', async () => {
+    try {
+      await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
+      await Escrow.refund({ from: accounts[0] });
+      const contractStatus = await Escrow.getStatus.call();
+      assert.equal(contractStatus, 5);
+    } catch (ex) {
+      assert(false)
     }
   });
 
