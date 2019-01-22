@@ -443,7 +443,7 @@ contract('Escrow', (accounts) => {
       const paidStatus = await Escrow.getStatus.call();
       assert.equal(paidStatus, 3);
 
-      // Complete escrowe
+      // Complete escrow
       await Escrow.complete({ from: reputationOracle });
       const completeStatus = await Escrow.getStatus.call();
       assert.equal(completeStatus, 4);
@@ -506,7 +506,7 @@ contract('Escrow', (accounts) => {
       const paidStatus = await Escrow.getStatus.call();
       assert.equal(paidStatus, 3);
 
-      // Complete escrowe
+      // Complete escrow
       await Escrow.complete({ from: reputationOracle });
       const completeStatus = await Escrow.getStatus.call();
       assert.equal(completeStatus, 4);
