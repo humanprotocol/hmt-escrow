@@ -12,4 +12,3 @@ src/**
 *.png
 docker-compose
 coverage/
-package-lock.json
