@@ -1,4 +1,4 @@
-node_modules
+node_modules/
 build/
 build/**
 venv
@@ -11,3 +11,4 @@ src/**
 .git/**
 *.png
 docker-compose
+coverage/

@@ -1,0 +1,47 @@
+{
+  "name": "hmt-escrow",
+  "version": "0.0.1",
+  "description": "Launch escrow contracts to the HUMAN network",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "compile": "truffle compile; truffle migrate",
+    "fix:js": "eslint --fix test/** migrations/**",
+    "lint:js": "eslint test/** migrations/**",
+    "lint": "npm run lint:js",
+    "publish": "truffle publish",
+    "test": "truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hCaptcha/hmt-escrow.git"
+  },
+  "keywords": [
+    "ethereum"
+  ],
+  "authors": [
+    "HUMAN Protocol"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/hCaptcha/hmt-escrow#readme",
+  "dependencies": {
+    "openzeppelin-solidity": "^1.12.0",
+    "truffle": "4.1.13",
+    "truffle-hdwallet-provider": "0.0.5"
+  },
+  "devDependencies": {
+    "dotenv": "^6.0.0",
+    "eslint": "4.13.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "2.8.0",
+    "eslint-plugin-jsx-a11y": "6.0.3",
+    "eslint-plugin-mocha": "4.11.0",
+    "eslint-plugin-node": "5.1.0",
+    "eslint-plugin-react": "7.5.1",
+    "solhint": "^1.2.1",
+    "solidity-coverage": "^0.5.11"
+  }
+}

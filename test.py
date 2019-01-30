@@ -6,6 +6,7 @@ import sys
 import unittest
 from decimal import *
 
+from unittest.mock import MagicMock, ANY
 import schematics
 from unittest.mock import patch
 from web3 import Web3
@@ -99,9 +100,22 @@ def a_manifest(number_of_tasks=100,
 
 
 class ContractTest(unittest.TestCase):
+    def setUp(self):
+        self.manifest = a_manifest()
+        self.contract = api.Contract(self.manifest)
+        self.per_job_cost = Decimal(self.manifest['task_bid_price'])
+        self.total_tasks = self.manifest['job_total_tasks']
+        self.hmt_amount = api._convert_to_hmt_cents(self.per_job_cost)
+        self.hmt_amount_with_tasks = self.hmt_amount * self.total_tasks
+        self.oracle_stake = api._convert_to_hmt_cents(
+            Decimal(self.manifest['oracle_stake']))
+
+    def test_hmt_amount_convertion(self):
+        self.assertEqual(self.hmt_amount, 100)
+
     # TODO bid amount should require positive values,
     # expiration date should require a reasonable date
-    # i.e. this test should fai
+    # i.e. this test should fail
     def test_basic_construction(self):
         a_manifest()
 
@@ -116,191 +130,76 @@ class ContractTest(unittest.TestCase):
         mani.taskdata_uri = 'test'
         self.assertRaises(schematics.exceptions.DataError, mani.validate)
 
+    def test_deploy_calls_initialize_with_correct_values(self):
+        self.contract.initialize = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.initialize.assert_called_once_with(
+            ANY, self.hmt_amount_with_tasks, self.oracle_stake,
+            self.total_tasks)
 
-class LocalBlockchainTest(unittest.TestCase):
-    def setUp(self):
-        self.manifest = a_manifest()
-        self.contract = api.Contract(self.manifest)
-        self.amount = 1000
-        self.oracle_stake = 5
+    def test_after_deploy_contract_values_are_set_correctly(self):
+        self.contract.deploy(PUB2, PRIV1)
+        self.assertEqual(self.contract.amount, self.hmt_amount_with_tasks)
+        self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
+        self.assertEqual(self.contract.number_of_answers, self.total_tasks)
 
-    def test_contract_needs_funding(self):
-        # We shouldn't test this on our internal blockchain because it's slow
-        manifest = REQ_JSON
-        contract = api.get_job()
-        self.assertFalse(
-            api.setup_job(contract, self.amount, self.oracle_stake, manifest,
-                          Web3.toBytes(0)))
+    def test_fund_sends_correct_amount_to_correct_address(self):
+        api._transfer_to_address = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.fund()
+        api._transfer_to_address.assert_called_once_with(
+            self.contract.job_contract.address, self.contract.amount)
 
-    def test_create_start_contract(self):
-        # We shouldn't test this on our internal blockchain because it's slow
-        manifest = REQ_JSON
+    def test_abort_calls_abort_sol_once(self):
+        api._abort_sol = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.abort()
+        api._abort_sol.assert_called_once_with(self.contract.job_contract, ANY)
 
-        contract = api.get_job()
-        self.assertTrue(
-            api._transfer_to_address(contract.address, self.amount))
-        self.assertTrue(
-            api.setup_job(contract, self.amount, self.oracle_stake, manifest,
-                          Web3.toBytes(0)))
-        self.assertEqual(api._balance(contract), self.amount)
+    def test_complete_calls_complete_once(self):
+        api._complete = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.complete()
+        api._complete.assert_called_once_with(self.contract.job_contract)
 
-    def test_intermediate_results(self):
-        # We shouldn't test this on our internal blockchain because it's slow
-        manifest = REQ_JSON
+    def test_launch_calls_setup_sol_once_with_correct_params(self):
+        api._setup_sol = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.launch()
+        api._setup_sol.assert_called_once_with(
+            self.contract.job_contract, ANY, ANY, self.oracle_stake,
+            self.oracle_stake, self.hmt_amount_with_tasks,
+            self.contract.manifest_url, self.contract.manifest_hash)
 
-        contract = api.get_job()
-        self.assertTrue(
-            api._transfer_to_address(contract.address, self.amount))
-        self.assertTrue(
-            api.setup_job(contract, self.amount, self.oracle_stake, manifest,
-                          Web3.toBytes(0)))
-        api.store_results(contract, manifest, "0")
-        self.assertEquals(manifest, api._getIURL(contract))
+    def test_store_intermediate_calls_store_results_once(self):
+        api._store_results = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.store_intermediate({}, PUB2, PRIV1)
+        api._store_results.assert_called_once()
 
-    def test_create_start_contract_spend_to_complete(self):
-        # We shouldn't test this on our internal blockchain because it's slow
-        manifest = REQ_JSON
-        contract = api.get_job()
-        self.assertTrue(
-            api._transfer_to_address(contract.address, self.amount))
-        self.assertTrue(
-            api.setup_job(contract, self.amount, self.oracle_stake, manifest,
-                          Web3.toBytes(0)))
-        self.assertEqual(api._balance(contract), self.amount)
-        to_address = TO_ADDR
-        api.partial_payout(contract, self.amount, to_address, manifest,
-                           Web3.toBytes(0))
-        self.assertEquals(manifest, api._getFURL(contract))
+    def test_refund_calls_refund_sol_once(self):
+        api._refund_sol = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.refund()
+        api._refund_sol.assert_called_once_with(self.contract.job_contract,
+                                                ANY)
 
-    def test_create_start_contract_spend_to_oracle_fees(self):
-        manifest = REQ_JSON
-        escrow = api.get_job()
-        address = ADDR
-        address_balance = escrow.call().getAddressBalance(address)
-        to_address = TO_ADDR
-        to_address_balance = escrow.call().getAddressBalance(to_address)
+    def test_payout_calls_partial_payout_once_with_correct_params(self):
+        api._partial_payout_sol = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
+        self.contract.payout(self.per_job_cost, TO_ADDR, {}, PUB2, PRIV1)
+        api._partial_payout_sol.assert_called_once_with(
+            self.contract.job_contract, self.hmt_amount, TO_ADDR, ANY, ANY)
 
-        self.assertTrue(api._transfer_to_address(escrow.address, self.amount))
-
-        address_balance_after_transfer = escrow.call().getAddressBalance(
-            address)
-        self.assertEqual(address_balance_after_transfer,
-                         address_balance - 1000)
-
-        self.assertTrue(
-            api.setup_job(escrow, self.amount, self.oracle_stake, manifest,
-                          Web3.toBytes(0)))
-        self.assertEqual(api._balance(escrow), self.amount)
-        api.partial_payout(escrow, self.amount, to_address, manifest,
-                           Web3.toBytes(0))
-
-        address_balance_after_payout = escrow.call().getAddressBalance(address)
-
-        # Stake has been set to 5% which in these tests is 50.
-        # 100 is the correct fee because our address is both the reputation and recording oracle.
-        self.assertEqual(address_balance_after_payout,
-                         address_balance_after_transfer + 100)
-
-        to_address_balance_after_payout = escrow.call().getAddressBalance(
-            to_address)
-        self.assertEqual(to_address_balance_after_payout,
-                         to_address_balance + 900)
-
-    def test_oo_bulk(self):
-        to_address = [TO_ADDR]
-        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        contract_address = self.contract.job_contract.address
-        self.assertTrue(self.contract.fund())
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        self.assertTrue(self.contract.launch())
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-        contract2 = api.get_contract_from_address(contract_address, PRIV2)
-        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
-        contract2.store_intermediate({}, PUB1, PRIV2)
-        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
-
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-
-        amount_to_payout = [100]
-        contract2.bulk_payout(to_address, amount_to_payout, {}, PUB2, PRIV1)
-        self.assertEqual(self.contract.status(), api.Status.Paid)
-        self.assertTrue(contract2.complete())
-        self.assertEqual(self.contract.status(), api.Status.Complete)
-
-    def test_oo_bulk_multiple_addrs(self):
-        to_address = TO_ADDR
-        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        contract_address = self.contract.job_contract.address
-        self.assertTrue(self.contract.fund())
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        self.assertTrue(self.contract.launch())
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-        contract2 = api.get_contract_from_address(contract_address, PRIV2)
-        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
-        contract2.store_intermediate({}, PUB1, PRIV2)
-        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
-
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-
+    def test_bulk_payout_calls_bulk_payout_sol_once_with_correct_params(self):
+        api._bulk_payout_sol = MagicMock()
+        self.contract.deploy(PUB2, PRIV1)
         addresses = [TO_ADDR, TO_ADDR2]
-        payouts = [50, 50]
-        contract2.bulk_payout(addresses, payouts, {}, PUB2, PRIV1)
-        self.assertEqual(self.contract.status(), api.Status.Paid)
-        self.assertTrue(contract2.complete())
-        self.assertEqual(self.contract.status(), api.Status.Complete)
-
-    def test_oo(self):
-        to_address = TO_ADDR
-        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        contract_address = self.contract.job_contract.address
-        self.assertTrue(self.contract.fund())
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        self.assertTrue(self.contract.launch())
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-        contract2 = api.get_contract_from_address(contract_address, PRIV2)
-        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
-        contract2.store_intermediate({}, PUB1, PRIV2)
-        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
-
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-
-        amount_to_payout = 1
-        contract2.payout(amount_to_payout, to_address, {}, PUB2, PRIV1)
-        self.assertEqual(self.contract.status(), api.Status.Partial)
-        self.assertFalse(contract2.complete())
-        self.assertEqual({}, contract2.get_results(PRIV2))
-
-        amount_to_payout = 99
-        contract2.payout(amount_to_payout, to_address, {}, PUB2, PRIV1)
-        self.assertEqual(self.contract.status(), api.Status.Paid)
-        self.assertTrue(contract2.complete())
-        self.assertEqual(self.contract.status(), api.Status.Complete)
-
-    def test_refund(self):
-        to_address = TO_ADDR
-        self.assertTrue(self.contract.deploy(PUB2, PRIV1))
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        contract_address = self.contract.job_contract.address
-        self.assertTrue(self.contract.fund())
-        self.assertEqual(self.contract.status(), api.Status.Launched)
-        self.assertTrue(self.contract.launch())
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-        contract2 = api.get_contract_from_address(contract_address, PRIV2)
-        self.assertNotEqual({}, contract2.get_manifest(PRIV2))
-        contract2.store_intermediate({}, PUB1, PRIV2)
-        self.assertEqual({}, contract2.get_intermediate_results(PRIV1))
-
-        self.assertEqual(self.contract.status(), api.Status.Pending)
-        contract2.refund()
-        self.assertEqual(self.contract.status(), api.Status.Cancelled)
-
-    def test_hmt_amount_convertion(self):
-        per_job_cost = Decimal(self.manifest['task_bid_price'])
-        hmt_amount = api._convert_to_hmt_cents(per_job_cost)
-        self.assertEqual(hmt_amount, 100)
+        amounts = [10, 20]
+        hmt_amounts = [1000, 2000]
+        self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
+        api._bulk_payout_sol.assert_called_once_with(
+            self.contract.job_contract, addresses, hmt_amounts, ANY, ANY)
 
 
 class EncryptionTest(unittest.TestCase):
