@@ -1,4 +1,4 @@
-version: "2"
+version: '2'
 services:
 
   api:
@@ -16,9 +16,15 @@ services:
     links: 
       - ganache
       - ipfs
-      - hmt
-    volumes:
-      - hmt_token_address:/deployed
+  
+  contracts:
+    environment:
+      - ETH_HOST=ganache
+      - ETH_PORT=8545
+    command: sh -c "yarn run compile; yarn run test"
+    build: .
+    links:
+      - ganache
 
   ganache:
     image: trufflesuite/ganache-cli:v6.1.0
@@ -26,21 +32,8 @@ services:
     ports:
       - 8545:8545
 
-  hmt:
-    image: hcaptcha/hmt-token
-    links:
-      - ganache
-    environment:
-      - ETH_HOST=ganache
-      - ETH_PORT=8545
-    command: sh -c "rm /deployed/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545 && npm run compile && python -m SimpleHTTPServer"
-    volumes:
-      - hmt_token_address:/deployed
-
   ipfs:
     image: ipfs/go-ipfs
     ports:
       - 5001:5001
 
-volumes:
-  hmt_token_address:

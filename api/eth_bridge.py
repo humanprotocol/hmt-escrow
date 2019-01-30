@@ -2,12 +2,10 @@ import logging
 import os
 import time
 
-from solc import compile_source
+from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract as WContract
 from web3.middleware import geth_poa_middleware
-
-CONTRACT = None
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
 GAS_PAYER = Web3.toChecksumAddress(
@@ -27,6 +25,16 @@ except Exception as e:
     raise e
 
 COUNTER = int(os.getenv("TIMEOUT_COUNTER", "10"))
+
+CONTRACT_FOLDER = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), 'contracts')
+CONTRACTS = compile_files([
+    "{}/Escrow.sol".format(CONTRACT_FOLDER),
+    "{}/EscrowFactory.sol".format(CONTRACT_FOLDER),
+    "{}/HMToken.sol".format(CONTRACT_FOLDER),
+    "{}/HMTokenInterface.sol".format(CONTRACT_FOLDER),
+    "{}/SafeMath.sol".format(CONTRACT_FOLDER)
+])
 
 
 def _get_w3():
@@ -57,26 +65,34 @@ def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
     return W3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
 
-def get_contract():
-    global CONTRACT
-    if CONTRACT is None:
-        with open(os.getenv("CONTRACT", "hmt.sol"), 'r') as f:
-            CONTRACT = f.read()
-    return CONTRACT
-
-
 def get_contract_interface(contract_entrypoint):
-    compiled_sol = compile_source(get_contract())  # Compiled source code
+    compiled_sol = CONTRACTS
     contract_interface = compiled_sol[contract_entrypoint]
     return contract_interface
 
 
 def get_eip20():
-    global EIP20ADDR, CONTRACT
-    contract_interface = get_contract_interface('<stdin>:HMTokenInterface')
+    contract_interface = get_contract_interface(
+        '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
     contract = W3.eth.contract(
         address=EIP20ADDR, abi=contract_interface['abi'])
     return contract
+
+
+def get_escrow(escrow_address, gas=DEFAULT_GAS) -> WContract:
+    contract_interface = get_contract_interface(
+        '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
+    escrow = get_w3().eth.contract(
+        address=escrow_address, abi=contract_interface['abi'])
+    return escrow
+
+
+def get_factory(factory_address, gas=DEFAULT_GAS) -> WContract:
+    contract_interface = get_contract_interface(
+        '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
+    escrow_factory = get_w3().eth.contract(
+        address=factory_address, abi=contract_interface['abi'])
+    return escrow_factory
 
 
 def deploy_contract(contract_interface, gas, args=[]):
@@ -107,17 +123,16 @@ def deploy_contract(contract_interface, gas, args=[]):
     return contract, contract_address
 
 
-def get_factory(gas: int,
-                contract_entrypoint='<stdin>:EscrowFactory') -> WContract:
+def deploy_factory(gas=DEFAULT_GAS) -> WContract:
     """
     Returns success
-
     sol: solidity code
     gas: how much gas to use for the contract
     contract = input path into sol contract
     """
 
-    contract_interface = get_contract_interface(contract_entrypoint)
+    contract_interface = get_contract_interface(
+        '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     (contract, contract_address) = deploy_contract(
         contract_interface, gas, args=[EIP20ADDR])
     return contract
