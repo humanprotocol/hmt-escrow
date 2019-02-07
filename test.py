@@ -105,22 +105,13 @@ class ContractTest(unittest.TestCase):
         self.contract = api.Contract(self.manifest)
         self.per_job_cost = Decimal(self.manifest['task_bid_price'])
         self.total_tasks = self.manifest['job_total_tasks']
-        self.hmt_amount = api._convert_to_hmt_cents(self.per_job_cost)
-        self.hmt_amount_with_tasks = self.hmt_amount * self.total_tasks
-        self.oracle_stake = api._convert_to_hmt_cents(
-            Decimal(self.manifest['oracle_stake']))
+        self.oracle_stake = self.manifest['oracle_stake']
+        self.amount = self.per_job_cost * self.total_tasks
 
-    def test_hmt_amount_convertion(self):
-        self.assertEqual(self.hmt_amount, 100)
-
-    # TODO bid amount should require positive values,
-    # expiration date should require a reasonable date
-    # i.e. this test should fail
     def test_basic_construction(self):
         a_manifest()
 
     def test_can_fail_toconstruct(self):
-        # TODO Should fail
         a_manifest(-1)
         self.assertRaises(schematics.exceptions.DataError, a_manifest,
                           "invalid amount")
@@ -134,12 +125,12 @@ class ContractTest(unittest.TestCase):
         self.contract.initialize = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.initialize.assert_called_once_with(
-            ANY, self.hmt_amount_with_tasks, self.oracle_stake,
+            ANY, self.amount, self.oracle_stake,
             self.total_tasks)
 
     def test_after_deploy_contract_values_are_set_correctly(self):
         self.contract.deploy(PUB2, PRIV1)
-        self.assertEqual(self.contract.amount, self.hmt_amount_with_tasks)
+        self.assertEqual(self.contract.amount, self.amount)
         self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
         self.assertEqual(self.contract.number_of_answers, self.total_tasks)
 
@@ -168,7 +159,7 @@ class ContractTest(unittest.TestCase):
         self.contract.launch()
         api._setup_sol.assert_called_once_with(
             self.contract.job_contract, ANY, ANY, self.oracle_stake,
-            self.oracle_stake, self.hmt_amount_with_tasks,
+            self.oracle_stake, self.amount,
             self.contract.manifest_url, self.contract.manifest_hash)
 
     def test_store_intermediate_calls_store_results_once(self):
@@ -187,19 +178,19 @@ class ContractTest(unittest.TestCase):
     def test_payout_calls_partial_payout_once_with_correct_params(self):
         api._partial_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
-        self.contract.payout(self.per_job_cost, TO_ADDR, {}, PUB2, PRIV1)
+        self.contract.payout(self.amount, TO_ADDR, {}, PUB2, PRIV1)
         api._partial_payout_sol.assert_called_once_with(
-            self.contract.job_contract, self.hmt_amount, TO_ADDR, ANY, ANY)
+            self.contract.job_contract, self.amount, TO_ADDR, ANY, ANY)
 
     def test_bulk_payout_calls_bulk_payout_sol_once_with_correct_params(self):
         api._bulk_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         addresses = [TO_ADDR, TO_ADDR2]
         amounts = [10, 20]
-        hmt_amounts = [1000, 2000]
+        
         self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
         api._bulk_payout_sol.assert_called_once_with(
-            self.contract.job_contract, addresses, hmt_amounts, ANY, ANY)
+            self.contract.job_contract, addresses, amounts, ANY, ANY)
 
 
 class EncryptionTest(unittest.TestCase):
