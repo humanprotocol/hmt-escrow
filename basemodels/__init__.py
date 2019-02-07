@@ -56,8 +56,13 @@ class Manifest(Model):
             "text_multiple_choice_multiple_options",
             "image_label_area_select_one_option",
             "image_label_area_select_multiple_options",
-            "image_label_area_adjust"
+            "image_label_area_adjust",
+            "image_label_single_polygon",
+            "image_label_multiple_polygons",
+            "image_label_semantic_segmentation_one_option",
+            "image_label_semantic_segmentation_multiple_options",
         ])
+    request_config = DictType()
     # if taskdata is directly provided
     taskdata = ListType(ModelType(TaskData))  # ListType(DictType(StringType))
 
