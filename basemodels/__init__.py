@@ -50,8 +50,10 @@ class Manifest(Model):
     request_type = StringType(
         required=True,
         choices=[
-            "image_label_binary", "image_label_multiple_choice_one_option",
-            "image_label_multiple_choice_multiple_options", "text_free_entry",
+            "image_label_binary",
+            "image_label_multiple_choice_one_option",
+            "image_label_multiple_choice_multiple_options",
+            "text_free_entry",
             "text_multiple_choice_one_option",
             "text_multiple_choice_multiple_options",
             "image_label_area_select_one_option",
