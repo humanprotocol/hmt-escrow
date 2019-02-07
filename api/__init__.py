@@ -253,10 +253,6 @@ def _transfer_to_address(address: str, amount: int, gas=DEFAULT_GAS) -> bool:
     return wait_on_transaction(tx_hash)
 
 
-def _convert_to_hmt_cents(amount: Decimal) -> int:
-    return int(amount * 100)
-
-
 class Contract(Manifest):
     job_contract = None
     amount = None
@@ -287,12 +283,9 @@ class Contract(Manifest):
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         oracle_stake = Decimal(serialized_manifest['oracle_stake'])
+        amount = per_job_cost * number_of_answers
 
-        # Convert to HMT cents
-        hmt_amount = _convert_to_hmt_cents(per_job_cost) * number_of_answers
-        hmt_oracle_stake = _convert_to_hmt_cents(oracle_stake)
-
-        self.initialize(job, hmt_amount, hmt_oracle_stake, number_of_answers)
+        self.initialize(job, amount, oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
@@ -341,17 +334,15 @@ class Contract(Manifest):
     def payout(self, amount: Decimal, to_address: str, results: dict,
                public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
-        hmt_amount = _convert_to_hmt_cents(amount)
-        LOG.info("We payout: {}".format(hmt_amount))
-        return partial_payout(self.job_contract, hmt_amount, to_address, url,
+        LOG.info("We payout: {}".format(amount))
+        return partial_payout(self.job_contract, amount, to_address, url,
                               hash_)
 
     def bulk_payout(self, addresses: list, amounts: list, results: dict,
                     public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
-        hmt_amounts = [_convert_to_hmt_cents(amount) for amount in amounts]
-        LOG.info("HMT amounts for bulk payout: {}".format(hmt_amounts))
-        return _bulk_payout_sol(self.job_contract, addresses, hmt_amounts, url,
+        LOG.info("Amounts for bulk payout: {}".format(amounts))
+        return _bulk_payout_sol(self.job_contract, addresses, amounts, url,
                                 hash_)
 
     def complete(self) -> bool:
@@ -382,9 +373,8 @@ def get_contract_from_address(escrow_address: str,
     contract = Contract(contract_m)
     task_bid = Decimal(manifest_dict['task_bid_price'])
     number_of_tasks = int(manifest_dict['job_total_tasks'])
-    contract.oracle_stake = int(
-        _convert_to_hmt_cents(Decimal(manifest_dict['oracle_stake'])))
-    contract.amount = int(_convert_to_hmt_cents(task_bid) * number_of_tasks)
+    contract.oracle_stake = int(Decimal(manifest_dict['oracle_stake']))
+    contract.amount = int(task_bid * number_of_tasks)
     contract.initialize(wcontract, contract.amount, contract.oracle_stake,
                         number_of_tasks)
     return contract
