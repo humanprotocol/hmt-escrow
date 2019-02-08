@@ -106,7 +106,7 @@ class ContractTest(unittest.TestCase):
         self.per_job_cost = Decimal(self.manifest['task_bid_price'])
         self.total_tasks = self.manifest['job_total_tasks']
         self.oracle_stake = self.manifest['oracle_stake']
-        self.amount = (self.per_job_cost * self.total_tasks) * 10 ** 18
+        self.amount = (self.per_job_cost * self.total_tasks) * 10**18
 
     def test_basic_construction(self):
         a_manifest()
@@ -125,8 +125,7 @@ class ContractTest(unittest.TestCase):
         self.contract.initialize = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.initialize.assert_called_once_with(
-            ANY, self.amount, self.oracle_stake,
-            self.total_tasks)
+            ANY, self.amount, self.oracle_stake, self.total_tasks)
 
     def test_deploy(self):
         self.contract.deploy(PUB2, PRIV1)
@@ -159,8 +158,8 @@ class ContractTest(unittest.TestCase):
         self.contract.launch()
         api._setup_sol.assert_called_once_with(
             self.contract.job_contract, ANY, ANY, self.oracle_stake,
-            self.oracle_stake, self.amount,
-            self.contract.manifest_url, self.contract.manifest_hash)
+            self.oracle_stake, self.amount, self.contract.manifest_url,
+            self.contract.manifest_hash)
 
     def test_store_intermediate(self):
         api._store_results = MagicMock()
@@ -183,7 +182,7 @@ class ContractTest(unittest.TestCase):
 
         self.contract.payout(amount, TO_ADDR, {}, PUB2, PRIV1)
 
-        assert_amount = 10 * 10 ** 18
+        assert_amount = 10 * 10**18
         api._partial_payout_sol.assert_called_once_with(
             self.contract.job_contract, assert_amount, TO_ADDR, ANY, ANY)
 
@@ -195,7 +194,7 @@ class ContractTest(unittest.TestCase):
 
         self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
 
-        assert_amounts = [10 * 10 ** 18, 20 * 10 ** 18]
+        assert_amounts = [10 * 10**18, 20 * 10**18]
         api._bulk_payout_sol.assert_called_once_with(
             self.contract.job_contract, addresses, assert_amounts, ANY, ANY)
 
