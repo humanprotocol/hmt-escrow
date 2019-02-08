@@ -283,7 +283,7 @@ class Contract(Manifest):
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         oracle_stake = Decimal(serialized_manifest['oracle_stake'])
-        amount = (per_job_cost * number_of_answers) * 10 ** 18
+        amount = int((per_job_cost * number_of_answers) * 10 ** 18)
 
         self.initialize(job, amount, oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
@@ -335,7 +335,7 @@ class Contract(Manifest):
                public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
         LOG.info("We payout: {}".format(amount))
-        amount = amount * 10 ** 18
+        amount = int(amount * 10 ** 18)
         return partial_payout(self.job_contract, amount, to_address, url,
                               hash_)
 
@@ -343,7 +343,7 @@ class Contract(Manifest):
                     public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
         LOG.info("Amounts for bulk payout: {}".format(amounts))
-        amounts = [amount * 10 ** 18 for amount in amounts]
+        amounts = [int(amount * 10 ** 18) for amount in amounts]
         return _bulk_payout_sol(self.job_contract, addresses, amounts, url,
                                 hash_)
 
@@ -376,7 +376,7 @@ def get_contract_from_address(escrow_address: str,
     task_bid = Decimal(manifest_dict['task_bid_price'])
     number_of_tasks = int(manifest_dict['job_total_tasks'])
     contract.oracle_stake = int(Decimal(manifest_dict['oracle_stake']))
-    contract.amount = int(task_bid * number_of_tasks) * 10 ** 18
+    contract.amount = int(task_bid * number_of_tasks * 10 ** 18)
     contract.initialize(wcontract, contract.amount, contract.oracle_stake,
                         number_of_tasks)
     return contract
