@@ -177,11 +177,8 @@ class ContractTest(unittest.TestCase):
     def test_payout(self):
         api._partial_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
-
         amount = 10
-
         self.contract.payout(amount, TO_ADDR, {}, PUB2, PRIV1)
-
         assert_amount = 10 * 10**18
         api._partial_payout_sol.assert_called_once_with(
             self.contract.job_contract, assert_amount, TO_ADDR, ANY, ANY)
@@ -191,9 +188,7 @@ class ContractTest(unittest.TestCase):
         self.contract.deploy(PUB2, PRIV1)
         addresses = [TO_ADDR, TO_ADDR2]
         amounts = [10, 20]
-
         self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
-
         assert_amounts = [10 * 10**18, 20 * 10**18]
         api._bulk_payout_sol.assert_called_once_with(
             self.contract.job_contract, addresses, assert_amounts, ANY, ANY)
