@@ -121,39 +121,39 @@ class ContractTest(unittest.TestCase):
         mani.taskdata_uri = 'test'
         self.assertRaises(schematics.exceptions.DataError, mani.validate)
 
-    def test_deploy_calls_initialize_with_correct_values(self):
+    def test_initialize(self):
         self.contract.initialize = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.initialize.assert_called_once_with(
             ANY, self.amount, self.oracle_stake,
             self.total_tasks)
 
-    def test_after_deploy_contract_values_are_set_correctly(self):
+    def test_deploy(self):
         self.contract.deploy(PUB2, PRIV1)
         self.assertEqual(self.contract.amount, self.amount)
         self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
         self.assertEqual(self.contract.number_of_answers, self.total_tasks)
 
-    def test_fund_sends_correct_amount_to_correct_address(self):
+    def test_fund(self):
         api._transfer_to_address = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.fund()
         api._transfer_to_address.assert_called_once_with(
-            self.contract.job_contract.address, self.contract.amount)
+            self.contract.job_contract.address, self.amount)
 
-    def test_abort_calls_abort_sol_once(self):
+    def test_abort(self):
         api._abort_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.abort()
         api._abort_sol.assert_called_once_with(self.contract.job_contract, ANY)
 
-    def test_complete_calls_complete_once(self):
+    def test_complete(self):
         api._complete = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.complete()
         api._complete.assert_called_once_with(self.contract.job_contract)
 
-    def test_launch_calls_setup_sol_once_with_correct_params(self):
+    def test_launch(self):
         api._setup_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.launch()
@@ -162,20 +162,20 @@ class ContractTest(unittest.TestCase):
             self.oracle_stake, self.amount,
             self.contract.manifest_url, self.contract.manifest_hash)
 
-    def test_store_intermediate_calls_store_results_once(self):
+    def test_store_intermediate(self):
         api._store_results = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.store_intermediate({}, PUB2, PRIV1)
         api._store_results.assert_called_once()
 
-    def test_refund_calls_refund_sol_once(self):
+    def test_refund(self):
         api._refund_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.refund()
         api._refund_sol.assert_called_once_with(self.contract.job_contract,
                                                 ANY)
 
-    def test_payout_calls_partial_payout_once_with_correct_params(self):
+    def test_payout(self):
         api._partial_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
 
@@ -187,7 +187,7 @@ class ContractTest(unittest.TestCase):
         api._partial_payout_sol.assert_called_once_with(
             self.contract.job_contract, assert_amount, TO_ADDR, ANY, ANY)
 
-    def test_bulk_payout_calls_bulk_payout_sol_once_with_correct_params(self):
+    def test_bulk_payout(self):
         api._bulk_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         addresses = [TO_ADDR, TO_ADDR2]
