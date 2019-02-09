@@ -283,9 +283,12 @@ class Contract(Manifest):
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         oracle_stake = Decimal(serialized_manifest['oracle_stake'])
-        amount = int((per_job_cost * number_of_answers) * 10**18)
+        amount = per_job_cost * number_of_answers
 
-        self.initialize(job, amount, oracle_stake, number_of_answers)
+        # Convert to HMT
+        hmt_amount = int(amount * 10**18)
+
+        self.initialize(job, hmt_amount, oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
@@ -335,16 +338,21 @@ class Contract(Manifest):
                public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
         LOG.info("We payout: {}".format(amount))
-        amount = int(amount * 10**18)
-        return partial_payout(self.job_contract, amount, to_address, url,
+
+        # Convert to HMT
+        hmt_amount = int(amount * 10**18)
+
+        return partial_payout(self.job_contract, hmt_amount, to_address, url,
                               hash_)
 
     def bulk_payout(self, addresses: list, amounts: list, results: dict,
                     public_key: bytes, private_key: bytes):
         (hash_, url) = upload(results, public_key)
         LOG.info("Amounts for bulk payout: {}".format(amounts))
-        amounts = [int(amount * 10**18) for amount in amounts]
-        return _bulk_payout_sol(self.job_contract, addresses, amounts, url,
+
+        # Convert to HMT
+        hmt_amounts = [int(amount * 10**18) for amount in amounts]
+        return _bulk_payout_sol(self.job_contract, addresses, hmt_amounts, url,
                                 hash_)
 
     def complete(self) -> bool:
@@ -375,8 +383,13 @@ def get_contract_from_address(escrow_address: str,
     contract = Contract(contract_m)
     task_bid = Decimal(manifest_dict['task_bid_price'])
     number_of_tasks = int(manifest_dict['job_total_tasks'])
+    amount = task_bid * number_of_tasks
+
+    # Convert to HMT
+    hmt_amount = int(amount * 10**18)
+
     contract.oracle_stake = int(Decimal(manifest_dict['oracle_stake']))
-    contract.amount = int(task_bid * number_of_tasks * 10**18)
+    contract.amount = hmt_amount
     contract.initialize(wcontract, contract.amount, contract.oracle_stake,
                         number_of_tasks)
     return contract
