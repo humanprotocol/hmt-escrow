@@ -381,9 +381,9 @@ def get_contract_from_address(escrow_address: str,
     manifest_dict = download(url, private_key)
     contract_m = Manifest(manifest_dict)
     contract = Contract(contract_m)
-    task_bid = Decimal(manifest_dict['task_bid_price'])
-    number_of_tasks = int(manifest_dict['job_total_tasks'])
-    amount = task_bid * number_of_tasks
+    per_job_cost = Decimal(manifest_dict['task_bid_price'])
+    number_of_answers = int(manifest_dict['job_total_tasks'])
+    amount = per_job_cost * number_of_answers
 
     # Convert to HMT
     hmt_amount = int(amount * 10**18)
