@@ -124,11 +124,13 @@ class ContractTest(unittest.TestCase):
         self.assertRaises(schematics.exceptions.DataError, mani.validate)
 
     def test_can_make_request_config_job(self):
+        """Test that jobs with valid request_config parameter work"""
         manifest = a_manifest(
             request_type='image_label_area_select',
             request_config={'shape_type': 'point'})
 
     def test_can_bad_request_config(self):
+        """Test that an invalid shape_type in request_config will fail"""
         manifest = a_manifest()
         manifest.request_type = 'image_label_area_select'
         manifest.request_config = {'shape_type': 'not-a-real-option'}
