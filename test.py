@@ -91,32 +91,34 @@ def a_manifest(number_of_tasks=100,
 
 
 class ContractTest(unittest.TestCase):
+    """
+    Tests the escrow API's functions.
+
+    Some of the blockchain specific functionality is mocked.
+    Contract specific functionality is delegated to JS tests.
+    """
+
     def setUp(self):
+        """Set up the fields for Contract class testing, based on the test manifest."""
         self.manifest = a_manifest()
         self.contract = api.Contract(self.manifest)
         self.per_job_cost = Decimal(self.manifest['task_bid_price'])
         self.total_tasks = self.manifest['job_total_tasks']
-        self.hmt_amount = api._convert_to_hmt_cents(self.per_job_cost)
-        self.hmt_amount_with_tasks = self.hmt_amount * self.total_tasks
-        self.oracle_stake = api._convert_to_hmt_cents(
-            Decimal(self.manifest['oracle_stake']))
+        self.oracle_stake = self.manifest['oracle_stake']
+        self.amount = (self.per_job_cost * self.total_tasks) * 10**18
 
-    def test_hmt_amount_convertion(self):
-        self.assertEqual(self.hmt_amount, 100)
-
-    # TODO bid amount should require positive values,
-    # expiration date should require a reasonable date
-    # i.e. this test should fail
     def test_basic_construction(self):
+        """Tests that manifest can validate the test manifest properly."""
         a_manifest()
 
     def test_can_fail_toconstruct(self):
-        # TODO Should fail
+        """Tests that the manifest raises an Error when called with falsy parameters."""
         a_manifest(-1)
         self.assertRaises(schematics.exceptions.DataError, a_manifest,
                           "invalid amount")
 
     def test_can_fail_toconstruct2(self):
+        """Tests that validated fields can't be broken without an exception."""
         mani = a_manifest()
         mani.taskdata_uri = 'test'
         self.assertRaises(schematics.exceptions.DataError, mani.validate)
@@ -132,80 +134,92 @@ class ContractTest(unittest.TestCase):
         manifest.request_config = {'shape_type': 'not-a-real-option'}
         self.assertRaises(schematics.exceptions.DataError, manifest.validate)
 
-    def test_deploy_calls_initialize_with_correct_values(self):
+    def test_initialize(self):
+        """Tests that initialize gets called with correct parameters inside contract.deploy."""
         self.contract.initialize = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.initialize.assert_called_once_with(
-            ANY, self.hmt_amount_with_tasks, self.oracle_stake,
-            self.total_tasks)
+            ANY, self.amount, self.oracle_stake, self.total_tasks)
 
-    def test_after_deploy_contract_values_are_set_correctly(self):
+    def test_deploy(self):
+        """Tests that deploy assigns correct field values to Contract class state."""
         self.contract.deploy(PUB2, PRIV1)
-        self.assertEqual(self.contract.amount, self.hmt_amount_with_tasks)
+        self.assertEqual(self.contract.amount, self.amount)
         self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
         self.assertEqual(self.contract.number_of_answers, self.total_tasks)
 
-    def test_fund_sends_correct_amount_to_correct_address(self):
+    def test_fund(self):
+        """Tests that fund calls _transfer_to_address with correct parameters."""
         api._transfer_to_address = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.fund()
         api._transfer_to_address.assert_called_once_with(
-            self.contract.job_contract.address, self.contract.amount)
+            self.contract.job_contract.address, self.amount)
 
-    def test_abort_calls_abort_sol_once(self):
+    def test_abort(self):
+        """Tests that abort calls _abort_sol with correct parameters."""
         api._abort_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.abort()
         api._abort_sol.assert_called_once_with(self.contract.job_contract, ANY)
 
-    def test_complete_calls_complete_once(self):
+    def test_complete(self):
+        """Tests that complete calls _complete with correct parameters."""
         api._complete = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.complete()
         api._complete.assert_called_once_with(self.contract.job_contract)
 
-    def test_launch_calls_setup_sol_once_with_correct_params(self):
+    def test_launch(self):
+        """Tests that launch calls _setup_sol with correct parameters."""
         api._setup_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.launch()
         api._setup_sol.assert_called_once_with(
             self.contract.job_contract, ANY, ANY, self.oracle_stake,
-            self.oracle_stake, self.hmt_amount_with_tasks,
-            self.contract.manifest_url, self.contract.manifest_hash)
+            self.oracle_stake, self.amount, self.contract.manifest_url,
+            self.contract.manifest_hash)
 
-    def test_store_intermediate_calls_store_results_once(self):
+    def test_store_intermediate(self):
+        """Tests that store_intermediate calls _store_results without parameters."""
         api._store_results = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.store_intermediate({}, PUB2, PRIV1)
         api._store_results.assert_called_once()
 
-    def test_refund_calls_refund_sol_once(self):
+    def test_refund(self):
+        """Tests that refund calls _refund_sol with correct parameters."""
         api._refund_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.refund()
         api._refund_sol.assert_called_once_with(self.contract.job_contract,
                                                 ANY)
 
-    def test_payout_calls_partial_payout_once_with_correct_params(self):
+    def test_payout(self):
+        """Tests that payout calls _partial_payout with correct amount after HMT decimal conversion."""
         api._partial_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
-        self.contract.payout(self.per_job_cost, TO_ADDR, {}, PUB2, PRIV1)
+        amount = 10
+        self.contract.payout(amount, TO_ADDR, {}, PUB2, PRIV1)
+        assert_amount = 10 * 10**18
         api._partial_payout_sol.assert_called_once_with(
-            self.contract.job_contract, self.hmt_amount, TO_ADDR, ANY, ANY)
+            self.contract.job_contract, assert_amount, TO_ADDR, ANY, ANY)
 
-    def test_bulk_payout_calls_bulk_payout_sol_once_with_correct_params(self):
+    def test_bulk_payout(self):
+        """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
         api._bulk_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         addresses = [TO_ADDR, TO_ADDR2]
         amounts = [10, 20]
-        hmt_amounts = [1000, 2000]
         self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
+        assert_amounts = [10 * 10**18, 20 * 10**18]
         api._bulk_payout_sol.assert_called_once_with(
-            self.contract.job_contract, addresses, hmt_amounts, ANY, ANY)
+            self.contract.job_contract, addresses, assert_amounts, ANY, ANY)
 
 
 class EncryptionTest(unittest.TestCase):
     def test_encryption_decryption_identity(self):
+        """Tests _decrypt of _encrypt message returns the same message."""
         plaintext = 'asdfasdf'
         cipher = _encrypt(PUB2, plaintext)
         self.assertEqual(_decrypt(PRIV2, cipher), plaintext)
