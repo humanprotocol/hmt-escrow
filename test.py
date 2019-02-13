@@ -47,8 +47,9 @@ def a_manifest(number_of_tasks=100,
                expiration_date=0,
                minimum_trust=.1,
                request_type=IMAGE_LABEL_BINARY,
+               request_config=None,
                job_mode='batch') -> basemodels.Manifest:
-    manifest = basemodels.Manifest({
+    model = {
         'requester_restricted_answer_set': {
             '0': {
                 'en': 'English Answer 1'
@@ -59,43 +60,33 @@ def a_manifest(number_of_tasks=100,
                 'https://hcaptcha.com/example_answer2.jpg'
             }
         },
-        'job_mode':
-        job_mode,
-        'request_type':
-        request_type,
-        'unsafe_content':
-        False,
-        'task_bid_price':
-        bid_amount,
-        'oracle_stake':
-        oracle_stake,
-        'expiration_date':
-        expiration_date,
-        'minimum_trust_server':
-        minimum_trust,
-        'minimum_trust_client':
-        minimum_trust,
-        'requester_accuracy_target':
-        minimum_trust,
-        'recording_oracle_addr':
-        REC_ORACLE,
-        'reputation_oracle_addr':
-        REP_ORACLE,
-        'reputation_agent_addr':
-        REP_ORACLE,
-        'instant_result_delivery_webhook':
-        CALLBACK_URL,
+        'job_mode': job_mode,
+        'request_type': request_type,
+        'unsafe_content': False,
+        'task_bid_price': bid_amount,
+        'oracle_stake': oracle_stake,
+        'expiration_date': expiration_date,
+        'minimum_trust_server': minimum_trust,
+        'minimum_trust_client': minimum_trust,
+        'requester_accuracy_target': minimum_trust,
+        'recording_oracle_addr': REC_ORACLE,
+        'reputation_oracle_addr': REP_ORACLE,
+        'reputation_agent_addr': REP_ORACLE,
+        'instant_result_delivery_webhook': CALLBACK_URL,
         'requester_question': {
             "en": "How much money are we to make"
         },
-        'requester_question_example':
-        FAKE_URL,
-        'job_total_tasks':
-        number_of_tasks,
-        'taskdata_uri':
-        FAKE_URL
-    })
+        'requester_question_example': FAKE_URL,
+        'job_total_tasks': number_of_tasks,
+        'taskdata_uri': FAKE_URL
+    }
+
+    if request_config:
+        model.update({'request_config': request_config})
+
+    manifest = basemodels.Manifest(model)
     manifest.validate()
+
     return manifest
 
 
@@ -129,6 +120,17 @@ class ContractTest(unittest.TestCase):
         mani = a_manifest()
         mani.taskdata_uri = 'test'
         self.assertRaises(schematics.exceptions.DataError, mani.validate)
+
+    def test_can_make_request_config_job(self):
+        manifest = a_manifest(
+            request_type='image_label_area_select',
+            request_config={'shape_type': 'point'})
+
+    def test_can_bad_request_config(self):
+        manifest = a_manifest()
+        manifest.request_type = 'image_label_area_select'
+        manifest.request_config = {'shape_type': 'not-a-real-option'}
+        self.assertRaises(schematics.exceptions.DataError, manifest.validate)
 
     def test_deploy_calls_initialize_with_correct_values(self):
         self.contract.initialize = MagicMock()
