@@ -1,7 +1,7 @@
 import uuid
 from schematics.models import Model, ValidationError
 from schematics.types import StringType, DecimalType, BooleanType, IntType, DictType, ListType, URLType, FloatType, \
-    UUIDType, ModelType
+    UUIDType, ModelType, BooleanType
 
 
 class TaskData(Model):
@@ -9,6 +9,19 @@ class TaskData(Model):
     task_key = UUIDType(required=True)
     datapoint_uri = URLType(required=True, min_length=10)
     datapoint_hash = StringType(required=True, min_length=10)
+
+
+class RequestConfig(Model):
+    """ definition of the request_config object in manifest """
+    version = IntType(default=0)
+    shape_type = StringType(
+        choices=["point", "bounding_box", "polygon"], required=True)
+    min_points = IntType()
+    max_points = IntType()
+    min_shapes_per_image = IntType()
+    max_shapes_per_image = IntType()
+    restrict_to_coords = BooleanType()
+    minimum_selection_area_per_shape = IntType()
 
 
 class Manifest(Model):
@@ -50,14 +63,24 @@ class Manifest(Model):
     request_type = StringType(
         required=True,
         choices=[
-            "image_label_binary", "image_label_multiple_choice_one_option",
-            "image_label_multiple_choice_multiple_options", "text_free_entry",
+            "image_label_binary",
+            "image_label_multiple_choice_one_option",
+            "image_label_multiple_choice_multiple_options",
+            "text_free_entry",
             "text_multiple_choice_one_option",
             "text_multiple_choice_multiple_options",
-            "image_label_area_select_one_option",
-            "image_label_area_select_multiple_options",
-            "image_label_area_adjust"
+            "image_label_area_adjust",
+            "image_label_area_select",
+            "image_label_area_select_one_option",  # legacy
+            "image_label_area_select_multiple_options",  # legacy
+            "image_label_single_polygon",
+            "image_label_multiple_polygons",
+            "image_label_semantic_segmentation_one_option",
+            "image_label_semantic_segmentation_multiple_options",
         ])
+
+    request_config = ModelType(RequestConfig, required=False)
+
     # if taskdata is directly provided
     taskdata = ListType(ModelType(TaskData))  # ListType(DictType(StringType))
 
