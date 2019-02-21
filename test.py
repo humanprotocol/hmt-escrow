@@ -90,22 +90,10 @@ def a_manifest(number_of_tasks=100,
     return manifest
 
 
-class ContractTest(unittest.TestCase):
+class ManifestTest(unittest.TestCase):
     """
-    Tests the escrow API's functions.
-
-    Some of the blockchain specific functionality is mocked.
-    Contract specific functionality is delegated to JS tests.
+    Manifest specific tests, validating that models work the way we want
     """
-
-    def setUp(self):
-        """Set up the fields for Contract class testing, based on the test manifest."""
-        self.manifest = a_manifest()
-        self.contract = api.Contract(self.manifest)
-        self.per_job_cost = Decimal(self.manifest['task_bid_price'])
-        self.total_tasks = self.manifest['job_total_tasks']
-        self.oracle_stake = self.manifest['oracle_stake']
-        self.amount = (self.per_job_cost * self.total_tasks) * 10**18
 
     def test_basic_construction(self):
         """Tests that manifest can validate the test manifest properly."""
@@ -135,6 +123,53 @@ class ContractTest(unittest.TestCase):
         manifest.request_type = 'image_label_area_select'
         manifest.request_config = {'shape_type': 'not-a-real-option'}
         self.assertRaises(schematics.exceptions.DataError, manifest.validate)
+
+    def test_gets_default_restrictedanswerset(self):
+        """Make sure that the image_label_area_select jobs get a default RAS"""
+        model = {
+            'job_mode': 'batch',
+            'request_type': 'image_label_area_select',
+            'unsafe_content': False,
+            'task_bid_price': 1,
+            'oracle_stake': 0.1,
+            'expiration_date': 0,
+            'minimum_trust_server': .1,
+            'minimum_trust_client': .1,
+            'requester_accuracy_target': .1,
+            'recording_oracle_addr': REC_ORACLE,
+            'reputation_oracle_addr': REP_ORACLE,
+            'reputation_agent_addr': REP_ORACLE,
+            'instant_result_delivery_webhook': CALLBACK_URL,
+            'requester_question': {
+                "en": "How much money are we to make"
+            },
+            'requester_question_example': FAKE_URL,
+            'job_total_tasks': 5,
+            'taskdata_uri': FAKE_URL
+        }
+        manifest = basemodels.Manifest(model)
+
+        manifest.validate()
+        self.assertGreater(
+            len(manifest['requester_restricted_answer_set'].keys()), 0)
+
+
+class ContractTest(unittest.TestCase):
+    """
+    Tests the escrow API's functions.
+
+    Some of the blockchain specific functionality is mocked.
+    Contract specific functionality is delegated to JS tests.
+    """
+
+    def setUp(self):
+        """Set up the fields for Contract class testing, based on the test manifest."""
+        self.manifest = a_manifest()
+        self.contract = api.Contract(self.manifest)
+        self.per_job_cost = Decimal(self.manifest['task_bid_price'])
+        self.total_tasks = self.manifest['job_total_tasks']
+        self.oracle_stake = self.manifest['oracle_stake']
+        self.amount = (self.per_job_cost * self.total_tasks) * 10**18
 
     def test_initialize(self):
         """Tests that initialize gets called with correct parameters inside contract.deploy."""
