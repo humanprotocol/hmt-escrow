@@ -33,6 +33,15 @@ class Manifest(Model):
     job_total_tasks = IntType()
 
     requester_restricted_answer_set = DictType(DictType(StringType))
+
+    def validate_requester_restricted_answer_set(self, data, value):
+        """image_label_area_select should always have a single RAS set"""
+        if data['request_type'] == 'image_label_area_select':
+            if not value or len(value.keys()) == 0:
+                value = {'label': {}}
+                data['requester_restricted_answer_set'] = value
+        return value
+
     requester_description = StringType()
     requester_max_repeats = IntType(default=100)
     requester_min_repeats = IntType(default=1)
