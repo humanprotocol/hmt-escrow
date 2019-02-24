@@ -347,6 +347,13 @@ class Contract(Manifest):
 
     def bulk_payout(self, addresses: list, amounts: list, results: dict,
                     public_key: bytes, private_key: bytes):
+        '''
+        Takes in a matching list of addresses and amounts to pay, as well
+        as a dict of the final results. Uploads final results to IPFS,
+        and stores that URI + hash to the escrow contract upon payout.
+        
+        Returns Undefined (XXX: @rbval) if successful.
+        '''
         (hash_, url) = upload(results, public_key)
         LOG.info("Amounts for bulk payout: {}".format(amounts))
 
