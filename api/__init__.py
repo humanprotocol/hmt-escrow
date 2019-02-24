@@ -525,7 +525,7 @@ def store_results(contract: WContract,
             manifest_hash: The hash of the plaintext of the manifest.
             gas (int): The amount of gas to run the transaction with.
         Returns:
-            bool: True if the payment was successful """
+            bool: True if the results storage was successful """
     return _store_results(contract, manifest_url, manifest_hash, gas)
 
 
