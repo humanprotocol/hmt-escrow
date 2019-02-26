@@ -29,14 +29,6 @@ ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
 LOG = logging.getLogger("api")
 
 
-def _unlock_account_or_raise(account: str) -> None:
-    _validate_account_or_raise(account)
-
-
-def _validate_account_or_raise(account: str) -> str:
-    return account
-
-
 def _bulk_payout_sol(contract: Contract,
                      addresses: list,
                      amounts: list,
