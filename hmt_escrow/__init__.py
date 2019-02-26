@@ -7,6 +7,7 @@ from decimal import *
 from web3 import Web3
 from web3.contract import Contract
 from enum import Enum
+from typing import List, Tuple
 
 # Access basemodels
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -147,26 +148,25 @@ def _abort_sol(contract: Contract, gas: int) -> bool:
     }) == 5  # Cancelled
 
 
-def _setup_sol(contract: Contract,
-               reputation_oracle: str,
-               recording_oracle: str,
-               reputation_oracle_stake: int,
-               recording_oracle_stake: int,
-               amount: int,
-               manifest_url: str,
-               manifest_hash: str,
-               gas=DEFAULT_GAS) -> bool:
+def _setup_sol(escrow: 'Escrow', gas=DEFAULT_GAS) -> bool:
+    contract = escrow.job_contract
+    reputation_oracle_stake = int(escrow.oracle_stake * 100)
+    recording_oracle_stake = int(escrow.oracle_stake * 100)
+    hmt_amount = int(escrow.amount * 10**18)
 
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
     tx_dict = contract.functions.setup(
-        reputation_oracle, recording_oracle, reputation_oracle_stake,
-        recording_oracle_stake, amount, manifest_url,
-        manifest_hash).buildTransaction({
-            'from': GAS_PAYER,
-            'gas': gas,
-            'nonce': nonce
+        escrow.reputation_oracle, escrow.recording_oracle,
+        reputation_oracle_stake, recording_oracle_stake, hmt_amount,
+        escrow.manifest_url, escrow.manifest_hash).buildTransaction({
+            'from':
+            GAS_PAYER,
+            'gas':
+            gas,
+            'nonce':
+            nonce
         })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
@@ -218,17 +218,6 @@ def _transfer_to_address(address: str, amount: Decimal,
 class Escrow(Manifest):
     initialized = False
 
-    def initialize(self, job_contract: Contract, amount: Decimal,
-                   oracle_stake: Decimal, number_of_answers: int) -> bool:
-        if self.initialized:
-            raise Exception("Unable to reinitialize if we already are")
-        self.job_contract = job_contract
-        self.number_of_answers = number_of_answers
-        self.amount = amount
-        self.oracle_stake = oracle_stake
-        self.initialized = True
-        return True
-
     def deploy(self, public_key: bytes, private_key: bytes) -> bool:
         """
         Deploy the contract to the blockchain for funding and activation
@@ -236,19 +225,23 @@ class Escrow(Manifest):
         :param private_key:  The private key to encrypt the manifest
         """
         job_address = get_job()
-        job = get_job_from_address(job_address)
-
         serialized_manifest = self.serialize()
-        per_job_cost = Decimal(serialized_manifest['task_bid_price'])
-        number_of_answers = int(serialized_manifest['job_total_tasks'])
-        oracle_stake = Decimal(serialized_manifest['oracle_stake'])
-        amount = Decimal(per_job_cost * number_of_answers)
 
-        self.initialize(job, amount, oracle_stake, number_of_answers)
+        if self.initialized:
+            raise Exception("Unable to reinitialize if we already have")
+
+        self.job_contract = get_job_from_address(job_address)
+        self.per_job_cost = Decimal(serialized_manifest['task_bid_price'])
+        self.oracle_stake = Decimal(serialized_manifest['oracle_stake'])
+        self.recording_oracle = serialized_manifest['recording_oracle_addr']
+        self.reputation_oracle = serialized_manifest['reputation_oracle_addr']
+        self.number_of_answers = int(serialized_manifest['job_total_tasks'])
+        self.oracle_stake = Decimal(serialized_manifest['oracle_stake'])
+        self.amount = Decimal(self.per_job_cost * self.number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
-
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
+        self.initialized = True
         return True
 
     def fund(self) -> bool:
@@ -275,8 +268,7 @@ class Escrow(Manifest):
 
         :return: Returns if the job is pending
         """
-        return setup_job(self.job_contract, self.amount, self.oracle_stake,
-                         self.manifest_url, self.manifest_hash)
+        return setup_job(self)
 
     def status(self) -> Enum:
         """
@@ -290,7 +282,7 @@ class Escrow(Manifest):
         (hash_, url) = upload(results, public_key)
         return store_results(self.job_contract, url, hash_)
 
-    def bulk_payout(self, addresses: list, amounts: list, results: dict,
+    def bulk_payout(self, payouts: List[Tuple[str, int]], results: dict,
                     public_key: bytes, private_key: bytes) -> bool:
         '''
         Takes in a matching list of addresses and amounts to pay, as well
@@ -300,11 +292,12 @@ class Escrow(Manifest):
         Returns Undefined (XXX: @rbval) if successful.
         '''
         (hash_, url) = upload(results, public_key)
-        LOG.info("Amounts for bulk payout: {}".format(amounts))
 
-        # Convert to HMT
-        hmt_amounts = [int(amount * 10**18) for amount in amounts]
-        return _bulk_payout_sol(self.job_contract, addresses, hmt_amounts, url,
+        eth_addrs = [eth_addr for eth_addr, amount in payouts]
+        # Convert amounts to HMT
+        hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
+
+        return _bulk_payout_sol(self.job_contract, eth_addrs, hmt_amounts, url,
                                 hash_)
 
     def complete(self) -> bool:
@@ -391,8 +384,7 @@ def get_job_from_address(escrow_address: str) -> Contract:
     return get_escrow(escrow_address)
 
 
-def setup_job(contract: Contract, amount: Decimal, oracle_stake: Decimal,
-              manifest_url: str, manifest_hash: str) -> bool:
+def setup_job(escrow: Escrow) -> bool:
     """ Once a job is started we can start a job to be processing.
 
 
@@ -407,15 +399,8 @@ def setup_job(contract: Contract, amount: Decimal, oracle_stake: Decimal,
 
         Returns:
             bool: True if the contract is pending """
-    reputation_oracle = GAS_PAYER
-    recording_oracle = GAS_PAYER
-    reputation_oracle_stake = int(oracle_stake * 100)
-    recording_oracle_stake = int(oracle_stake * 100)
-    hmt_amount = int(amount * 10**18)
 
-    return _setup_sol(contract, reputation_oracle, recording_oracle,
-                      reputation_oracle_stake, recording_oracle_stake,
-                      hmt_amount, manifest_url, manifest_hash)
+    return _setup_sol(escrow)
 
 
 def abort_job(contract: Contract, gas=DEFAULT_GAS) -> bool:
