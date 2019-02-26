@@ -86,6 +86,34 @@ def get_factory(factory_address: str, gas: int = DEFAULT_GAS) -> Contract:
     return escrow_factory
 
 
+def deploy_contract(contract_interface, gas: int = DEFAULT_GAS, args=[]):
+    contract = W3.eth.contract(
+        abi=contract_interface['abi'], bytecode=contract_interface['bin'])
+    nonce = W3.eth.getTransactionCount(GAS_PAYER)
+
+    # Get transaction hash from deployed contract
+    LOG.debug("Deploying contract with gas:{}".format(gas))
+
+    tx_dict = contract.constructor(*args).buildTransaction({
+        'from': GAS_PAYER,
+        'gas': gas,
+        'nonce': nonce
+    })
+    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
+    wait_on_transaction(tx_hash)
+
+    tx_receipt = W3.eth.getTransactionReceipt(tx_hash)
+    contract_address = tx_receipt.contractAddress
+
+    contract = W3.eth.contract(
+        address=contract_address,
+        abi=contract_interface['abi'],
+    )
+
+    LOG.info("New contract at:{} ".format(contract_address))
+    return contract, contract_address
+
+
 def deploy_factory(gas: int = DEFAULT_GAS) -> Contract:
     """
     Returns success
@@ -98,4 +126,4 @@ def deploy_factory(gas: int = DEFAULT_GAS) -> Contract:
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     (contract, contract_address) = deploy_contract(
         contract_interface, gas, args=[HMTOKEN_ADDR])
-    return contract
+    return contract_address
