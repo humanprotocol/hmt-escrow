@@ -265,14 +265,14 @@ def _transfer_to_address(address: str, amount: Decimal,
     hmtoken_contract = get_hmtoken()
 
     tx_dict = hmtoken_contract.functions.transfer(address,
-                                                amount).buildTransaction({
-                                                    'from':
-                                                    GAS_PAYER,
-                                                    'gas':
-                                                    gas,
-                                                    'nonce':
-                                                    nonce
-                                                })
+                                                  amount).buildTransaction({
+                                                      'from':
+                                                      GAS_PAYER,
+                                                      'gas':
+                                                      gas,
+                                                      'nonce':
+                                                      nonce
+                                                  })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
     return True
