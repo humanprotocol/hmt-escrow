@@ -61,7 +61,7 @@ def get_contract_interface(contract_entrypoint):
     return contract_interface
 
 
-def get_eip20() -> Contract:
+def get_hmtoken() -> Contract:
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
