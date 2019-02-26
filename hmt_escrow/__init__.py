@@ -100,49 +100,46 @@ def _complete(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
     }))
 
 
-def _manifest(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
-    return escrow_contract.functions.getUrl().call({
-        'from': GAS_PAYER,
-        'gas': gas
-    })
-
-
-def _hash(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+def _manifest_hash(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
     return escrow_contract.functions.getHash().call({
         'from': GAS_PAYER,
         'gas': gas
     })
 
 
-def _hashI(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+def _intermediate_manifest_hash(escrow_contract: Contract,
+                                gas: int = DEFAULT_GAS) -> str:
     return escrow_contract.functions.getIHash().call({
         'from': GAS_PAYER,
         'gas': gas
     })
 
 
-def _hashF(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+def _final_manifest_hash(escrow_contract: Contract,
+                         gas: int = DEFAULT_GAS) -> str:
     return escrow_contract.functions.getFHash().call({
         'from': GAS_PAYER,
         'gas': gas
     })
 
 
-def _getURL(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+def _manifest_url(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
     return escrow_contract.functions.getUrl().call({
         'from': GAS_PAYER,
         'gas': gas
     })
 
 
-def _getIURL(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+def _intermediate_manifest_url(escrow_contract: Contract,
+                               gas: int = DEFAULT_GAS) -> str:
     return escrow_contract.functions.getIUrl().call({
         'from': GAS_PAYER,
         'gas': gas
     })
 
 
-def _getFURL(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+def _final_manifest_url(escrow_contract: Contract,
+                        gas: int = DEFAULT_GAS) -> str:
     return escrow_contract.functions.getFUrl().call({
         'from': GAS_PAYER,
         'gas': gas
@@ -378,18 +375,19 @@ class Escrow(Manifest):
             return False
 
     def get_manifest(self, private_key: bytes) -> Dict:
-        return download(_getURL(self.job_contract), private_key)
+        return download(_manifest_url(self.job_contract), private_key)
 
     def get_intermediate_results(self, private_key: bytes) -> Dict:
-        return download(_getIURL(self.job_contract), private_key)
+        return download(
+            _intermediate_manifest_url(self.job_contract), private_key)
 
     def get_results(self, private_key: bytes) -> Dict:
-        return download(_getFURL(self.job_contract), private_key)
+        return download(_final_manifest_url(self.job_contract), private_key)
 
 
 def access_job(escrow_address: str, private_key: bytes) -> Contract:
     job = get_job_from_address(escrow_address)
-    url = _getURL(job)
+    url = _manifest_url(job)
     manifest_dict = download(url, private_key)
     contract_manifest = Manifest(manifest_dict)
     contract = Contract(contract_manifest)
