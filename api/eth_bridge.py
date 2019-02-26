@@ -4,7 +4,7 @@ import time
 
 from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
-from web3.contract import Contract as WContract
+from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
@@ -67,7 +67,7 @@ def get_eip20():
     return contract
 
 
-def get_escrow(escrow_address, gas=DEFAULT_GAS) -> WContract:
+def get_escrow(escrow_address, gas=DEFAULT_GAS) -> Contract:
     contract_interface = get_contract_interface(
         '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
     escrow = get_w3().eth.contract(
@@ -75,7 +75,7 @@ def get_escrow(escrow_address, gas=DEFAULT_GAS) -> WContract:
     return escrow
 
 
-def get_factory(factory_address, gas=DEFAULT_GAS) -> WContract:
+def get_factory(factory_address, gas=DEFAULT_GAS) -> Contract:
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     escrow_factory = get_w3().eth.contract(
@@ -112,7 +112,7 @@ def deploy_contract(contract_interface, gas, args=[]):
     return contract, contract_address
 
 
-def deploy_factory(gas=DEFAULT_GAS) -> WContract:
+def deploy_factory(gas=DEFAULT_GAS) -> Contract:
     """
     Returns success
     sol: solidity code
