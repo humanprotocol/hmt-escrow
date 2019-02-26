@@ -26,7 +26,7 @@ REP_ORACLE = Web3.toChecksumAddress(
     os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
+FACTORY_ADDR = os.getenv("FACTORY_ADDR", None)
 LOG = logging.getLogger("hmt_escrow")
 
 
@@ -405,16 +405,18 @@ def initialize_job() -> str:
         Returns:
             Contract: The contract launched on the blockchain
             """
-
+    global FACTORY_ADDR
     factory = None
-    if not ESCROW_FACTORY:
-        factory = deploy_factory()
-        ESCROW_FACTORY = factory.address
-        if not ESCROW_FACTORY:
+
+    if not FACTORY_ADDR:
+        factory_address = deploy_factory()
+        factory = get_factory(factory_address)
+        FACTORY_ADDR = factory_address
+        if not FACTORY_ADDR:
             raise Exception("Unable to get address from factory")
 
-    if factory is None:
-        factory = get_factory(ESCROW_FACTORY)
+    if not factory:
+        factory = get_factory(FACTORY_ADDR)
         counter = _counter(factory)
         LOG.debug("Factory counter is at:{}".format(counter))
 
