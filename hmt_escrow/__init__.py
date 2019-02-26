@@ -301,7 +301,7 @@ class Escrow(Manifest):
         :param private_key:  The private key to encrypt the manifest
         """
         job_address = initialize_job()
-        self.job_contract = get_job_from_address(job_address)
+        self.job_contract = get_escrow(job_address)
         serialized_manifest = self.serialize()
         self.initialize(serialized_manifest)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
@@ -385,7 +385,7 @@ class Escrow(Manifest):
 
 
 def access_job(escrow_address: str, private_key: bytes) -> Contract:
-    job = get_job_from_address(escrow_address)
+    job = get_escrow(escrow_address)
     url = _manifest_url(job)
     manifest_dict = download(url, private_key)
     contract_manifest = Manifest(manifest_dict)
@@ -423,10 +423,6 @@ def initialize_job() -> str:
 
     LOG.info("New pokemon!:{}".format(escrow_address))
     return escrow_address
-
-
-def get_job_from_address(escrow_address: str) -> Contract:
-    return get_escrow(escrow_address)
 
 
 def setup_job(escrow: Escrow) -> bool:
