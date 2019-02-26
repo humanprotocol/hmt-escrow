@@ -40,14 +40,16 @@ def get_w3():
 
 
 def wait_on_transaction(tx_hash: str) -> bool:
+    w3 = get_w3()
     LOG.debug("Waiting to get transaction recipt")
-    return W3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
+    return w3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
 
 
 def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
-    signed_txn = W3.eth.account.signTransaction(
+    w3 = get_w3()
+    signed_txn = w3.eth.account.signTransaction(
         tx_hash, private_key=private_key)
-    return W3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    return w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
 
 def get_contract_interface(contract_entrypoint):
@@ -57,9 +59,10 @@ def get_contract_interface(contract_entrypoint):
 
 
 def get_eip20():
+    w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
-    contract = W3.eth.contract(
+    contract = w3.eth.contract(
         address=EIP20ADDR, abi=contract_interface['abi'])
     return contract
 
@@ -81,9 +84,10 @@ def get_factory(factory_address, gas=DEFAULT_GAS) -> WContract:
 
 
 def deploy_contract(contract_interface, gas, args=[]):
-    contract = W3.eth.contract(
+    w3 = get_w3()
+    contract = w3.eth.contract(
         abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-    nonce = W3.eth.getTransactionCount(GAS_PAYER)
+    nonce = w3.eth.getTransactionCount(GAS_PAYER)
 
     # Get transaction hash from deployed contract
     LOG.debug("Deploying contract with gas:{}".format(gas))
@@ -96,10 +100,10 @@ def deploy_contract(contract_interface, gas, args=[]):
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
 
-    tx_receipt = W3.eth.getTransactionReceipt(tx_hash)
+    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     contract_address = tx_receipt.contractAddress
 
-    contract = W3.eth.contract(
+    contract = w3.eth.contract(
         address=contract_address,
         abi=contract_interface['abi'],
     )
