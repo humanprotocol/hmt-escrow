@@ -59,10 +59,6 @@ class Manifest(Model):
     reputation_oracle_addr = StringType(required=True)
     reputation_agent_addr = StringType(required=True)
     requester_pgp_public_key = StringType()
-
-    # Future TODO: replace with KV lookup on recording_oracle_addr
-    # NOTE: URLType fails without TLD (examples: http://localhost/,
-    #       http://exchange/, etc), so using StringType instead.
     ro_uri = StringType()
     repo_uri = StringType()
 
@@ -90,10 +86,10 @@ class Manifest(Model):
 
     request_config = ModelType(RequestConfig, required=False)
 
-    # if taskdata is directly provided
-    taskdata = ListType(ModelType(TaskData))  # ListType(DictType(StringType))
+    # If taskdata is directly provided
+    taskdata = ListType(ModelType(TaskData))
 
-    # if taskdata is separately stored
+    # If taskdata is separately stored
     taskdata_uri = URLType()
 
     def validate_taskdata_uri(self, data, value):
