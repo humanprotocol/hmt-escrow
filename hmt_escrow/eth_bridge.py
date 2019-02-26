@@ -71,25 +71,28 @@ def get_eip20() -> Contract:
 
 
 def get_escrow(escrow_address: str, gas: int = DEFAULT_GAS) -> Contract:
+    w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
-    escrow = get_w3().eth.contract(
+    escrow = w3.eth.contract(
         address=escrow_address, abi=contract_interface['abi'])
     return escrow
 
 
 def get_factory(factory_address: str, gas: int = DEFAULT_GAS) -> Contract:
+    w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
-    escrow_factory = get_w3().eth.contract(
+    escrow_factory = w3.eth.contract(
         address=factory_address, abi=contract_interface['abi'])
     return escrow_factory
 
 
 def deploy_contract(contract_interface, gas: int = DEFAULT_GAS, args=[]):
-    contract = W3.eth.contract(
+    w3 = get_w3()
+    contract = w3.eth.contract(
         abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-    nonce = W3.eth.getTransactionCount(GAS_PAYER)
+    nonce = w3.eth.getTransactionCount(GAS_PAYER)
 
     # Get transaction hash from deployed contract
     LOG.debug("Deploying contract with gas:{}".format(gas))
@@ -102,10 +105,10 @@ def deploy_contract(contract_interface, gas: int = DEFAULT_GAS, args=[]):
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
 
-    tx_receipt = W3.eth.getTransactionReceipt(tx_hash)
+    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
     contract_address = tx_receipt.contractAddress
 
-    contract = W3.eth.contract(
+    contract = w3.eth.contract(
         address=contract_address,
         abi=contract_interface['abi'],
     )
