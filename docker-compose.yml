@@ -5,7 +5,7 @@ services:
     stdin_open: true
     tty: true
     environment:
-      - HET_ETH_SERVER=http://ganache:8545
+      - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
       - DEFAULT_GAS=6700000
       - TESTADDR=0x1413862c2b7054cdbfdc181b83962cb0fc11fd92

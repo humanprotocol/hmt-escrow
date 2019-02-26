@@ -33,9 +33,9 @@ CONTRACTS = compile_files([
 
 
 def get_w3() -> Web3:
-    endpoint = os.getenv("HET_ETH_SERVER", 'http://localhost:8545')
+    endpoint = os.getenv("HMT_ETH_SERVER", 'http://localhost:8545')
     if not endpoint:
-        LOG.error("Using EthereumTesterProvider as we have no HET_ETH_SERVER")
+        LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
     provider = HTTPProvider(endpoint) if endpoint else EthereumTesterProvider
     w3 = Web3(provider)
     w3.middleware_stack.inject(geth_poa_middleware, layer=0)
