@@ -8,10 +8,9 @@ from web3 import Web3
 from web3.contract import Contract as WContract
 from enum import Enum
 
-# for accessing ../basemodels
+# Access basemodels
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# local
 from api.eth_bridge import get_eip20, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
 from basemodels import Manifest
 from api.storage import download, upload
@@ -26,8 +25,6 @@ REP_ORACLE = Web3.toChecksumAddress(
     os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-
-# The address of the escrow factory
 ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
 LOG = logging.getLogger("api")
 
@@ -58,28 +55,6 @@ def _bulk_payout_sol(contract: WContract,
                                                 'nonce':
                                                 nonce
                                             })
-    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
-    wait_on_transaction(tx_hash)
-
-
-def _partial_payout_sol(contract: WContract,
-                        amount: int,
-                        to_account: str,
-                        uri: str,
-                        hash_: str,
-                        gas=DEFAULT_GAS):
-    W3 = get_w3()
-    nonce = W3.eth.getTransactionCount(GAS_PAYER)
-
-    tx_dict = contract.functions.payOut(amount, to_account, uri,
-                                        hash_).buildTransaction({
-                                            'from':
-                                            GAS_PAYER,
-                                            'gas':
-                                            gas,
-                                            'nonce':
-                                            nonce
-                                        })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
 
@@ -334,17 +309,6 @@ class Contract(Manifest):
         (hash_, url) = upload(results, public_key)
         return store_results(self.job_contract, url, hash_)
 
-    def payout(self, amount: Decimal, to_address: str, results: dict,
-               public_key: bytes, private_key: bytes):
-        (hash_, url) = upload(results, public_key)
-        LOG.info("We payout: {}".format(amount))
-
-        # Convert to HMT
-        hmt_amount = int(amount * 10**18)
-
-        return partial_payout(self.job_contract, hmt_amount, to_address, url,
-                              hash_)
-
     def bulk_payout(self, addresses: list, amounts: list, results: dict,
                     public_key: bytes, private_key: bytes):
         '''
@@ -496,26 +460,6 @@ def abort_job(contract: WContract, gas=DEFAULT_GAS) -> bool:
         Returns:
             bool: True if the contract is pending """
     return _abort_sol(contract, gas)
-
-
-def partial_payout(contract: WContract, amount: int, to_account: str,
-                   manifest_url: str, manifest_hash: str):
-    """ Pay out the specified funds to the specified account
-
-        Once the reputation oracle has decided to pay money it can call this function to pay out
-        to mining servers.
-
-        Args:
-            contract (WContract): The actual ethereum contract instantiated.
-            amount (int): Amount of contract money to pay out
-            to_account (str): What account is getting the hmt
-            manifest_url (str): The url of the answers to the questions
-            manifest_hash: The hash of the plaintext of the manifest.
-        Returns:
-            bool: True if the payment was successful
-    """
-    return _partial_payout_sol(contract, amount, to_account, manifest_url,
-                               manifest_hash)
 
 
 def store_results(contract: WContract,
