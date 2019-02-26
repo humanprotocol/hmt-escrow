@@ -18,8 +18,8 @@ GAS_PAYER_PRIV = os.getenv(
     "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
 
 LOG = logging.getLogger("api.eth_bridge")
-EIP20ADDR = Web3.toChecksumAddress(
-    os.getenv("EIP20ADDR", '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
+HMTOKEN_ADDR = Web3.toChecksumAddress(
+    os.getenv("HMTOKEN_ADDR", '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
 
 CONTRACT_FOLDER = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'contracts')
@@ -66,7 +66,7 @@ def get_eip20() -> Contract:
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
     contract = w3.eth.contract(
-        address=EIP20ADDR, abi=contract_interface['abi'])
+        address=HMTOKEN_ADDR, abi=contract_interface['abi'])
     return contract
 
 
@@ -97,5 +97,5 @@ def deploy_factory(gas: int = DEFAULT_GAS) -> Contract:
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     (contract, contract_address) = deploy_contract(
-        contract_interface, gas, args=[EIP20ADDR])
+        contract_interface, gas, args=[HMTOKEN_ADDR])
     return contract
