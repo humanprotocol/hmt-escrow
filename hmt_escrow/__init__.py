@@ -390,7 +390,7 @@ def access_job(escrow_address: str, private_key: bytes) -> Contract:
     manifest_dict = download(url, private_key)
     contract_manifest = Manifest(manifest_dict)
     contract = Contract(contract_manifest)
-    contract.serialize(contract)
+    contract.initialize(contract)
     return contract
 
 
