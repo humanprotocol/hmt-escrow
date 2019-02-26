@@ -15,8 +15,8 @@ GAS_PAYER_PRIV = os.getenv(
     "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
 
 LOG = logging.getLogger("api.eth_bridge")
-EIP20ADDR = Web3.toChecksumAddress(os.getenv("EIP20ADDR",
-                      '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
+EIP20ADDR = Web3.toChecksumAddress(
+    os.getenv("EIP20ADDR", '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
 
 CONTRACT_FOLDER = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'contracts')
@@ -29,7 +29,7 @@ CONTRACTS = compile_files([
 ])
 
 
-def _get_w3():
+def get_w3():
     endpoint = os.getenv("HET_ETH_SERVER", 'http://localhost:8545')
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HET_ETH_SERVER")
@@ -37,13 +37,6 @@ def _get_w3():
     w3 = Web3(provider)
     w3.middleware_stack.inject(geth_poa_middleware, layer=0)
     return w3
-
-
-W3 = _get_w3()
-
-
-def get_w3():
-    return W3
 
 
 def wait_on_transaction(tx_hash: str) -> bool:
