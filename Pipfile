@@ -12,6 +12,7 @@ py-solc = "*"
 yapf = "*"
 schematics = "==2.1.0"
 py-evm = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.6"
