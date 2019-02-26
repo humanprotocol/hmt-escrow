@@ -13,9 +13,9 @@ from web3 import Web3
 
 os.environ['HET_ETH_SERVER'] = os.getenv('HET_ETH_SERVER',
                                          "http://localhost:8545")
-import api
+import hmt_escrow
 import basemodels
-from api.storage import _decrypt, _encrypt, upload
+from hmt_escrow.storage import _decrypt, _encrypt, upload
 
 REQ_JSON = 'file:///tmp/req.json'
 ANS_JSON = 'file:///tmp/ans.json'
@@ -154,22 +154,22 @@ class ManifestTest(unittest.TestCase):
             len(manifest['requester_restricted_answer_set'].keys()), 0)
 
 
-class ContractTest(unittest.TestCase):
+class EscrowTest(unittest.TestCase):
     """
     Tests the escrow API's functions.
 
     Some of the blockchain specific functionality is mocked.
-    Contract specific functionality is delegated to JS tests.
+    Solidity specific functionality is delegated to JS tests.
     """
 
     def setUp(self):
-        """Set up the fields for Contract class testing, based on the test manifest."""
+        """Set up the fields for Escrow class testing, based on the test manifest."""
         self.manifest = a_manifest()
-        self.contract = api.Contract(self.manifest)
+        self.contract = hmt_escrow.Escrow(self.manifest)
         self.per_job_cost = Decimal(self.manifest['task_bid_price'])
         self.total_tasks = self.manifest['job_total_tasks']
         self.oracle_stake = self.manifest['oracle_stake']
-        self.amount = (self.per_job_cost * self.total_tasks) * 10**18
+        self.amount = self.per_job_cost * self.total_tasks
 
     def test_initialize(self):
         """Tests that initialize gets called with correct parameters inside contract.deploy."""
@@ -179,7 +179,7 @@ class ContractTest(unittest.TestCase):
             ANY, self.amount, self.oracle_stake, self.total_tasks)
 
     def test_deploy(self):
-        """Tests that deploy assigns correct field values to Contract class state."""
+        """Tests that deploy assigns correct field values to Escrow class state."""
         self.contract.deploy(PUB2, PRIV1)
         self.assertEqual(self.contract.amount, self.amount)
         self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
@@ -187,60 +187,66 @@ class ContractTest(unittest.TestCase):
 
     def test_fund(self):
         """Tests that fund calls _transfer_to_address with correct parameters."""
-        api._transfer_to_address = MagicMock()
+        hmt_escrow._transfer_to_address = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.fund()
-        api._transfer_to_address.assert_called_once_with(
+        hmt_escrow._transfer_to_address.assert_called_once_with(
             self.contract.job_contract.address, self.amount)
 
     def test_abort(self):
         """Tests that abort calls _abort_sol with correct parameters."""
-        api._abort_sol = MagicMock()
+        hmt_escrow._abort_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.abort()
-        api._abort_sol.assert_called_once_with(self.contract.job_contract, ANY)
+        hmt_escrow._abort_sol.assert_called_once_with(
+            self.contract.job_contract, ANY)
 
     def test_complete(self):
         """Tests that complete calls _complete with correct parameters."""
-        api._complete = MagicMock()
+        hmt_escrow._complete = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.complete()
-        api._complete.assert_called_once_with(self.contract.job_contract)
+        hmt_escrow._complete.assert_called_once_with(
+            self.contract.job_contract)
 
     def test_launch(self):
         """Tests that launch calls _setup_sol with correct parameters."""
-        api._setup_sol = MagicMock()
+        hmt_escrow._setup_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.launch()
-        api._setup_sol.assert_called_once_with(
-            self.contract.job_contract, ANY, ANY, self.oracle_stake,
-            self.oracle_stake, self.amount, self.contract.manifest_url,
-            self.contract.manifest_hash)
+
+        assert_oracle_amount = self.oracle_stake * 100
+        assert_hmt_amount = self.amount * 10**18
+
+        hmt_escrow._setup_sol.assert_called_once_with(
+            self.contract.job_contract, ANY, ANY, assert_oracle_amount,
+            assert_oracle_amount, assert_hmt_amount,
+            self.contract.manifest_url, self.contract.manifest_hash)
 
     def test_store_intermediate(self):
         """Tests that store_intermediate calls _store_results without parameters."""
-        api._store_results = MagicMock()
+        hmt_escrow._store_results = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.store_intermediate({}, PUB2, PRIV1)
-        api._store_results.assert_called_once()
+        hmt_escrow._store_results.assert_called_once()
 
     def test_refund(self):
         """Tests that refund calls _refund_sol with correct parameters."""
-        api._refund_sol = MagicMock()
+        hmt_escrow._refund_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.refund()
-        api._refund_sol.assert_called_once_with(self.contract.job_contract,
-                                                ANY)
+        hmt_escrow._refund_sol.assert_called_once_with(
+            self.contract.job_contract, ANY)
 
     def test_bulk_payout(self):
         """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
-        api._bulk_payout_sol = MagicMock()
+        hmt_escrow._bulk_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         addresses = [TO_ADDR, TO_ADDR2]
         amounts = [10, 20]
         self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
         assert_amounts = [10 * 10**18, 20 * 10**18]
-        api._bulk_payout_sol.assert_called_once_with(
+        hmt_escrow._bulk_payout_sol.assert_called_once_with(
             self.contract.job_contract, addresses, assert_amounts, ANY, ANY)
 
 
@@ -261,8 +267,8 @@ def encrypt(public_key, msg):
 
 
 class StorageTest(unittest.TestCase):
-    @patch('api.storage.API.add_bytes', side_effect=add_bytes)
-    @patch('api.storage._encrypt', side_effect=encrypt)
+    @patch('hmt_escrow.storage.API.add_bytes', side_effect=add_bytes)
+    @patch('hmt_escrow.storage._encrypt', side_effect=encrypt)
     def test_upload(self, add_bytes, _encrypt):
         upload(a_manifest().serialize(), PUB1)
 
