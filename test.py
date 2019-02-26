@@ -11,7 +11,7 @@ import schematics
 from unittest.mock import patch
 from web3 import Web3
 
-os.environ['HET_ETH_SERVER'] = os.getenv('HET_ETH_SERVER',
+os.environ['HMT_ETH_SERVER'] = os.getenv('HMT_ETH_SERVER',
                                          "http://localhost:8545")
 import hmt_escrow
 import basemodels
