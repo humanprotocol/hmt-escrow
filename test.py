@@ -39,6 +39,7 @@ REP_ORACLE = Web3.toChecksumAddress(
     os.getenv("REP_ORACLE", "0x61F9F0B31eacB420553da8BCC59DC617279731Ac"))
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0xD979105297fB0eee83F7433fC09279cb5B94fFC6"))
+FACTORY_ADDR = os.getenv("FACTORYADDR", None)
 
 
 def a_manifest(number_of_tasks=100,
@@ -171,6 +172,61 @@ class EscrowTest(unittest.TestCase):
         self.oracle_stake = self.manifest['oracle_stake']
         self.amount = self.per_job_cost * self.total_tasks
 
+    @patch('hmt_escrow.Escrow.initialize')
+    @patch('hmt_escrow.Escrow.serialize')
+    def test_initialize(self, mock_serialize, mock_initialize):
+        """Tests that initialize gets called with correct parameters inside contract.deploy."""
+        mock_serialize.return_value = {
+            'job_mode': 'batch',
+            'job_api_key': '878587d4-41ae-48ea-839a-227afd9c01f8',
+            'job_id': 'e852b904-8fcf-4d07-8dba-48483d06e054',
+            'job_total_tasks': 100,
+            'requester_restricted_answer_set': {
+                '0': {
+                    'en': 'English Answer 1'
+                },
+                '1': {
+                    'en':
+                    'English Answer 2',
+                    'answer_example_uri':
+                    'https://hcaptcha.com/example_answer2.jpg'
+                }
+            },
+            'requester_description': None,
+            'requester_max_repeats': 100,
+            'requester_min_repeats': 1,
+            'requester_question': {
+                'en': 'How much money are we to make'
+            },
+            'requester_question_example': 'http://google.com/fake',
+            'unsafe_content': False,
+            'task_bid_price': '1.0',
+            'oracle_stake': '0.05',
+            'expiration_date': 0,
+            'requester_accuracy_target': 0.1,
+            'manifest_smart_bounty_addr': None,
+            'minimum_trust_server': 0.1,
+            'minimum_trust_client': 0.1,
+            'recording_oracle_addr':
+            '0xD979105297fB0eee83F7433fC09279cb5B94fFC6',
+            'reputation_oracle_addr':
+            '0x61F9F0B31eacB420553da8BCC59DC617279731Ac',
+            'reputation_agent_addr':
+            '0x61F9F0B31eacB420553da8BCC59DC617279731Ac',
+            'requester_pgp_public_key': None,
+            'ro_uri': None,
+            'repo_uri': None,
+            'batch_result_delivery_webhook': None,
+            'online_result_delivery_webhook': None,
+            'instant_result_delivery_webhook': 'http://google.com/webback',
+            'request_type': 'image_label_binary',
+            'request_config': None,
+            'taskdata': None,
+            'taskdata_uri': 'http://google.com/fake'
+        }
+        self.contract.deploy(PUB2, PRIV1)
+        mock_initialize.assert_called_once_with(mock_serialize.return_value)
+
     def test_deploy(self):
         """Tests that deploy assigns correct field values to Escrow class state."""
         self.contract.deploy(PUB2, PRIV1)
@@ -187,12 +243,11 @@ class EscrowTest(unittest.TestCase):
             self.contract.job_contract.address, self.amount)
 
     def test_abort(self):
-        """Tests that abort calls _abort_sol with correct parameters."""
-        hmt_escrow._abort_sol = MagicMock()
+        """Tests that abort calls _abort with correct parameters."""
+        hmt_escrow._abort = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.abort()
-        hmt_escrow._abort_sol.assert_called_once_with(
-            self.contract.job_contract, ANY)
+        hmt_escrow._abort.assert_called_once_with(self.contract.job_contract)
 
     def test_complete(self):
         """Tests that complete calls _complete with correct parameters."""
@@ -203,11 +258,11 @@ class EscrowTest(unittest.TestCase):
             self.contract.job_contract)
 
     def test_launch(self):
-        """Tests that launch calls _setup_sol with correct parameters."""
-        hmt_escrow._setup_sol = MagicMock()
+        """Tests that launch calls _setup with correct parameters."""
+        hmt_escrow._setup = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.launch()
-        hmt_escrow._setup_sol.assert_called_once_with(self.contract)
+        hmt_escrow._setup.assert_called_once_with(self.contract)
 
     def test_store_intermediate(self):
         """Tests that store_intermediate calls _store_results without parameters."""
@@ -217,22 +272,21 @@ class EscrowTest(unittest.TestCase):
         hmt_escrow._store_results.assert_called_once()
 
     def test_refund(self):
-        """Tests that refund calls _refund_sol with correct parameters."""
-        hmt_escrow._refund_sol = MagicMock()
+        """Tests that refund calls _refund with correct parameters."""
+        hmt_escrow._refund = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.refund()
-        hmt_escrow._refund_sol.assert_called_once_with(
-            self.contract.job_contract, ANY)
+        hmt_escrow._refund.assert_called_once_with(self.contract.job_contract)
 
     def test_bulk_payout(self):
         """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
-        hmt_escrow._bulk_payout_sol = MagicMock()
+        hmt_escrow._bulk_payout = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         payouts = [(TO_ADDR, 10), (TO_ADDR2, 20)]
         self.contract.bulk_payout(payouts, {}, PUB2, PRIV1)
         assert_addrs = [TO_ADDR, TO_ADDR2]
         assert_amounts = [10 * 10**18, 20 * 10**18]
-        hmt_escrow._bulk_payout_sol.assert_called_once_with(
+        hmt_escrow._bulk_payout.assert_called_once_with(
             self.contract.job_contract, assert_addrs, assert_amounts, ANY, ANY)
 
 
