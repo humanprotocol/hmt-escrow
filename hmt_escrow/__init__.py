@@ -300,7 +300,7 @@ class Escrow(Manifest):
         :param public_key:  The public key to encrypt the manifest for
         :param private_key:  The private key to encrypt the manifest
         """
-        job_address = get_job()
+        job_address = initialize_job()
         self.job_contract = get_job_from_address(job_address)
         serialized_manifest = self.serialize()
         self.initialize(serialized_manifest)
@@ -394,7 +394,7 @@ def access_job(escrow_address: str, private_key: bytes) -> Contract:
     return contract
 
 
-def get_job() -> str:
+def initialize_job() -> str:
     """ Get a new job and launch it without funds on the blockchain.
 
         This is the first step of putting a new job on the blockchain.
