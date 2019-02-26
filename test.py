@@ -171,13 +171,6 @@ class EscrowTest(unittest.TestCase):
         self.oracle_stake = self.manifest['oracle_stake']
         self.amount = self.per_job_cost * self.total_tasks
 
-    def test_initialize(self):
-        """Tests that initialize gets called with correct parameters inside contract.deploy."""
-        self.contract.initialize = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
-        self.contract.initialize.assert_called_once_with(
-            ANY, self.amount, self.oracle_stake, self.total_tasks)
-
     def test_deploy(self):
         """Tests that deploy assigns correct field values to Escrow class state."""
         self.contract.deploy(PUB2, PRIV1)
@@ -214,14 +207,7 @@ class EscrowTest(unittest.TestCase):
         hmt_escrow._setup_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
         self.contract.launch()
-
-        assert_oracle_amount = self.oracle_stake * 100
-        assert_hmt_amount = self.amount * 10**18
-
-        hmt_escrow._setup_sol.assert_called_once_with(
-            self.contract.job_contract, ANY, ANY, assert_oracle_amount,
-            assert_oracle_amount, assert_hmt_amount,
-            self.contract.manifest_url, self.contract.manifest_hash)
+        hmt_escrow._setup_sol.assert_called_once_with(self.contract)
 
     def test_store_intermediate(self):
         """Tests that store_intermediate calls _store_results without parameters."""
@@ -242,12 +228,12 @@ class EscrowTest(unittest.TestCase):
         """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
         hmt_escrow._bulk_payout_sol = MagicMock()
         self.contract.deploy(PUB2, PRIV1)
-        addresses = [TO_ADDR, TO_ADDR2]
-        amounts = [10, 20]
-        self.contract.bulk_payout(addresses, amounts, {}, PUB2, PRIV1)
+        payouts = [(TO_ADDR, 10), (TO_ADDR2, 20)]
+        self.contract.bulk_payout(payouts, {}, PUB2, PRIV1)
+        assert_addrs = [TO_ADDR, TO_ADDR2]
         assert_amounts = [10 * 10**18, 20 * 10**18]
         hmt_escrow._bulk_payout_sol.assert_called_once_with(
-            self.contract.job_contract, addresses, assert_amounts, ANY, ANY)
+            self.contract.job_contract, assert_addrs, assert_amounts, ANY, ANY)
 
 
 class EncryptionTest(unittest.TestCase):
