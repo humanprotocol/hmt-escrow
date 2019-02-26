@@ -209,6 +209,19 @@ def _counter(factory_contract: Contract, gas: int = DEFAULT_GAS) -> int:
     })
 
 
+def _create_escrow_sol(factory_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
+    w3 = get_w3()
+    nonce = w3.eth.getTransactionCount(GAS_PAYER)
+    tx_dict = factory.functions.createEscrow().buildTransaction({
+        'from': GAS_PAYER,
+        'gas': gas,
+        'nonce': nonce
+    })
+    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
+    wait_on_transaction(tx_hash)
+    return True
+
+
 def _setup_sol(escrow: 'Escrow', gas: int = DEFAULT_GAS) -> bool:
     escrow_contract = escrow.job_contract
     reputation_oracle_stake = int(escrow.oracle_stake * 100)
@@ -397,16 +410,7 @@ def get_job() -> str:
         counter = _counter(factory)
         LOG.debug("Factory counter is at:{}".format(counter))
 
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(GAS_PAYER)
-    tx_dict = factory.functions.createEscrow().buildTransaction({
-        'from': GAS_PAYER,
-        'gas': gas,
-        'nonce': nonce
-    })
-    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
-    wait_on_transaction(tx_hash)
-
+    escrow_created = _create_escrow_sol(factory)
     escrow_address = factory.functions.getLastAddress().call({
         'from': GAS_PAYER,
         'gas': gas
