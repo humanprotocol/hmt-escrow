@@ -4,14 +4,9 @@ set -exu
 FILES="*.py api/*.py basemodels/*.py"
 if [ -z ${CI+x} ]
 	then
-	yapf -i $FILES 
-	solhint contracts/*
-	solium --fix -f contracts/*
+	yapf --i $FILES 
 	mypy $FILES --ignore-missing-imports
 else
-	yapf --diff $FILES 
-	# TODO RE-ENABLE 
-	# solhint contracts/*
-	# solium --fix -f contracts/*
-	#mypy $FILES --ignore-missing-imports
+	yapf --diff $FILES
+    mypy $FILES --ignore-missing-imports
 fi
