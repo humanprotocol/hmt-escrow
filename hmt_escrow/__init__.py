@@ -26,7 +26,7 @@ REP_ORACLE = Web3.toChecksumAddress(
 REC_ORACLE = Web3.toChecksumAddress(
     os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
-LOG = logging.getLogger("api")
+LOG = logging.getLogger("hmt_escrow")
 
 
 def _bulk_payout_sol(contract: Contract,
