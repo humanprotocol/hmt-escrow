@@ -11,9 +11,9 @@ from enum import Enum
 # Access basemodels
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from api.eth_bridge import get_eip20, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
+from hmt_escrow.eth_bridge import get_eip20, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
+from hmt_escrow.storage import download, upload
 from basemodels import Manifest
-from api.storage import download, upload
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
 GAS_PAYER = Web3.toChecksumAddress(
