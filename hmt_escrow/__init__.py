@@ -209,13 +209,24 @@ def _counter(factory_contract: Contract, gas: int = DEFAULT_GAS) -> int:
     })
 
 
-def _create_escrow_sol(factory_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
+def _last_address(factory_contract: Contract, gas: int = DEFAULT_GAS) -> str:
+    return factory_contract.functions.getLastAddress().call({
+        'from': GAS_PAYER,
+        'gas': gas
+    })
+
+
+def _create_escrow_sol(factory_contract: Contract,
+                       gas: int = DEFAULT_GAS) -> bool:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
-    tx_dict = factory.functions.createEscrow().buildTransaction({
-        'from': GAS_PAYER,
-        'gas': gas,
-        'nonce': nonce
+    tx_dict = factory_contract.functions.createEscrow().buildTransaction({
+        'from':
+        GAS_PAYER,
+        'gas':
+        gas,
+        'nonce':
+        nonce
     })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
@@ -400,7 +411,7 @@ def get_job() -> str:
 
     factory = None
     if not ESCROW_FACTORY:
-        factory = deploy_factory(gas)
+        factory = deploy_factory()
         ESCROW_FACTORY = factory.address
         if not ESCROW_FACTORY:
             raise Exception("Unable to get address from factory")
@@ -410,11 +421,8 @@ def get_job() -> str:
         counter = _counter(factory)
         LOG.debug("Factory counter is at:{}".format(counter))
 
-    escrow_created = _create_escrow_sol(factory)
-    escrow_address = factory.functions.getLastAddress().call({
-        'from': GAS_PAYER,
-        'gas': gas
-    })
+    _create_escrow_sol(factory)
+    escrow_address = _last_address(factory)
 
     LOG.info("New pokemon!:{}".format(escrow_address))
     return escrow_address
