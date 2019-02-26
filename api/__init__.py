@@ -5,7 +5,7 @@ import sys
 
 from decimal import *
 from web3 import Web3
-from web3.contract import Contract as WContract
+from web3.contract import Contract
 from enum import Enum
 
 # Access basemodels
@@ -37,7 +37,7 @@ def _validate_account_or_raise(account: str) -> str:
     return account
 
 
-def _bulk_payout_sol(contract: WContract,
+def _bulk_payout_sol(contract: Contract,
                      addresses: list,
                      amounts: list,
                      uri: str,
@@ -48,18 +48,16 @@ def _bulk_payout_sol(contract: WContract,
 
     tx_dict = contract.functions.bulkPayOut(addresses, amounts, uri, hash_,
                                             1).buildTransaction({
-                                                'from':
-                                                GAS_PAYER,
-                                                'gas':
-                                                gas,
-                                                'nonce':
-                                                nonce
+                                                'from': GAS_PAYER,
+                                                'gas': gas,
+                                                'nonce': nonce
                                             })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
+    return True
 
 
-def _store_results(contract: WContract, uri: str, hash_: str,
+def _store_results(contract: Contract, uri: str, hash_: str,
                    gas=DEFAULT_GAS) -> bool:
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
@@ -82,17 +80,14 @@ def _store_results(contract: WContract, uri: str, hash_: str,
     return True
 
 
-def _complete(contract: WContract, gas=DEFAULT_GAS) -> bool:
+def _complete(contract: Contract, gas=DEFAULT_GAS) -> bool:
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
     tx_dict = contract.functions.complete().buildTransaction({
-        'from':
-        GAS_PAYER,
-        'gas':
-        gas,
-        'nonce':
-        nonce
+        'from': GAS_PAYER,
+        'gas': gas,
+        'nonce': nonce
     })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
@@ -103,46 +98,46 @@ def _complete(contract: WContract, gas=DEFAULT_GAS) -> bool:
     }))
 
 
-def _manifest(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _manifest(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getUrl().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _hash(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _hash(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getHash().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _hashI(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _hashI(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getIHash().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _hashF(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _hashF(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getFHash().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _getURL(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _getURL(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getUrl().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _getIURL(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _getIURL(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getIUrl().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _getFURL(contract: WContract, gas=DEFAULT_GAS) -> str:
+def _getFURL(contract: Contract, gas=DEFAULT_GAS) -> str:
     return contract.functions.getFUrl().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _balance(contract: WContract, gas=DEFAULT_GAS) -> int:
+def _balance(contract: Contract, gas=DEFAULT_GAS) -> int:
     return contract.functions.getBalance().call({
         'from': GAS_PAYER,
         'gas': gas
     })
 
 
-def _status(contract: WContract, gas=DEFAULT_GAS) -> int:
+def _status(contract: Contract, gas=DEFAULT_GAS) -> int:
     return contract.functions.getStatus().call({'from': GAS_PAYER, 'gas': gas})
 
 
-def _abort_sol(contract: WContract, gas: int) -> bool:
+def _abort_sol(contract: Contract, gas: int) -> bool:
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
@@ -160,7 +155,7 @@ def _abort_sol(contract: WContract, gas: int) -> bool:
     }) == 5  # Cancelled
 
 
-def _setup_sol(contract: WContract,
+def _setup_sol(contract: Contract,
                reputation_oracle: str,
                recording_oracle: str,
                reputation_oracle_stake: int,
@@ -190,7 +185,7 @@ def _setup_sol(contract: WContract,
     }) == 1  # Pending
 
 
-def _refund_sol(contract: WContract, gas: int) -> bool:
+def _refund_sol(contract: Contract, gas: int) -> bool:
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
 
@@ -208,7 +203,8 @@ def _refund_sol(contract: WContract, gas: int) -> bool:
     }) == 5  # Cancelled
 
 
-def _transfer_to_address(address: str, amount: int, gas=DEFAULT_GAS) -> bool:
+def _transfer_to_address(address: str, amount: Decimal,
+                         gas=DEFAULT_GAS) -> bool:
     W3 = get_w3()
     nonce = W3.eth.getTransactionCount(GAS_PAYER)
     eip20_contract = get_eip20()
@@ -223,22 +219,15 @@ def _transfer_to_address(address: str, amount: int, gas=DEFAULT_GAS) -> bool:
                                                     nonce
                                                 })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
+    wait_on_transaction(tx_hash)
+    return True
 
-    # Smart contract returns True if transaction completes successfully
-    return wait_on_transaction(tx_hash)
 
-
-class Contract(Manifest):
-    job_contract = None
-    amount = None
-    oracle_stake = None
-    manifest_url = None
-    manifest_hash = None
-    number_of_answers = None
+class Escrow(Manifest):
     initialized = False
 
-    def initialize(self, job_contract: WContract, amount: int,
-                   oracle_stake: int, number_of_answers: int):
+    def initialize(self, job_contract: Contract, amount: Decimal,
+                   oracle_stake: Decimal, number_of_answers: int) -> bool:
         if self.initialized:
             raise Exception("Unable to reinitialize if we already are")
         self.job_contract = job_contract
@@ -246,6 +235,7 @@ class Contract(Manifest):
         self.amount = amount
         self.oracle_stake = oracle_stake
         self.initialized = True
+        return True
 
     def deploy(self, public_key: bytes, private_key: bytes) -> bool:
         """
@@ -253,17 +243,16 @@ class Contract(Manifest):
         :param public_key:  The public key to encrypt the manifest for
         :param private_key:  The private key to encrypt the manifest
         """
-        job = get_job()
+        job_address = get_job()
+        job = get_job_from_address(job_address)
+
         serialized_manifest = self.serialize()
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         oracle_stake = Decimal(serialized_manifest['oracle_stake'])
-        amount = per_job_cost * number_of_answers
+        amount = Decimal(per_job_cost * number_of_answers)
 
-        # Convert to HMT
-        hmt_amount = int(amount * 10**18)
-
-        self.initialize(job, hmt_amount, oracle_stake, number_of_answers)
+        self.initialize(job, amount, oracle_stake, number_of_answers)
         (hash_, manifest_url) = upload(serialized_manifest, public_key)
 
         self.manifest_url = manifest_url
@@ -310,7 +299,7 @@ class Contract(Manifest):
         return store_results(self.job_contract, url, hash_)
 
     def bulk_payout(self, addresses: list, amounts: list, results: dict,
-                    public_key: bytes, private_key: bytes):
+                    public_key: bytes, private_key: bytes) -> bool:
         '''
         Takes in a matching list of addresses and amounts to pay, as well
         as a dict of the final results. Uploads final results to IPFS,
@@ -344,29 +333,22 @@ class Contract(Manifest):
         return download(_getFURL(self.job_contract), private_key)
 
 
-def get_contract_from_address(escrow_address: str,
-                              private_key: bytes,
-                              gas=DEFAULT_GAS) -> Contract:
-    wcontract = get_job_from_address(escrow_address)
-    url = _getURL(wcontract, gas=gas)
+def access_job(escrow_address: str, private_key: bytes,
+               gas=DEFAULT_GAS) -> Contract:
+    job = get_job_from_address(escrow_address)
+    url = _getURL(job, gas=gas)
     manifest_dict = download(url, private_key)
     contract_m = Manifest(manifest_dict)
     contract = Contract(contract_m)
     per_job_cost = Decimal(manifest_dict['task_bid_price'])
     number_of_answers = int(manifest_dict['job_total_tasks'])
-    amount = per_job_cost * number_of_answers
-
-    # Convert to HMT
-    hmt_amount = int(amount * 10**18)
-
-    contract.oracle_stake = int(Decimal(manifest_dict['oracle_stake']))
-    contract.amount = hmt_amount
-    contract.initialize(wcontract, contract.amount, contract.oracle_stake,
-                        number_of_tasks)
+    oracle_stake = Decimal(manifest_dict['oracle_stake'])
+    amount = Decimal(per_job_cost * number_of_answers)
+    contract.initialize(job, amount, oracle_stake, number_of_answers)
     return contract
 
 
-def get_job(gas=DEFAULT_GAS) -> WContract:
+def get_job(gas=DEFAULT_GAS) -> str:
     """ Get a new job and launch it without funds on the blockchain.
 
         This is the first step of putting a new job on the blockchain.
@@ -375,7 +357,7 @@ def get_job(gas=DEFAULT_GAS) -> WContract:
         Args:
             gas (int): How much gas to get on the contract.
         Returns:
-            WContract: The contract launched on the blockchain
+            Contract: The contract launched on the blockchain
             """
 
     global ESCROW_FACTORY
@@ -394,35 +376,30 @@ def get_job(gas=DEFAULT_GAS) -> WContract:
         })
         LOG.debug("Factory counter is at:{}".format(counter))
 
-    W3 = get_w3()
-    nonce = W3.eth.getTransactionCount(GAS_PAYER)
+    w3 = get_w3()
+    nonce = w3.eth.getTransactionCount(GAS_PAYER)
     tx_dict = factory.functions.createEscrow().buildTransaction({
-        'from':
-        GAS_PAYER,
-        'gas':
-        gas,
-        'nonce':
-        nonce
+        'from': GAS_PAYER,
+        'gas': gas,
+        'nonce': nonce
     })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
 
     escrow_address = factory.functions.getLastAddress().call({
-        'from':
-        GAS_PAYER,
-        'gas':
-        gas
+        'from': GAS_PAYER,
+        'gas': gas
     })
 
     LOG.info("New pokemon!:{}".format(escrow_address))
+    return escrow_address
+
+
+def get_job_from_address(escrow_address: str) -> Contract:
     return get_escrow(escrow_address)
 
 
-def get_job_from_address(escrow_address: str) -> WContract:
-    return get_escrow(escrow_address)
-
-
-def setup_job(contract: WContract, amount: int, oracle_stake: int,
+def setup_job(contract: Contract, amount: Decimal, oracle_stake: Decimal,
               manifest_url: str, manifest_hash: str) -> bool:
     """ Once a job is started we can start a job to be processing.
 
@@ -431,7 +408,7 @@ def setup_job(contract: WContract, amount: int, oracle_stake: int,
         setup the job for labeling (Pending):
 
         Args:
-            contract (WContract): The actual ethereum contract instantiated.
+            contract (Contract): The actual ethereum contract instantiated.
             amount (int): The amount of token that the job represents.
             manifest_url (str): The url to the questions to be answered.
             manifest_hash: The hash of the plaintext of the manifest.
@@ -440,14 +417,16 @@ def setup_job(contract: WContract, amount: int, oracle_stake: int,
             bool: True if the contract is pending """
     reputation_oracle = GAS_PAYER
     recording_oracle = GAS_PAYER
-    reputation_oracle_stake = oracle_stake
-    recording_oracle_stake = oracle_stake
+    reputation_oracle_stake = int(oracle_stake * 100)
+    recording_oracle_stake = int(oracle_stake * 100)
+    hmt_amount = int(amount * 10**18)
+
     return _setup_sol(contract, reputation_oracle, recording_oracle,
-                      reputation_oracle_stake, recording_oracle_stake, amount,
-                      manifest_url, manifest_hash)
+                      reputation_oracle_stake, recording_oracle_stake,
+                      hmt_amount, manifest_url, manifest_hash)
 
 
-def abort_job(contract: WContract, gas=DEFAULT_GAS) -> bool:
+def abort_job(contract: Contract, gas=DEFAULT_GAS) -> bool:
     """ Return all leftover funds to the contract launcher
 
         Once a job hash been put on blockchain, and is funded, this function can return
@@ -455,14 +434,14 @@ def abort_job(contract: WContract, gas=DEFAULT_GAS) -> bool:
         already been partially paid.
 
         Args:
-            contract (WContract): The actual ethereum contract instantiated.
+            contract (Contract): The actual ethereum contract instantiated.
             gas (int): The amount of gas to run the transaction with.
         Returns:
             bool: True if the contract is pending """
     return _abort_sol(contract, gas)
 
 
-def store_results(contract: WContract,
+def store_results(contract: Contract,
                   manifest_url: str,
                   manifest_hash: str,
                   gas=DEFAULT_GAS) -> bool:
@@ -471,7 +450,7 @@ def store_results(contract: WContract,
         Store intermediate manifest results
 
         Args:
-            contract (WContract): The actual ethereum contract instantiated.
+            contract (Contract): The actual ethereum contract instantiated.
             manifest_url (str): The url of the answers to the questions
             manifest_hash: The hash of the plaintext of the manifest.
             gas (int): The amount of gas to run the transaction with.
@@ -483,7 +462,7 @@ def store_results(contract: WContract,
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 
-def status(contract: WContract, gas=DEFAULT_GAS) -> Enum:
+def status(contract: Contract, gas=DEFAULT_GAS) -> Enum:
     """ User friendly status.
 
     Returns the status of a contract
@@ -491,7 +470,7 @@ def status(contract: WContract, gas=DEFAULT_GAS) -> Enum:
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
 
     Args:
-        contract (WContract): The actual ethereum contract instantiated.
+        contract (Contract): The actual ethereum contract instantiated.
         gas (int): The amount of gas to run the transaction with.
     Returns:
         Status: The enum which represents the state.
