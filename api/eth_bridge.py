@@ -6,6 +6,9 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
+from typing import Dict, Tuple, Union
+
+AttributeDict = Dict[str, Union[int, str]]
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
 GAS_PAYER = Web3.toChecksumAddress(
@@ -29,7 +32,7 @@ CONTRACTS = compile_files([
 ])
 
 
-def get_w3():
+def get_w3() -> Web3:
     endpoint = os.getenv("HET_ETH_SERVER", 'http://localhost:8545')
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HET_ETH_SERVER")
@@ -39,7 +42,7 @@ def get_w3():
     return w3
 
 
-def wait_on_transaction(tx_hash: str) -> bool:
+def wait_on_transaction(tx_hash: str) -> AttributeDict:
     w3 = get_w3()
     LOG.debug("Waiting to get transaction recipt")
     return w3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
@@ -58,7 +61,7 @@ def get_contract_interface(contract_entrypoint):
     return contract_interface
 
 
-def get_eip20():
+def get_eip20() -> Contract:
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
@@ -67,7 +70,7 @@ def get_eip20():
     return contract
 
 
-def get_escrow(escrow_address, gas=DEFAULT_GAS) -> Contract:
+def get_escrow(escrow_address: str, gas: int = DEFAULT_GAS) -> Contract:
     contract_interface = get_contract_interface(
         '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
     escrow = get_w3().eth.contract(
@@ -75,7 +78,7 @@ def get_escrow(escrow_address, gas=DEFAULT_GAS) -> Contract:
     return escrow
 
 
-def get_factory(factory_address, gas=DEFAULT_GAS) -> Contract:
+def get_factory(factory_address: str, gas: int = DEFAULT_GAS) -> Contract:
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     escrow_factory = get_w3().eth.contract(
@@ -83,7 +86,8 @@ def get_factory(factory_address, gas=DEFAULT_GAS) -> Contract:
     return escrow_factory
 
 
-def deploy_contract(contract_interface, gas, args=[]):
+def deploy_contract(contract_interface, gas: int = DEFAULT_GAS,
+                    args=[]) -> Tuple[Contract, str]:
     w3 = get_w3()
     contract = w3.eth.contract(
         abi=contract_interface['abi'], bytecode=contract_interface['bin'])
@@ -112,7 +116,7 @@ def deploy_contract(contract_interface, gas, args=[]):
     return contract, contract_address
 
 
-def deploy_factory(gas=DEFAULT_GAS) -> Contract:
+def deploy_factory(gas: int = DEFAULT_GAS) -> Contract:
     """
     Returns success
     sol: solidity code
