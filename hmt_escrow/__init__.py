@@ -30,12 +30,12 @@ ESCROW_FACTORY = os.getenv("FACTORYADDR", None)
 LOG = logging.getLogger("hmt_escrow")
 
 
-def _bulk_payout_sol(escrow_contract: Contract,
-                     addresses: list,
-                     amounts: list,
-                     uri: str,
-                     hash_: str,
-                     gas: int = DEFAULT_GAS):
+def _bulk_payout(escrow_contract: Contract,
+                 addresses: list,
+                 amounts: list,
+                 uri: str,
+                 hash_: str,
+                 gas: int = DEFAULT_GAS):
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
 
@@ -160,7 +160,7 @@ def _status(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> int:
     })
 
 
-def _abort_sol(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
+def _abort(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
 
@@ -178,7 +178,7 @@ def _abort_sol(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
     }) == 5  # Cancelled
 
 
-def _refund_sol(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
+def _refund(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
 
@@ -213,8 +213,7 @@ def _last_address(factory_contract: Contract, gas: int = DEFAULT_GAS) -> str:
     })
 
 
-def _create_escrow_sol(factory_contract: Contract,
-                       gas: int = DEFAULT_GAS) -> bool:
+def _create_escrow(factory_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
     tx_dict = factory_contract.functions.createEscrow().buildTransaction({
@@ -230,7 +229,7 @@ def _create_escrow_sol(factory_contract: Contract,
     return True
 
 
-def _setup_sol(escrow: 'Escrow', gas: int = DEFAULT_GAS) -> bool:
+def _setup(escrow: 'Escrow', gas: int = DEFAULT_GAS) -> bool:
     escrow_contract = escrow.job_contract
     reputation_oracle_stake = int(escrow.oracle_stake * 100)
     recording_oracle_stake = int(escrow.oracle_stake * 100)
@@ -320,13 +319,13 @@ class Escrow(Manifest):
         """
         Transfer ether back to the contract initiator.
         """
-        return _refund_sol(self.job_contract)
+        return _refund(self.job_contract)
 
     def abort(self) -> bool:
         """
         Transfer back the money to the funder of the contract
         """
-        return _abort_sol(self.job_contract)
+        return _abort(self.job_contract)
 
     def launch(self) -> bool:
         """
@@ -363,8 +362,8 @@ class Escrow(Manifest):
         # Convert amounts to HMT
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
-        return _bulk_payout_sol(self.job_contract, eth_addrs, hmt_amounts, url,
-                                hash_)
+        return _bulk_payout(self.job_contract, eth_addrs, hmt_amounts, url,
+                            hash_)
 
     def complete(self) -> bool:
         try:
@@ -419,7 +418,7 @@ def get_job() -> str:
         counter = _counter(factory)
         LOG.debug("Factory counter is at:{}".format(counter))
 
-    _create_escrow_sol(factory)
+    _create_escrow(factory)
     escrow_address = _last_address(factory)
 
     LOG.info("New pokemon!:{}".format(escrow_address))
@@ -446,7 +445,7 @@ def setup_job(escrow: Escrow) -> bool:
         Returns:
             bool: True if the contract is pending """
 
-    return _setup_sol(escrow)
+    return _setup(escrow)
 
 
 def abort_job(escrow_contract: Contract) -> bool:
@@ -461,7 +460,7 @@ def abort_job(escrow_contract: Contract) -> bool:
             gas (int): The amount of gas to run the transaction with.
         Returns:
             bool: True if the contract is pending """
-    return _abort_sol(escrow_contract)
+    return _abort(escrow_contract)
 
 
 def store_results(escrow_contract: Contract, manifest_url: str,
