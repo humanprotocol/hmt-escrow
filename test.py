@@ -232,16 +232,6 @@ class ContractTest(unittest.TestCase):
         api._refund_sol.assert_called_once_with(self.contract.job_contract,
                                                 ANY)
 
-    def test_payout(self):
-        """Tests that payout calls _partial_payout with correct amount after HMT decimal conversion."""
-        api._partial_payout_sol = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
-        amount = 10
-        self.contract.payout(amount, TO_ADDR, {}, PUB2, PRIV1)
-        assert_amount = 10 * 10**18
-        api._partial_payout_sol.assert_called_once_with(
-            self.contract.job_contract, assert_amount, TO_ADDR, ANY, ANY)
-
     def test_bulk_payout(self):
         """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
         api._bulk_payout_sol = MagicMock()
