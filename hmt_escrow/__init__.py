@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple
 # Access basemodels
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from hmt_escrow.eth_bridge import get_eip20, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
+from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
 from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
@@ -262,9 +262,9 @@ def _transfer_to_address(address: str, amount: Decimal,
                          gas: int = DEFAULT_GAS) -> bool:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
-    eip20_contract = get_eip20()
+    hmtoken_contract = get_hmtoken()
 
-    tx_dict = eip20_contract.functions.transfer(address,
+    tx_dict = hmtoken_contract.functions.transfer(address,
                                                 amount).buildTransaction({
                                                     'from':
                                                     GAS_PAYER,
