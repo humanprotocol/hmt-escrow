@@ -2,7 +2,7 @@ import logging
 import codecs
 import hashlib
 import json
-from typing import Tuple
+from typing import Dict, Tuple
 
 import ipfsapi
 import os
@@ -26,7 +26,7 @@ if not os.getenv("IPFS_DISABLE"):
         LOG.error("Connection with IPFS failed because of: {}".format(e))
 
 
-def download(key: str, private_key: bytes) -> dict:
+def download(key: str, private_key: bytes) -> Dict:
     """
     Download a key, decrypt it, and output it as a binary string
     :param private_key: The private_key to decrypt this string with.
