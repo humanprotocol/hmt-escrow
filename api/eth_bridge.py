@@ -15,16 +15,8 @@ GAS_PAYER_PRIV = os.getenv(
     "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
 
 LOG = logging.getLogger("api.eth_bridge")
-WAIT_TIME = 3
-EIP20ADDR = os.getenv("EIP20ADDR",
-                      '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25')
-try:
-    EIP20ADDR = Web3.toChecksumAddress(EIP20ADDR)
-except Exception as e:
-    LOG.error("EIP20ADDR:{}".format(EIP20ADDR))
-    raise e
-
-COUNTER = int(os.getenv("TIMEOUT_COUNTER", "10"))
+EIP20ADDR = Web3.toChecksumAddress(os.getenv("EIP20ADDR",
+                      '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
 
 CONTRACT_FOLDER = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'contracts')
