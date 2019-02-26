@@ -1,7 +1,7 @@
 import codecs
 import hashlib
 import json
-from typing import Any, Tuple
+from typing import Tuple
 
 import ipfsapi
 import os
@@ -33,7 +33,7 @@ def download(key: str, private_key: bytes) -> dict:
     return json.loads(msg)
 
 
-def upload(msg: dict, public_key: bytes) -> Tuple[Any, Any]:
+def upload(msg: dict, public_key: bytes) -> Tuple[str, str]:
     """
     Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
@@ -49,13 +49,25 @@ def upload(msg: dict, public_key: bytes) -> Tuple[Any, Any]:
     return hash_, key
 
 
-def _decrypt(private_key: bytes, msg: bytes):
+def _decrypt(private_key: bytes, msg: bytes) -> str:
+    """
+    Use ECIES to decrypt a message with a given private key and an optional MAC.
+    :param private_key: The private_key to decrypt the message with
+    :param msg: The message to be decrypted
+    :return: Plaintext equivalent to the originally encrypted one
+    """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
     return e.decode(encoding='utf-8')
 
 
-def _encrypt(public_key: bytes, msg: str):
+def _encrypt(public_key: bytes, msg: str) -> bytes:
+    """
+    Use ECIES to encrypt a message with a given public key and optional MAC.
+    :param public_key: The public_key to encrypt the message with
+    :param msg: The message to be encrypted
+    :return: Cryptotext
+    """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
     msg_bytes = msg.encode(encoding='utf-8')
     return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
