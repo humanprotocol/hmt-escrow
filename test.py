@@ -224,12 +224,12 @@ class EscrowTest(unittest.TestCase):
             'taskdata': None,
             'taskdata_uri': 'http://google.com/fake'
         }
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         mock_initialize.assert_called_once_with(mock_serialize.return_value)
 
     def test_deploy(self):
         """Tests that deploy assigns correct field values to Escrow class state."""
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         self.assertEqual(self.contract.amount, self.amount)
         self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
         self.assertEqual(self.contract.number_of_answers, self.total_tasks)
@@ -237,7 +237,7 @@ class EscrowTest(unittest.TestCase):
     def test_fund(self):
         """Tests that fund calls _transfer_to_address with correct parameters."""
         hmt_escrow._transfer_to_address = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         self.contract.fund()
         hmt_escrow._transfer_to_address.assert_called_once_with(
             self.contract.job_contract.address, self.amount)
@@ -245,14 +245,14 @@ class EscrowTest(unittest.TestCase):
     def test_abort(self):
         """Tests that abort calls _abort with correct parameters."""
         hmt_escrow._abort = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         self.contract.abort()
         hmt_escrow._abort.assert_called_once_with(self.contract.job_contract)
 
     def test_complete(self):
         """Tests that complete calls _complete with correct parameters."""
         hmt_escrow._complete = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         self.contract.complete()
         hmt_escrow._complete.assert_called_once_with(
             self.contract.job_contract)
@@ -260,32 +260,32 @@ class EscrowTest(unittest.TestCase):
     def test_launch(self):
         """Tests that launch calls _setup with correct parameters."""
         hmt_escrow._setup = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
-        self.contract.launch()
+        self.contract.deploy(PUB2)
+        self.contract.setup()
         hmt_escrow._setup.assert_called_once_with(self.contract)
 
     def test_store_intermediate(self):
         """Tests that store_intermediate calls _store_results without parameters."""
         hmt_escrow._store_results = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
-        self.contract.store_intermediate({}, PUB2, PRIV1)
+        self.contract.deploy(PUB2)
+        self.contract.store_intermediate_results({}, PUB2)
         hmt_escrow._store_results.assert_called_once()
 
     def test_refund(self):
         """Tests that refund calls _refund with correct parameters."""
         hmt_escrow._refund = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         self.contract.refund()
         hmt_escrow._refund.assert_called_once_with(self.contract.job_contract)
 
     def test_bulk_payout(self):
         """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
         hmt_escrow._bulk_payout = MagicMock()
-        self.contract.deploy(PUB2, PRIV1)
+        self.contract.deploy(PUB2)
         payouts = [(TO_ADDR, 10), (TO_ADDR2, 20)]
-        self.contract.bulk_payout(payouts, {}, PUB2, PRIV1)
+        self.contract.bulk_payout(payouts, {}, PUB2)
         assert_addrs = [TO_ADDR, TO_ADDR2]
-        assert_amounts = [10 * 10**18, 20 * 10**18]
+        assert_amounts = [10, 20]
         hmt_escrow._bulk_payout.assert_called_once_with(
             self.contract.job_contract, assert_addrs, assert_amounts, ANY, ANY)
 
