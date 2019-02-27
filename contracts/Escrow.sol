@@ -20,11 +20,11 @@ contract Escrow {
     string private manifestUrl;
     string private manifestHash;
 
-    string private intermediateManifestUrl;
-    string private intermediateManifestHash;
+    string private intermediateResultsUrl;
+    string private intermediateResultsHash;
 
-    string private resultsManifestUrl;
-    string private resultsManifestHash;
+    string private finalResultsUrl;
+    string private finalResultsHash;
 
     uint private expiration;
 
@@ -62,28 +62,28 @@ contract Escrow {
         return recordingOracle;
     }
 
-    function getHash() public view returns (string) {
+    function getManifestHash() public view returns (string) {
         return manifestHash;
     }
 
-    function getUrl() public view returns (string) {
+    function getManifestUrl() public view returns (string) {
         return manifestUrl;
     }
 
-    function getIUrl() public view returns (string) {
-        return intermediateManifestUrl;
+    function getIntermediateResultsUrl() public view returns (string) {
+        return intermediateResultsUrl;
     }
 
-    function getIHash() public view returns (string) {
-        return intermediateManifestHash;
+    function getIntermediateResultsHash() public view returns (string) {
+        return intermediateResultsHash;
     }
 
-    function getFUrl() public view returns (string) {
-        return resultsManifestUrl;
+    function getFinalResultsUrl() public view returns (string) {
+        return finalResultsUrl;
     }
 
-    function getFHash() public view returns (string) {
-        return resultsManifestHash;
+    function getFinalResultsHash() public view returns (string) {
+        return finalResultsHash;
     }
 
     // The escrower puts the Token in the contract without an agentless
@@ -145,18 +145,13 @@ contract Escrow {
         return success;
     }
 
-    function complete() public returns (bool success) {
+    function complete() public {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
-        if (status == EscrowStatuses.Complete) {
-            return true;
-        }
 
         if (status == EscrowStatuses.Paid) {
             status = EscrowStatuses.Complete;
-            return true;
         }
-        return false;
     }
 
     function storeResults(string _url, string _hash) public {
@@ -167,39 +162,9 @@ contract Escrow {
             status == EscrowStatuses.Partial,
             "Escrow not in Pending or Partial status state"
         );
-        intermediateManifestUrl = _url;
-        intermediateManifestHash = _hash;
+        intermediateResultsUrl = _url;
+        intermediateResultsHash = _hash;
         emit IntermediateStorage(_url, _hash);
-    }
-
-    function payOut(
-        uint256 _amount,
-        address _recipient,
-        string _url,
-        string _hash
-    ) public returns (bool)
-    {
-        require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
-        require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
-        uint256 balance = getBalance();
-        require(balance > 0, "EIP20 contract out of funds");
-        require(balance >= _amount, "Amount too high");
-        require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
-        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-        resultsManifestUrl = _url;
-        resultsManifestHash = _hash;
-
-        bool success = partialPayout(_amount, _recipient);
-        balance = getBalance();
-        if (success) {
-            if (status == EscrowStatuses.Pending) {
-                status = EscrowStatuses.Partial;
-            }
-            if (balance == 0 && status != EscrowStatuses.Paid) {
-                status = EscrowStatuses.Paid;
-            }
-        }
-        return success;
     }
 
     function bulkPayOut(
@@ -217,8 +182,8 @@ contract Escrow {
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
-        resultsManifestUrl = _url;
-        resultsManifestHash = _hash;
+        intermediateResultsUrl = _url;
+        intermediateResultsHash = _hash;
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
@@ -258,17 +223,6 @@ contract Escrow {
             finalAmounts.push(amount);
         }
         return (reputationOracleFee, recordingOracleFee);
-    }
-
-    function partialPayout(uint256 _amount, address _recipient) internal returns (bool) {
-        HMTokenInterface token = HMTokenInterface(eip20);
-        uint256 reputationOracleFee = reputationOracleStake.mul(_amount).div(100);
-        uint256 recordingOracleFee = recordingOracleStake.mul(_amount).div(100);
-        uint256 amount = _amount.sub(reputationOracleFee).sub(recordingOracleFee);
-        token.transfer(reputationOracle, reputationOracleFee);
-        token.transfer(recordingOracle, recordingOracleFee);
-        token.transfer(_recipient, amount);
-        return true;
     }
 
     event Pending(string manifest, string hash);
