@@ -22,10 +22,6 @@ GAS_PAYER = Web3.toChecksumAddress(
 GAS_PAYER_PRIV = os.getenv(
     "GAS_PAYER_PRIV",
     "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
-REP_ORACLE = Web3.toChecksumAddress(
-    os.getenv("REP_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-REC_ORACLE = Web3.toChecksumAddress(
-    os.getenv("REC_ORACLE", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
 FACTORY_ADDR = os.getenv("FACTORY_ADDR", None)
 LOG = logging.getLogger("hmt_escrow")
 
