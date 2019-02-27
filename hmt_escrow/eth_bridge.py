@@ -33,6 +33,12 @@ CONTRACTS = compile_files([
 
 
 def get_w3() -> Web3:
+    """Set up the web3 provider for serving transactions to the ethereum network.
+
+    Returns:
+        Web3: returns the web3 provider.
+
+    """
     endpoint = os.getenv("HMT_ETH_SERVER", 'http://localhost:8545')
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
@@ -43,6 +49,18 @@ def get_w3() -> Web3:
 
 
 def wait_on_transaction(tx_hash: str) -> AttributeDict:
+    """Waits for transaction to complete.
+
+    Args:
+        tx_hash (str): transaction hash that had been deployed to the network.
+
+    Returns:
+        AttributedDict: returns the transaction receipt.
+    
+    Raises:
+        TimeoutError: if timeout expires.
+
+    """
     w3 = get_w3()
     LOG.debug("Waiting to get transaction recipt")
     try:
@@ -53,6 +71,16 @@ def wait_on_transaction(tx_hash: str) -> AttributeDict:
 
 
 def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
+    """Locally signs and sends the transaction with a given private key to the network.
+
+    Args:
+        tx_hash (str): transaction hash that had been deployed to the network.
+        private_key (bytes): the private key used to locally sign the transaction.
+    
+    Returns:
+        str: returns the transaction hash back.
+
+    """
     w3 = get_w3()
     signed_txn = w3.eth.account.signTransaction(
         tx_hash, private_key=private_key)
@@ -60,12 +88,27 @@ def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
 
 
 def get_contract_interface(contract_entrypoint):
+    """Retrieve the contract interface of a given contract.
+
+    Args:
+        contract_entrypoint: the entrypoint of the compiled source.
+    
+    Returns:
+        returns the contract interface containing the contract abi.
+
+    """
     compiled_sol = CONTRACTS
     contract_interface = compiled_sol[contract_entrypoint]
     return contract_interface
 
 
 def get_hmtoken() -> Contract:
+    """Retrieve the HMToken contract from a given address.
+
+    Returns:
+        Contract: returns the HMToken solidity contract.
+
+    """
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
@@ -74,7 +117,17 @@ def get_hmtoken() -> Contract:
     return contract
 
 
-def get_escrow(escrow_address: str, gas: int = DEFAULT_GAS) -> Contract:
+def get_escrow(escrow_address: str) -> Contract:
+    """Retrieve the Escrow contract from a given address.
+
+    Args:
+        escrow_address (str): the ethereum address of the Escrow contract.
+
+    Returns:
+        Contract: returns the Escrow solidity contract.
+        
+    """
+
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
@@ -83,7 +136,16 @@ def get_escrow(escrow_address: str, gas: int = DEFAULT_GAS) -> Contract:
     return escrow
 
 
-def get_factory(factory_address: str, gas: int = DEFAULT_GAS) -> Contract:
+def get_factory(factory_address: str) -> Contract:
+    """Retrieve the EscrowFactory contract from a given address.
+
+    Args:
+        factory_address (str): the ethereum address of the Escrow contract.
+
+    Returns:
+        Contract: returns the EscrowFactory solidity contract.
+        
+    """
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
@@ -92,7 +154,19 @@ def get_factory(factory_address: str, gas: int = DEFAULT_GAS) -> Contract:
     return escrow_factory
 
 
-def deploy_contract(contract_interface, gas: int = DEFAULT_GAS, args=[]):
+def deploy_contract(contract_interface, gas: int = DEFAULT_GAS,
+                    args=[]) -> Tuple[Contract, str]:
+    """Deploy a given contract to the ethereum network.
+
+    Args:
+        contract_interface: the interface of a contract containing the abi and the binary.
+        gas (int): maximum amount of gas the caller is ready to pay.
+        args: additional arguments like the HMToken address.
+
+    Returns:
+        Tuple[Contract, str]: returns a tuple of the solidity contract and its ethereum address.
+        
+    """
     w3 = get_w3()
     contract = w3.eth.contract(
         abi=contract_interface['abi'], bytecode=contract_interface['bin'])
@@ -121,12 +195,15 @@ def deploy_contract(contract_interface, gas: int = DEFAULT_GAS, args=[]):
     return contract, contract_address
 
 
-def deploy_factory(gas: int = DEFAULT_GAS) -> Contract:
-    """
-    Returns success
-    sol: solidity code
-    gas: how much gas to use for the contract
-    contract = input path into sol contract
+def deploy_factory(gas: int = DEFAULT_GAS) -> str:
+    """Deploy an EscrowFactory solidity contract to the ethereum network.
+
+    Args:
+        gas (int): maximum amount of gas the caller is ready to pay.
+
+    Returns
+        str: returns the contract address of the newly deployed factory.
+
     """
 
     contract_interface = get_contract_interface(
