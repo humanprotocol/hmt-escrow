@@ -45,7 +45,11 @@ def get_w3() -> Web3:
 def wait_on_transaction(tx_hash: str) -> AttributeDict:
     w3 = get_w3()
     LOG.debug("Waiting to get transaction recipt")
-    return w3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
+    try:
+        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
+    except TimeoutError as e:
+        raise e
+    return tx_receipt
 
 
 def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
