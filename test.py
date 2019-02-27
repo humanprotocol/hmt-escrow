@@ -92,9 +92,7 @@ def a_manifest(number_of_tasks=100,
 
 
 class ManifestTest(unittest.TestCase):
-    """
-    Manifest specific tests, validating that models work the way we want
-    """
+    """Manifest specific tests, validating that models work the way we want"""
 
     def test_basic_construction(self):
         """Tests that manifest can validate the test manifest properly."""

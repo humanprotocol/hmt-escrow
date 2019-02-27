@@ -660,7 +660,7 @@ class Escrow(Manifest):
         """Retrieves the initial manifest used to setup the job.
 
         Args:
-            private_key (bool): the private key used to download the manifest.
+            private_key (bytes): the private key used to download the manifest.
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
@@ -672,7 +672,7 @@ class Escrow(Manifest):
         """Retrieves the intermediate results.
 
         Args:
-            private_key (bool): the private key of the Reputation Oracle.
+            private_key (bytes): the private key of the Reputation Oracle.
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
@@ -685,7 +685,7 @@ class Escrow(Manifest):
         """Retrieves the final results.
 
         Args:
-            private_key (bool): the private key of the the job requester or their agent.
+            private_key (bytes): the private key of the the job requester or their agent.
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
