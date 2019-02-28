@@ -33,7 +33,6 @@ ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
 # Necessary files for the API to function properly
 COPY *.py /work/
 COPY hmt_escrow /work/hmt_escrow/
-COPY basemodels /work/basemodels/
 COPY bin /work/bin/
 
 CMD ./test.py

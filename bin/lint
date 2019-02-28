@@ -1,7 +1,7 @@
 #!/bin/sh
 set -exu
 
-FILES="*.py hmt_escrow/*.py basemodels/*.py"
+FILES="*.py hmt_escrow/*.py"
 if [ -z ${CI+x} ]
 	then
 	yapf --i $FILES 
