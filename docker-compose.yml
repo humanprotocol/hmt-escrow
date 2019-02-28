@@ -8,7 +8,8 @@ services:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
       - DEFAULT_GAS=6700000
-      - TESTADDR=0x1413862c2b7054cdbfdc181b83962cb0fc11fd92
+      - GAS_PAYER=0x1413862c2b7054cdbfdc181b83962cb0fc11fd92
+      - GAS_PAYER_PRIV=28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5
       - IPFS_HOSTNAME=ipfs
     command: /work/bin/wait_then_run
     build: .

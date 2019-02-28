@@ -21,8 +21,13 @@ REQ_JSON = 'file:///tmp/req.json'
 ANS_JSON = 'file:///tmp/ans.json'
 CALLBACK_URL = 'http://google.com/webback'
 
-ADDR = Web3.toChecksumAddress(
-    os.getenv("TESTADDR", '0x1413862c2b7054cdbfdc181b83962cb0fc11fd92'))
+GAS_PAYER = Web3.toChecksumAddress(
+    os.getenv("GAS_PAYER", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
+GAS_PAYER_PRIV = os.getenv(
+    "GAS_PAYER_PRIV",
+    "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
+
+ADDR = GAS_PAYER
 TO_ADDR = '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
 TO_ADDR2 = '0xa30E4681db25f0f32E8C79b28F2A80A653A556A2'
 

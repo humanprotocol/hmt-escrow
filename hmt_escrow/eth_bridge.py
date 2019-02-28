@@ -6,16 +6,13 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, Optional
 
 AttributeDict = Dict[str, Union[int, str]]
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
-GAS_PAYER = Web3.toChecksumAddress(
-    os.getenv("GAS_PAYER", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-GAS_PAYER_PRIV = os.getenv(
-    "GAS_PAYER_PRIV",
-    "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
+GAS_PAYER = Web3.toChecksumAddress(os.getenv("GAS_PAYER"))
+GAS_PAYER_PRIV = os.getenv("GAS_PAYER_PRIV")
 
 LOG = logging.getLogger("api.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
@@ -70,12 +67,13 @@ def wait_on_transaction(tx_hash: str) -> AttributeDict:
     return tx_receipt
 
 
-def sign_and_send_transaction(tx_hash: str, private_key: str) -> str:
+def sign_and_send_transaction(tx_hash: str,
+                              private_key: Optional[str] = None) -> str:
     """Locally signs and sends the transaction with a given private key to the network.
 
     Args:
         tx_hash (str): transaction hash that had been deployed to the network.
-        private_key (bytes): the private key used to locally sign the transaction.
+        private_key (Optional[str]): the private key used to locally sign the transaction
     
     Returns:
         str: returns the transaction hash back.

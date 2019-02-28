@@ -14,12 +14,12 @@ from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
-GAS_PAYER = Web3.toChecksumAddress(
-    os.getenv("GAS_PAYER", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-GAS_PAYER_PRIV = os.getenv(
-    "GAS_PAYER_PRIV",
-    "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
-FACTORY_ADDR = os.getenv("FACTORY_ADDR", None)
+GAS_PAYER = Web3.toChecksumAddress(os.getenv("GAS_PAYER"))
+GAS_PAYER_PRIV = str(os.getenv("GAS_PAYER_PRIV"))
+FACTORY_ADDR = os.getenv("FACTORY_ADDR")
+if FACTORY_ADDR:
+    FACTORY_ADDR = Web3.toChecksumAddress(FACTORY_ADDR)
+
 LOG = logging.getLogger("hmt_escrow")
 
 
@@ -180,11 +180,11 @@ def _balance(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> int:
 
 
 def _bulk_payout(escrow_contract: Contract,
-                 addresses: list,
-                 amounts: list,
+                 addresses: List[str],
+                 amounts: List[int],
                  uri: str,
                  hash_: str,
-                 gas: int = DEFAULT_GAS):
+                 gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Escrow solidity contract's bulkPayout method that creates a transaction to the network.
 
     Handles the conversion of the oracle_stake and fundable amount to contract's native values.
