@@ -91,68 +91,6 @@ def a_manifest(number_of_tasks=100,
     return manifest
 
 
-class ManifestTest(unittest.TestCase):
-    """Manifest specific tests, validating that models work the way we want"""
-
-    def test_basic_construction(self):
-        """Tests that manifest can validate the test manifest properly."""
-        a_manifest()
-
-    def test_can_fail_toconstruct(self):
-        """Tests that the manifest raises an Error when called with falsy parameters."""
-        a_manifest(-1)
-        self.assertRaises(schematics.exceptions.DataError, a_manifest,
-                          "invalid amount")
-
-    def test_can_fail_toconstruct2(self):
-        """Tests that validated fields can't be broken without an exception."""
-        mani = a_manifest()
-        mani.taskdata_uri = 'test'
-        self.assertRaises(schematics.exceptions.DataError, mani.validate)
-
-    def test_can_make_request_config_job(self):
-        """Test that jobs with valid request_config parameter work"""
-        manifest = a_manifest(
-            request_type='image_label_area_select',
-            request_config={'shape_type': 'point'})
-
-    def test_can_bad_request_config(self):
-        """Test that an invalid shape_type in request_config will fail"""
-        manifest = a_manifest()
-        manifest.request_type = 'image_label_area_select'
-        manifest.request_config = {'shape_type': 'not-a-real-option'}
-        self.assertRaises(schematics.exceptions.DataError, manifest.validate)
-
-    def test_gets_default_restrictedanswerset(self):
-        """Make sure that the image_label_area_select jobs get a default RAS"""
-        model = {
-            'job_mode': 'batch',
-            'request_type': 'image_label_area_select',
-            'unsafe_content': False,
-            'task_bid_price': 1,
-            'oracle_stake': 0.1,
-            'expiration_date': 0,
-            'minimum_trust_server': .1,
-            'minimum_trust_client': .1,
-            'requester_accuracy_target': .1,
-            'recording_oracle_addr': REC_ORACLE,
-            'reputation_oracle_addr': REP_ORACLE,
-            'reputation_agent_addr': REP_ORACLE,
-            'instant_result_delivery_webhook': CALLBACK_URL,
-            'requester_question': {
-                "en": "How much money are we to make"
-            },
-            'requester_question_example': FAKE_URL,
-            'job_total_tasks': 5,
-            'taskdata_uri': FAKE_URL
-        }
-        manifest = basemodels.Manifest(model)
-
-        manifest.validate()
-        self.assertGreater(
-            len(manifest['requester_restricted_answer_set'].keys()), 0)
-
-
 class EscrowTest(unittest.TestCase):
     """
     Tests the escrow API's functions.
@@ -175,10 +113,14 @@ class EscrowTest(unittest.TestCase):
     def test_initialize(self, mock_serialize, mock_initialize):
         """Tests that initialize gets called with correct parameters inside contract.deploy."""
         mock_serialize.return_value = {
-            'job_mode': 'batch',
-            'job_api_key': '878587d4-41ae-48ea-839a-227afd9c01f8',
-            'job_id': 'e852b904-8fcf-4d07-8dba-48483d06e054',
-            'job_total_tasks': 100,
+            'job_mode':
+            'batch',
+            'job_api_key':
+            '878587d4-41ae-48ea-839a-227afd9c01f8',
+            'job_id':
+            'e852b904-8fcf-4d07-8dba-48483d06e054',
+            'job_total_tasks':
+            100,
             'requester_restricted_answer_set': {
                 '0': {
                     'en': 'English Answer 1'
@@ -190,37 +132,59 @@ class EscrowTest(unittest.TestCase):
                     'https://hcaptcha.com/example_answer2.jpg'
                 }
             },
-            'requester_description': None,
-            'requester_max_repeats': 100,
-            'requester_min_repeats': 1,
+            'requester_description':
+            None,
+            'requester_max_repeats':
+            100,
+            'requester_min_repeats':
+            1,
             'requester_question': {
                 'en': 'How much money are we to make'
             },
-            'requester_question_example': 'http://google.com/fake',
-            'unsafe_content': False,
-            'task_bid_price': '1.0',
-            'oracle_stake': '0.05',
-            'expiration_date': 0,
-            'requester_accuracy_target': 0.1,
-            'manifest_smart_bounty_addr': None,
-            'minimum_trust_server': 0.1,
-            'minimum_trust_client': 0.1,
+            'requester_question_example':
+            'http://google.com/fake',
+            'unsafe_content':
+            False,
+            'task_bid_price':
+            '1.0',
+            'oracle_stake':
+            '0.05',
+            'expiration_date':
+            0,
+            'requester_accuracy_target':
+            0.1,
+            'manifest_smart_bounty_addr':
+            None,
+            'minimum_trust_server':
+            0.1,
+            'minimum_trust_client':
+            0.1,
             'recording_oracle_addr':
             '0xD979105297fB0eee83F7433fC09279cb5B94fFC6',
             'reputation_oracle_addr':
             '0x61F9F0B31eacB420553da8BCC59DC617279731Ac',
             'reputation_agent_addr':
             '0x61F9F0B31eacB420553da8BCC59DC617279731Ac',
-            'requester_pgp_public_key': None,
-            'ro_uri': None,
-            'repo_uri': None,
-            'batch_result_delivery_webhook': None,
-            'online_result_delivery_webhook': None,
-            'instant_result_delivery_webhook': 'http://google.com/webback',
-            'request_type': 'image_label_binary',
-            'request_config': None,
-            'taskdata': None,
-            'taskdata_uri': 'http://google.com/fake'
+            'requester_pgp_public_key':
+            None,
+            'ro_uri':
+            None,
+            'repo_uri':
+            None,
+            'batch_result_delivery_webhook':
+            None,
+            'online_result_delivery_webhook':
+            None,
+            'instant_result_delivery_webhook':
+            'http://google.com/webback',
+            'request_type':
+            'image_label_binary',
+            'request_config':
+            None,
+            'taskdata':
+            None,
+            'taskdata_uri':
+            'http://google.com/fake'
         }
         self.contract.deploy(PUB2)
         mock_initialize.assert_called_once_with(mock_serialize.return_value)
