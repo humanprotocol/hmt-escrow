@@ -9,9 +9,6 @@ from web3.contract import Contract
 from enum import Enum
 from typing import Dict, List, Tuple
 
-# Access basemodels
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
 from hmt_escrow.storage import download, upload
 from basemodels import Manifest
@@ -101,8 +98,10 @@ def _final_results_hash(escrow_contract: Contract,
 
     """
     return escrow_contract.functions.getFinalResultsHash().call({
-        'from': GAS_PAYER,
-        'gas': gas
+        'from':
+        GAS_PAYER,
+        'gas':
+        gas
     })
 
 
@@ -156,8 +155,10 @@ def _final_results_url(escrow_contract: Contract,
 
     """
     return escrow_contract.functions.getFinalResultsUrl().call({
-        'from': GAS_PAYER,
-        'gas': gas
+        'from':
+        GAS_PAYER,
+        'gas':
+        gas
     })
 
 
@@ -312,9 +313,12 @@ def _abort(escrow_contract: Contract, gas: int = DEFAULT_GAS) -> bool:
     nonce = w3.eth.getTransactionCount(GAS_PAYER)
 
     tx_dict = escrow_contract.functions.abort().buildTransaction({
-        'from': GAS_PAYER,
-        'gas': gas,
-        'nonce': nonce
+        'from':
+        GAS_PAYER,
+        'gas':
+        gas,
+        'nonce':
+        nonce
     })
     tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
     wait_on_transaction(tx_hash)
