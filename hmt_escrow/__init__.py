@@ -1,14 +1,13 @@
-import json
-import logging
+#!/usr/bin/env python3
 import os
-import sys
+import logging
 
 from decimal import *
-from web3 import Web3
-from web3.contract import Contract
 from enum import Enum
 from typing import Dict, List, Tuple
 
+from web3 import Web3
+from web3.contract import Contract
 from eth_keys import keys
 from eth_utils import decode_hex
 
@@ -51,7 +50,7 @@ class Job:
 
         credentials_valid = _validate_credentials(address, private_key)
         if not credentials_valid:
-            raise Exception("Given private key doesn't match the address")
+            raise ValueError("Given private key doesn't match the address")
 
         self.gas_payer = Web3.toChecksumAddress(address)
         self.gas_payer_priv = private_key
