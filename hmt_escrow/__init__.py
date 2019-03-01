@@ -105,8 +105,7 @@ class Job:
             bool: returns True if contract is funded.
 
         """
-        return _transfer_to_address(self.job_contract.address, self.amount,
-                                    self.gas_payer, self.gas_payer_priv)
+        return _transfer_to_address(self, self.amount)
 
     def abort(self) -> bool:
         """Transfers back the money to the funder of the Job solidity contract and destroys it.
@@ -115,7 +114,7 @@ class Job:
             bool: returns True if contract initiator is refunded and contract gets destroyed successfully.
 
         """
-        return _abort(self.job_contract, self.gas_payer, self.gas_payer_priv)
+        return _abort(self)
 
     def refund(self) -> bool:
         """Transfers back the money to the funder of the Job solidity contract but doesn't destroy it.
@@ -127,7 +126,7 @@ class Job:
             bool: returns True if refund to contract initiator succeeds.
 
         """
-        return _refund(self.job_contract, self.gas_payer, self.gas_payer_priv)
+        return _refund(self)
 
     def status(self) -> Enum:
         """Returns the status of a contract.
@@ -136,7 +135,7 @@ class Job:
             Enum: returns the status as an enumeration.
 
         """
-        status_ = _status(self.job_contract, self.gas_payer)
+        status_ = _status(self)
         return Status(status_ + 1)
 
     def store_intermediate_results(self, results: Dict,
@@ -152,8 +151,7 @@ class Job:
 
         """
         (hash_, url) = upload(results, public_key)
-        return _store_intermediate_results(self.job_contract, self.gas_payer,
-                                           self.gas_payer_priv, url, hash_)
+        return _store_intermediate_results(self, url, hash_)
 
     def bulk_payout(self, payouts: List[Tuple[str, int]], results: Dict,
                     public_key: bytes) -> bool:
@@ -176,8 +174,7 @@ class Job:
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         amounts = [amount for eth_addr, amount in payouts]
 
-        return _bulk_payout(self.job_contract, eth_addrs, amounts, url, hash_,
-                            self.gas_payer, self.gas_payer_priv)
+        return _bulk_payout(self, eth_addrs, amounts, url, hash_)
 
     def complete(self) -> bool:
         """Moves the Job solidity contract to a "Complete" state.
@@ -190,8 +187,7 @@ class Job:
             
         """
         try:
-            return _complete(self.job_contract, self.gas_payer,
-                             self.gas_payer_priv)
+            return _complete(self)
         except Exception as e:
             LOG.error("Unable to complete contract:{} is the exception".format(
                 str(e)))
@@ -207,8 +203,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(
-            _manifest_url(self.job_contract, self.gas_payer), private_key)
+        return download(_manifest_url(self, self.gas_payer), private_key)
 
     def get_intermediate_results(self, private_key: bytes) -> Dict:
         """Retrieves the intermediate results.
@@ -220,9 +215,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(
-            _intermediate_results_url(self.job_contract, self.gas_payer),
-            private_key)
+        return download(_intermediate_results_url(self), private_key)
 
     def get_final_results(self, private_key: bytes) -> Dict:
         """Retrieves the final results.
@@ -234,8 +227,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(
-            _final_results_url(self.job_contract, self.gas_payer), private_key)
+        return download(_final_results_url(self), private_key)
 
 
 def _validate_credentials(address: str, private_key: str) -> bool:
@@ -244,33 +236,6 @@ def _validate_credentials(address: str, private_key: str) -> bool:
     pub_key = priv_key.public_key
     calculated_address = pub_key.to_checksum_address()
     return Web3.toChecksumAddress(address) == calculated_address
-
-
-def _status(escrow_contract: Contract, gas_payer: str,
-            gas: int = DEFAULT_GAS) -> int:
-    """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
-
-    Description of status codes:
-    0: Launched
-    1: Pending
-    2: Partial
-    3: Paid
-    4: Complete
-    5: Cancelled
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas_payer (str): an ethereum address paying the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        int: returns the number equivalent to the status of the contract.
-
-    """
-    return escrow_contract.functions.getStatus().call({
-        'from': gas_payer,
-        'gas': gas
-    })
 
 
 def _manifest_hash(escrow_contract: Contract,
@@ -289,48 +254,6 @@ def _manifest_hash(escrow_contract: Contract,
     return escrow_contract.functions.getManifestHash().call({
         'from': gas_payer,
         'gas': gas
-    })
-
-
-def _intermediate_results_hash(escrow_contract: Contract,
-                               gas_payer: str,
-                               gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getIntermediateResultsHash method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the intermediate results hash
-
-    """
-    return escrow_contract.functions.getIntermediateResultsHash().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
-
-
-def _final_results_hash(escrow_contract: Contract,
-                        gas_payer: str,
-                        gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getFinalResultsHash method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the final results hash
-
-    """
-    return escrow_contract.functions.getFinalResultsHash().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
     })
 
 
@@ -353,9 +276,35 @@ def _manifest_url(escrow_contract: Contract,
     })
 
 
-def _intermediate_results_url(escrow_contract: Contract,
-                              gas_payer: str,
-                              gas: int = DEFAULT_GAS) -> str:
+def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
+    """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
+
+    Description of status codes:
+    0: Launched
+    1: Pending
+    2: Partial
+    3: Paid
+    4: Complete
+    5: Cancelled
+
+    Args:
+        escrow_contract (Contract): the contract to be read.
+        gas_payer (str): an ethereum address paying the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        int: returns the number equivalent to the status of the contract.
+
+    """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    return escrow_contract.functions.getStatus().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
+def _intermediate_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
     """Wrapper function that calls Job solidity contract's getIntermediateResultsUrl method in a read-only manner.
 
     Args:
@@ -366,6 +315,8 @@ def _intermediate_results_url(escrow_contract: Contract,
         str: returns the intermediate results url
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
     return escrow_contract.functions.getIntermediateResultsUrl().call({
         'from':
         gas_payer,
@@ -374,9 +325,28 @@ def _intermediate_results_url(escrow_contract: Contract,
     })
 
 
-def _final_results_url(escrow_contract: Contract,
-                       gas_payer: str,
-                       gas: int = DEFAULT_GAS) -> str:
+def _intermediate_results_hash(job: Job, gas: int = DEFAULT_GAS) -> str:
+    """Wrapper function that calls Job solidity contract's getIntermediateResultsHash method in a read-only manner.
+
+    Args:
+        escrow_contract (Contract): the contract to be read.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        str: returns the intermediate results hash
+
+    """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    return escrow_contract.functions.getIntermediateResultsHash().call({
+        'from':
+        gas_payer,
+        'gas':
+        gas
+    })
+
+
+def _final_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
     """Wrapper function that calls Job solidity contract's getFinalResultsUrl method in a read-only manner.
 
     Args:
@@ -387,6 +357,8 @@ def _final_results_url(escrow_contract: Contract,
         str: returns the final results url
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
     return escrow_contract.functions.getFinalResultsUrl().call({
         'from':
         gas_payer,
@@ -395,8 +367,28 @@ def _final_results_url(escrow_contract: Contract,
     })
 
 
-def _balance(escrow_contract: Contract, gas_payer: str,
-             gas: int = DEFAULT_GAS) -> int:
+def _final_results_hash(job: Job, gas: int = DEFAULT_GAS) -> str:
+    """Wrapper function that calls Job solidity contract's getFinalResultsHash method in a read-only manner.
+
+    Args:
+        escrow_contract (Contract): the contract to be read.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        str: returns the final results hash
+
+    """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    return escrow_contract.functions.getFinalResultsHash().call({
+        'from':
+        gas_payer,
+        'gas':
+        gas
+    })
+
+
+def _balance(job: Job, gas: int = DEFAULT_GAS) -> int:
     """Wrapper function that calls Job solidity contract's getBalance method in a read-only manner.
 
     Args:
@@ -407,19 +399,19 @@ def _balance(escrow_contract: Contract, gas_payer: str,
         int: returns the balance of the contract.
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
     return escrow_contract.functions.getBalance().call({
         'from': gas_payer,
         'gas': gas
     })
 
 
-def _bulk_payout(escrow_contract: Contract,
+def _bulk_payout(job: Job,
                  addresses: List[str],
                  amounts: List[int],
                  uri: str,
                  hash_: str,
-                 gas_payer: str,
-                 gas_payer_priv: str,
                  gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's bulkPayout method that creates a transaction to the network.
 
@@ -441,6 +433,9 @@ def _bulk_payout(escrow_contract: Contract,
         TimeoutError: if wait_on_transaction times out.
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
 
     hmt_amounts = [int(amount * 10**18) for amount in amounts]
 
@@ -461,11 +456,9 @@ def _bulk_payout(escrow_contract: Contract,
     return True
 
 
-def _store_intermediate_results(escrow_contract: Contract,
+def _store_intermediate_results(job: Job,
                                 uri: str,
                                 hash_: str,
-                                gas_payer: str,
-                                gas_payer_priv: str,
                                 gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's storeResults method that creates a transaction to the network.
 
@@ -482,6 +475,9 @@ def _store_intermediate_results(escrow_contract: Contract,
         TimeoutError: if wait_on_transaction times out
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
 
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
@@ -500,10 +496,7 @@ def _store_intermediate_results(escrow_contract: Contract,
     return True
 
 
-def _complete(escrow_contract: Contract,
-              gas_payer: str,
-              gas_payer_priv: str,
-              gas: int = DEFAULT_GAS) -> bool:
+def _complete(job: Job, gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's complete method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -519,6 +512,10 @@ def _complete(escrow_contract: Contract,
         TimeoutError: if wait_on_transaction times out
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
+
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
 
@@ -532,13 +529,10 @@ def _complete(escrow_contract: Contract,
     })
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
-    return _status(escrow_contract, gas_payer) == 4
+    return _status(job) == 4
 
 
-def _abort(escrow_contract: Contract,
-           gas_payer: str,
-           gas_payer_priv: str,
-           gas: int = DEFAULT_GAS) -> bool:
+def _abort(job: Job, gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's abort method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -556,6 +550,10 @@ def _abort(escrow_contract: Contract,
         TimeoutError: if wait_on_transaction times out
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
+
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
 
@@ -570,13 +568,10 @@ def _abort(escrow_contract: Contract,
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
 
-    return _status(escrow_contract, gas_payer) == 5
+    return _status(job) == 5
 
 
-def _refund(escrow_contract: Contract,
-            gas_payer: str,
-            gas_payer_priv: str,
-            gas: int = DEFAULT_GAS) -> bool:
+def _refund(job: Job, gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's refund method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -594,6 +589,10 @@ def _refund(escrow_contract: Contract,
         TimeoutError: if wait_on_transaction times out
 
     """
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
+
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
 
@@ -608,7 +607,7 @@ def _refund(escrow_contract: Contract,
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
 
-    return _status(escrow_contract, gas_payer) == 5
+    return _status(job) == 5
 
 
 def _counter(factory_contract: Contract,
@@ -717,7 +716,7 @@ def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
         })
     tx_hash = sign_and_send_transaction(tx_dict, job.gas_payer_priv)
     wait_on_transaction(tx_hash)
-    return _status(escrow_contract, job.gas_payer) == 1
+    return _status(job) == 1
 
 
 def _initialize(job: Job) -> str:
@@ -752,10 +751,7 @@ def _initialize(job: Job) -> str:
     return escrow_address
 
 
-def _transfer_to_address(address: str,
-                         amount: Decimal,
-                         gas_payer: str,
-                         gas_payer_priv: str,
+def _transfer_to_address(job: Job, amount: Decimal,
                          gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls HMToken solidity contract's transfer method that creates a transaction to the network.
 
@@ -776,6 +772,10 @@ def _transfer_to_address(address: str,
         TimeoutError: if wait_on_transaction times out.
 
     """
+    address = job.job_contract.address
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
+
     hmtoken_contract = get_hmtoken()
     hmt_amount = int(amount * 10**18)
 
