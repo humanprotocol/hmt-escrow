@@ -25,6 +25,28 @@ Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 
 class Job:
+    """A class used to represent a given Job launched on the HUMAN network.
+    A Job  can be created from a manifest or by accessing an existing escrow contract 
+    from the Ethereum network with the external access_job function. The manifest
+    has to follow the Manifest model specification at https://github.com/hCaptcha/hmt-basemodels.
+
+    A typical Job goes through the following stages:
+    Deploy: deploy the contract to the network.
+    Setup: store relevant attributes in the contract state.
+    Fund: store HMT in the contract.
+    Pay: pay all websites in HMT when all the Job's tasks have been completed.
+
+    Attributes:
+        initialized (bool): protects against re-initialization of the Job instance.
+        serialized_manifest (Dict[str, Any]): a dict representation of the Manifest model.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas_payer_priv (str): the private key of the gas_payer.
+        amount (Decimal): an amount to be stored in the escrow contract.
+        oracle_stake (Decimal): a percentage the Reputation and Recording Oracles get.
+        manifest_url (str): the location of the serialized manifest in IPFS.
+        manifest_hash (str): SHA-1 hashed version of the serialized manifest.
+
+    """
     def __init__(self,
                  manifest: Manifest,
                  gas_payer: str,
