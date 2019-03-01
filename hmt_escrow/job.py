@@ -32,8 +32,8 @@ class Job:
 
     A typical Job goes through the following stages:
     Deploy: deploy an escrow contract to the network.
-    Setup: store relevant attributes in the contract state.
     Fund: store HMT in the contract.
+    Setup: store relevant attributes in the contract state.
     Pay: pay all websites in HMT when all the Job's tasks have been completed.
 
     Attributes:
@@ -117,15 +117,6 @@ class Job:
         self.manifest_hash = hash_
         return True
 
-    def setup(self) -> bool:
-        """Sets up the Job solidity contract with Job's class attributes.
-
-        Returns:
-            bool: returns True if job is pending.
-
-        """
-        return _setup(self)
-
     def fund(self) -> bool:
         """Funds the Job solidity contract set in Job's class attributes.
 
@@ -134,6 +125,39 @@ class Job:
 
         """
         return _fund(self)
+
+    def setup(self) -> bool:
+        """Sets up the Job solidity contract with Job's class attributes.
+
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+
+        We can't setup a job without deploying it first.
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.setup()
+        Traceback (most recent call last):
+        AttributeError: 'Job' object has no attribute 'job_contract'
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+
+        We can't setup a job without funding it first.
+        >>> job.setup()
+        False
+
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+
+        Returns:
+            bool: returns True if Job is in Pending state.
+        
+        Raises:
+            AttributeError: if trying to setup the job before deploying it.
+
+        """
+        return _setup(self)
 
     def abort(self) -> bool:
         """Transfers back the money to the funder of the Job solidity contract and destroys it.
