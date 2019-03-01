@@ -238,25 +238,6 @@ def _validate_credentials(address: str, private_key: str) -> bool:
     return Web3.toChecksumAddress(address) == calculated_address
 
 
-def _manifest_url(escrow_contract: Contract,
-                  gas_payer: str,
-                  gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getManifestUrl method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the manifest url
-
-    """
-    return escrow_contract.functions.getManifestUrl().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
 def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
     """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
 
@@ -549,76 +530,6 @@ def _refund(job: Job, gas: int = DEFAULT_GAS) -> bool:
     return _status(job) == 5
 
 
-def _counter(factory_contract: Contract,
-             gas_payer: str,
-             gas: int = DEFAULT_GAS) -> int:
-    """Wrapper function that calls EscrowFactory solidity contract's getCounter method in a read-only manner.
-
-    Args:
-        factory_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        int: returns the balance of the contract
-
-    """
-    return factory_contract.functions.getCounter().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
-def _last_address(factory_contract: Contract,
-                  gas_payer: str,
-                  gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls EscrowFactory solidity contract's getLastAddress method in a read-only manner.
-
-    Args:
-        factory_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the last address of an job contract deployed by EscrowFactory
-
-    """
-    return factory_contract.functions.getLastAddress().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
-def _create_escrow(factory_contract: Contract,
-                   gas_payer: str,
-                   gas_payer_priv: str,
-                   gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls EscrowFactory solidity contract's createEscrow method that creates a transaction to the network.
-
-    Args:
-        factory_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if a new job (Pokémon) was successfully launched to the network.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out.
-
-    """
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-    tx_dict = factory_contract.functions.createEscrow().buildTransaction({
-        'from':
-        gas_payer,
-        'gas':
-        gas,
-        'nonce':
-        nonce
-    })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-    return True
-
-
 def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's setup method that creates a transaction to the network.
 
@@ -730,6 +641,95 @@ def _fund(job: Job, gas: int = DEFAULT_GAS) -> bool:
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
     return _balance(job) == hmt_amount
+
+
+def _manifest_url(escrow_contract: Contract,
+                  gas_payer: str,
+                  gas: int = DEFAULT_GAS) -> str:
+    """Wrapper function that calls Job solidity contract's getManifestUrl method in a read-only manner.
+
+    Args:
+        escrow_contract (Contract): the contract to be read.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        str: returns the manifest url
+
+    """
+    return escrow_contract.functions.getManifestUrl().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
+def _counter(factory_contract: Contract,
+             gas_payer: str,
+             gas: int = DEFAULT_GAS) -> int:
+    """Wrapper function that calls EscrowFactory solidity contract's getCounter method in a read-only manner.
+
+    Args:
+        factory_contract (Contract): the contract to be read.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        int: returns the balance of the contract
+
+    """
+    return factory_contract.functions.getCounter().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
+def _last_address(factory_contract: Contract,
+                  gas_payer: str,
+                  gas: int = DEFAULT_GAS) -> str:
+    """Wrapper function that calls EscrowFactory solidity contract's getLastAddress method in a read-only manner.
+
+    Args:
+        factory_contract (Contract): the contract to be read.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        str: returns the last address of an job contract deployed by EscrowFactory
+
+    """
+    return factory_contract.functions.getLastAddress().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
+def _create_escrow(factory_contract: Contract,
+                   gas_payer: str,
+                   gas_payer_priv: str,
+                   gas: int = DEFAULT_GAS) -> bool:
+    """Wrapper function that calls EscrowFactory solidity contract's createEscrow method that creates a transaction to the network.
+
+    Args:
+        factory_contract (Contract): the contract to be read.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        bool: returns True if a new job (Pokémon) was successfully launched to the network.
+    
+    Raises:
+        TimeoutError: if wait_on_transaction times out.
+
+    """
+    w3 = get_w3()
+    nonce = w3.eth.getTransactionCount(gas_payer)
+    tx_dict = factory_contract.functions.createEscrow().buildTransaction({
+        'from':
+        gas_payer,
+        'gas':
+        gas,
+        'nonce':
+        nonce
+    })
+    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
+    wait_on_transaction(tx_hash)
+    return True
 
 
 def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
