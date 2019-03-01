@@ -37,7 +37,6 @@ class Job:
     Pay: pay all websites in HMT when all the Job's tasks have been completed.
 
     Attributes:
-        initialized (bool): protects against re-initialization of the Job instance.
         serialized_manifest (Dict[str, Any]): a dict representation of the Manifest model.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas_payer_priv (str): the private key of the gas_payer.
@@ -48,14 +47,12 @@ class Job:
 
     """
 
-    def __init__(self,
-                 manifest: Manifest,
-                 gas_payer: str,
-                 gas_payer_priv: str,
-                 initialized=False):
-        """Initializes a Job instance with values from a Manifest class. Check that the
-        provided credentials are valid and set the Job's state to initialized.
+    def __init__(self, manifest: Manifest, gas_payer: str,
+                 gas_payer_priv: str):
+        """Initializes a Job instance with values from a Manifest class and 
+        checks that the provided credentials are valid.
 
+        Examples:
         >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
@@ -67,25 +64,17 @@ class Job:
         Decimal('0.05')
         >>> job.amount
         Decimal('100.0')
-        >>> job.initialized
-        True
 
         Args:
             manifest (Manifest): an instance of the Manifest class.
             gas_payer (str): an ethereum address paying for the gas costs.
             gas_payer_priv (str): the private key of the gas_payer.
-            initialized (bool): a default value, should not be provided optionally.
         
         Raises:
             Exception: if the Job has been already initialized.
             ValueError: if the credentials are not valid.
 
         """
-        self.initialized = initialized
-
-        if self.initialized:
-            raise Exception("Unable to reinitialize if we already have")
-
         credentials_valid = _validate_credentials(gas_payer, gas_payer_priv)
         if not credentials_valid:
             raise ValueError("Given private key doesn't match the address")
@@ -100,17 +89,22 @@ class Job:
         self.gas_payer_priv = gas_payer_priv
         self.oracle_stake = oracle_stake
         self.amount = Decimal(per_job_cost * number_of_answers)
-        self.initialized = True
 
     def deploy(self, public_key: bytes) -> bool:
-        """Deploy a contract to the blockchain
+        """Launches an escrow contract to the network, uploads the manifest
+        to IPFS with the public key of the Reputation oracle and stores 
+        the url to the escrow contract.
 
-        Launches a fresh new Job solidity contract (Pokémon) to the blockchain.
-        Serializes a manifest and calls initialize to setup Job's class attributes.
-        Uploads the the serialized manifest to IPFS with a public key of the Reputation Oracle.
+        Examples:
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
 
         Args:
-            public_key (bytes): public key of the Reputation Oracle
+            public_key (bytes): the public key of the Reputation Oracle.
 
         Returns:
             bool: returns True if Class initialization and Ethereum and IPFS transactions succeed.
@@ -815,4 +809,6 @@ def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
 if __name__ == "__main__":
     import doctest
     from test_job import test_manifest
+    from storage import upload
+    from unittest.mock import MagicMock
     doctest.testmod()
