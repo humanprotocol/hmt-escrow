@@ -105,7 +105,7 @@ class Job:
             bool: returns True if contract is funded.
 
         """
-        return _transfer_to_address(self, self.amount)
+        return _fund(self)
 
     def abort(self) -> bool:
         """Transfers back the money to the funder of the Job solidity contract and destroys it.
@@ -238,25 +238,6 @@ def _validate_credentials(address: str, private_key: str) -> bool:
     return Web3.toChecksumAddress(address) == calculated_address
 
 
-def _manifest_hash(escrow_contract: Contract,
-                   gas_payer: str,
-                   gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getManifestHash method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the manifest hash
-
-    """
-    return escrow_contract.functions.getManifestHash().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
 def _manifest_url(escrow_contract: Contract,
                   gas_payer: str,
                   gas: int = DEFAULT_GAS) -> str:
@@ -325,27 +306,6 @@ def _intermediate_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
     })
 
 
-def _intermediate_results_hash(job: Job, gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getIntermediateResultsHash method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the intermediate results hash
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    return escrow_contract.functions.getIntermediateResultsHash().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
-
-
 def _final_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
     """Wrapper function that calls Job solidity contract's getFinalResultsUrl method in a read-only manner.
 
@@ -360,27 +320,6 @@ def _final_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
     escrow_contract = job.job_contract
     gas_payer = job.gas_payer
     return escrow_contract.functions.getFinalResultsUrl().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
-
-
-def _final_results_hash(job: Job, gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getFinalResultsHash method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the final results hash
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    return escrow_contract.functions.getFinalResultsHash().call({
         'from':
         gas_payer,
         'gas':
@@ -751,8 +690,7 @@ def _initialize(job: Job) -> str:
     return escrow_address
 
 
-def _transfer_to_address(job: Job, amount: Decimal,
-                         gas: int = DEFAULT_GAS) -> bool:
+def _fund(job: Job, gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls HMToken solidity contract's transfer method that creates a transaction to the network.
 
     Handles the conversion of the oracle_stake and fundable amount to contract's native values:
@@ -773,6 +711,7 @@ def _transfer_to_address(job: Job, amount: Decimal,
 
     """
     address = job.job_contract.address
+    amount = job.amount
     gas_payer = job.gas_payer
     gas_payer_priv = job.gas_payer_priv
 
@@ -790,7 +729,7 @@ def _transfer_to_address(job: Job, amount: Decimal,
         })
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
-    return True
+    return _balance(job) == hmt_amount
 
 
 def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
