@@ -98,26 +98,26 @@ def a_manifest(number_of_tasks=100,
     return manifest
 
 
-class EscrowTest(unittest.TestCase):
+class JobTest(unittest.TestCase):
     """
-    Tests the escrow API's functions.
+    Tests the Job API's functions.
 
     Some of the blockchain specific functionality is mocked.
     Solidity specific functionality is delegated to JS tests.
     """
 
     def setUp(self):
-        """Set up the fields for Escrow class testing, based on the test manifest."""
+        """Set up the fields for Job class testing, based on the test manifest."""
         self.manifest = a_manifest()
-        self.contract = hmt_escrow.Escrow(self.manifest, GAS_PAYER,
-                                          GAS_PAYER_PRIV)
+        self.contract = hmt_escrow.Job(self.manifest, GAS_PAYER,
+                                       GAS_PAYER_PRIV)
         self.per_job_cost = Decimal(self.manifest['task_bid_price'])
         self.total_tasks = self.manifest['job_total_tasks']
         self.oracle_stake = self.manifest['oracle_stake']
         self.amount = self.per_job_cost * self.total_tasks
 
     def test_deploy(self):
-        """Tests that deploy assigns correct field values to Escrow class state."""
+        """Tests that deploy assigns correct field values to Job class state."""
         self.contract.deploy(PUB2)
         self.assertEqual(self.contract.amount, self.amount)
         self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
