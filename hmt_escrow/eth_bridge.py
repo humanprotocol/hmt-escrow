@@ -11,8 +11,6 @@ from typing import Dict, Tuple, Union, Optional
 AttributeDict = Dict[str, Union[int, str]]
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
-GAS_PAYER = Web3.toChecksumAddress(os.getenv("GAS_PAYER"))
-GAS_PAYER_PRIV = os.getenv("GAS_PAYER_PRIV")
 
 LOG = logging.getLogger("api.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
@@ -152,7 +150,10 @@ def get_factory(factory_address: str) -> Contract:
     return escrow_factory
 
 
-def deploy_contract(contract_interface, gas: int = DEFAULT_GAS,
+def deploy_contract(contract_interface,
+                    gas_payer: str,
+                    gas_payer_priv: str,
+                    gas: int = DEFAULT_GAS,
                     args=[]) -> Tuple[Contract, str]:
     """Deploy a given contract to the ethereum network.
 
@@ -168,17 +169,17 @@ def deploy_contract(contract_interface, gas: int = DEFAULT_GAS,
     w3 = get_w3()
     contract = w3.eth.contract(
         abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-    nonce = w3.eth.getTransactionCount(GAS_PAYER)
+    nonce = w3.eth.getTransactionCount(gas_payer)
 
     # Get transaction hash from deployed contract
     LOG.debug("Deploying contract with gas:{}".format(gas))
 
     tx_dict = contract.constructor(*args).buildTransaction({
-        'from': GAS_PAYER,
+        'from': gas_payer,
         'gas': gas,
         'nonce': nonce
     })
-    tx_hash = sign_and_send_transaction(tx_dict, GAS_PAYER_PRIV)
+    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
 
     tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
@@ -193,7 +194,8 @@ def deploy_contract(contract_interface, gas: int = DEFAULT_GAS,
     return contract, contract_address
 
 
-def deploy_factory(gas: int = DEFAULT_GAS) -> str:
+def deploy_factory(gas_payer: str, gas_payer_priv: str,
+                   gas: int = DEFAULT_GAS) -> str:
     """Deploy an EscrowFactory solidity contract to the ethereum network.
 
     Args:
@@ -207,5 +209,9 @@ def deploy_factory(gas: int = DEFAULT_GAS) -> str:
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     (contract, contract_address) = deploy_contract(
-        contract_interface, gas, args=[HMTOKEN_ADDR])
+        contract_interface,
+        gas_payer,
+        gas_payer_priv,
+        gas,
+        args=[HMTOKEN_ADDR])
     return contract_address
