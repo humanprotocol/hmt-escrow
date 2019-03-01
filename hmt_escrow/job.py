@@ -31,7 +31,7 @@ class Job:
     has to follow the Manifest model specification at https://github.com/hCaptcha/hmt-basemodels.
 
     A typical Job goes through the following stages:
-    Deploy: deploy the contract to the network.
+    Deploy: deploy an escrow contract to the network.
     Setup: store relevant attributes in the contract state.
     Fund: store HMT in the contract.
     Pay: pay all websites in HMT when all the Job's tasks have been completed.
@@ -47,23 +47,38 @@ class Job:
         manifest_hash (str): SHA-1 hashed version of the serialized manifest.
 
     """
+
     def __init__(self,
                  manifest: Manifest,
                  gas_payer: str,
                  gas_payer_priv: str,
                  initialized=False):
-        """Initialize the class attributes for the Job class.
+        """Initializes a Job instance with values from a Manifest class. Check that the
+        provided credentials are valid and set the Job's state to initialized.
 
-        Protects against re-entry.
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.gas_payer == gas_payer
+        True
+        >>> job.gas_payer_priv == gas_payer_priv
+        True
+        >>> job.oracle_stake
+        Decimal('0.05')
+        >>> job.amount
+        Decimal('100.0')
+        >>> job.initialized
+        True
 
         Args:
-            manifest (Dict): a pre-serialized manifest containing data regarding a job.
-        
-        Returns:
-            bool: returns True if all the class attributes have been set.
+            manifest (Manifest): an instance of the Manifest class.
+            gas_payer (str): an ethereum address paying for the gas costs.
+            gas_payer_priv (str): the private key of the gas_payer.
+            initialized (bool): a default value, should not be provided optionally.
         
         Raises:
-            Exception: if Job has been already initialized.
+            Exception: if the Job has been already initialized.
+            ValueError: if the credentials are not valid.
 
         """
         self.initialized = initialized
@@ -799,4 +814,5 @@ def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
 
 if __name__ == "__main__":
     import doctest
+    from test_job import test_manifest
     doctest.testmod()
