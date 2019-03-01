@@ -26,13 +26,13 @@ if FACTORY_ADDR:
 LOG = logging.getLogger("hmt_escrow")
 
 
-class Escrow:
+class Job:
     def __init__(self,
                  manifest: Manifest,
                  address: str,
                  private_key: str,
                  initialized=False):
-        """Initialize the class attributes for the Escrow class.
+        """Initialize the class attributes for the Job class.
 
         Protects against re-entry.
 
@@ -43,7 +43,7 @@ class Escrow:
             bool: returns True if all the class attributes have been set.
         
         Raises:
-            Exception: if Escrow has been already initialized.
+            Exception: if Job has been already initialized.
 
         """
         self.initialized = initialized
@@ -73,8 +73,8 @@ class Escrow:
     def deploy(self, public_key: bytes) -> bool:
         """Deploy a contract to the blockchain
 
-        Launches a fresh new Escrow solidity contract (Pokémon) to the blockchain.
-        Serializes a manifest and calls initialize to setup Escrow's class attributes.
+        Launches a fresh new Job solidity contract (Pokémon) to the blockchain.
+        Serializes a manifest and calls initialize to setup Job's class attributes.
         Uploads the the serialized manifest to IPFS with a public key of the Reputation Oracle.
 
         Args:
@@ -92,7 +92,7 @@ class Escrow:
         return True
 
     def fund(self) -> bool:
-        """Funds the Escrow solidity contract set in Escrow's class attributes.
+        """Funds the Job solidity contract set in Job's class attributes.
 
         Returns:
             bool: returns True if contract is funded.
@@ -102,7 +102,7 @@ class Escrow:
                                     self.gas_payer, self.gas_payer_priv)
 
     def abort(self) -> bool:
-        """Transfers back the money to the funder of the Escrow solidity contract and destroys it.
+        """Transfers back the money to the funder of the Job solidity contract and destroys it.
 
         Returns:
             bool: returns True if contract initiator is refunded and contract gets destroyed successfully.
@@ -111,9 +111,9 @@ class Escrow:
         return abort_job(self)
 
     def refund(self) -> bool:
-        """Transfers back the money to the funder of the Escrow solidity contract but doesn't destroy it.
+        """Transfers back the money to the funder of the Job solidity contract but doesn't destroy it.
 
-        Softer version of abort as the Escrow solidity contract is not destroyed.
+        Softer version of abort as the Job solidity contract is not destroyed.
         Higher in gas costs however than abort.
 
         Returns:
@@ -123,7 +123,7 @@ class Escrow:
         return _refund(self.job_contract, self.gas_payer, self.gas_payer_priv)
 
     def setup(self) -> bool:
-        """Sets up the Escrow solidity contract with Escrow's class attributes.
+        """Sets up the Job solidity contract with Job's class attributes.
 
         Returns:
             bool: returns True if job is pending.
@@ -180,7 +180,7 @@ class Escrow:
                             self.gas_payer, self.gas_payer_priv)
 
     def complete(self) -> bool:
-        """Moves the Escrow solidity contract to a "Complete" state.
+        """Moves the Job solidity contract to a "Complete" state.
 
         Returns:
             bool: returns True if the contract is in "Complete" state.
@@ -248,7 +248,7 @@ def _validate_credentials(address: str, private_key: str) -> bool:
 
 def _status(escrow_contract: Contract, gas_payer: str,
             gas: int = DEFAULT_GAS) -> int:
-    """Wrapper function that calls Escrow solidity contract's getStatus method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
 
     Description of status codes:
     0: Launched
@@ -276,7 +276,7 @@ def _status(escrow_contract: Contract, gas_payer: str,
 def _manifest_hash(escrow_contract: Contract,
                    gas_payer: str,
                    gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Escrow solidity contract's getManifestHash method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getManifestHash method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -295,7 +295,7 @@ def _manifest_hash(escrow_contract: Contract,
 def _intermediate_results_hash(escrow_contract: Contract,
                                gas_payer: str,
                                gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Escrow solidity contract's getIntermediateResultsHash method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getIntermediateResultsHash method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -316,7 +316,7 @@ def _intermediate_results_hash(escrow_contract: Contract,
 def _final_results_hash(escrow_contract: Contract,
                         gas_payer: str,
                         gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Escrow solidity contract's getFinalResultsHash method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getFinalResultsHash method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -337,7 +337,7 @@ def _final_results_hash(escrow_contract: Contract,
 def _manifest_url(escrow_contract: Contract,
                   gas_payer: str,
                   gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Escrow solidity contract's getManifestUrl method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getManifestUrl method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -356,7 +356,7 @@ def _manifest_url(escrow_contract: Contract,
 def _intermediate_results_url(escrow_contract: Contract,
                               gas_payer: str,
                               gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Escrow solidity contract's getIntermediateResultsUrl method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getIntermediateResultsUrl method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -377,7 +377,7 @@ def _intermediate_results_url(escrow_contract: Contract,
 def _final_results_url(escrow_contract: Contract,
                        gas_payer: str,
                        gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Escrow solidity contract's getFinalResultsUrl method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getFinalResultsUrl method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -397,7 +397,7 @@ def _final_results_url(escrow_contract: Contract,
 
 def _balance(escrow_contract: Contract, gas_payer: str,
              gas: int = DEFAULT_GAS) -> int:
-    """Wrapper function that calls Escrow solidity contract's getBalance method in a read-only manner.
+    """Wrapper function that calls Job solidity contract's getBalance method in a read-only manner.
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -421,7 +421,7 @@ def _bulk_payout(escrow_contract: Contract,
                  gas_payer: str,
                  gas_payer_priv: str,
                  gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Escrow solidity contract's bulkPayout method that creates a transaction to the network.
+    """Wrapper function that calls Job solidity contract's bulkPayout method that creates a transaction to the network.
 
     Handles the conversion of the oracle_stake and fundable amount to contract's native values.
     amount: Multiply by 10^18 to get the correct amount in HMT dictated by solidity contract's decimals.
@@ -430,8 +430,8 @@ def _bulk_payout(escrow_contract: Contract,
         escrow_contract (Contract): the contract to be updated.
         addresses (list): ethereum addresses receiving payouts.
         amounts (list): corresponding list of HMT to be paid.
-        uri (str): final manifest result url getting updated to the Escrow solidity contract's state.
-        hash_ (str): final manifest result hash getting updated to the Escrow solidity contract's state.
+        uri (str): final manifest result url getting updated to the Job solidity contract's state.
+        hash_ (str): final manifest result hash getting updated to the Job solidity contract's state.
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
@@ -467,12 +467,12 @@ def _store_results(escrow_contract: Contract,
                    gas_payer: str,
                    gas_payer_priv: str,
                    gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Escrow solidity contract's storeResults method that creates a transaction to the network.
+    """Wrapper function that calls Job solidity contract's storeResults method that creates a transaction to the network.
 
     Args:
         escrow_contract (Contract): the contract to be updated.
-        uri (str): intermediate manifest result url getting updated to the Escrow solidity contract's state.
-        hash_ (str): intermediate manifest result hash getting updated to the Escrow solidity contract's state.
+        uri (str): intermediate manifest result url getting updated to the Job solidity contract's state.
+        hash_ (str): intermediate manifest result hash getting updated to the Job solidity contract's state.
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
@@ -504,7 +504,7 @@ def _complete(escrow_contract: Contract,
               gas_payer: str,
               gas_payer_priv: str,
               gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Escrow solidity contract's complete method that creates a transaction to the network.
+    """Wrapper function that calls Job solidity contract's complete method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
 
@@ -539,7 +539,7 @@ def _abort(escrow_contract: Contract,
            gas_payer: str,
            gas_payer_priv: str,
            gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Escrow solidity contract's abort method that creates a transaction to the network.
+    """Wrapper function that calls Job solidity contract's abort method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
 
@@ -577,7 +577,7 @@ def _refund(escrow_contract: Contract,
             gas_payer: str,
             gas_payer_priv: str,
             gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Escrow solidity contract's refund method that creates a transaction to the network.
+    """Wrapper function that calls Job solidity contract's refund method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
 
@@ -640,7 +640,7 @@ def _last_address(factory_contract: Contract,
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
-        str: returns the last address of an escrow contract deployed by EscrowFactory
+        str: returns the last address of an job contract deployed by EscrowFactory
 
     """
     return factory_contract.functions.getLastAddress().call({
@@ -660,7 +660,7 @@ def _create_escrow(factory_contract: Contract,
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
-        bool: returns True if a new escrow (Pokémon) was successfully launched to the network.
+        bool: returns True if a new job (Pokémon) was successfully launched to the network.
     
     Raises:
         TimeoutError: if wait_on_transaction times out.
@@ -681,15 +681,15 @@ def _create_escrow(factory_contract: Contract,
     return True
 
 
-def _setup(escrow: Escrow, gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Escrow solidity contract's setup method that creates a transaction to the network.
+def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
+    """Wrapper function that calls Job solidity contract's setup method that creates a transaction to the network.
 
     Handles the conversion of the oracle_stake and fundable amount to contract's native values:
     oracle_stake: Multiply by 100 to an integer value between 0 and 100.
     amount: Multiply by 10^18 to get the correct amount in HMT dictated by solidity contract's decimals.
 
     Args:
-        escrow (Escrow): the Escrow class preferrably already initialized
+        job (Job): the Job class preferrably already initialized
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
@@ -699,28 +699,25 @@ def _setup(escrow: Escrow, gas: int = DEFAULT_GAS) -> bool:
         TimeoutError: if wait_on_transaction times out.
 
     """
-    escrow_contract = escrow.job_contract
-    reputation_oracle_stake = int(escrow.oracle_stake * 100)
-    recording_oracle_stake = int(escrow.oracle_stake * 100)
-    hmt_amount = int(escrow.amount * 10**18)
+    escrow_contract = job.job_contract
+    reputation_oracle_stake = int(job.oracle_stake * 100)
+    recording_oracle_stake = int(job.oracle_stake * 100)
+    hmt_amount = int(job.amount * 10**18)
 
     w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(escrow.gas_payer)
+    nonce = w3.eth.getTransactionCount(job.gas_payer)
 
     tx_dict = escrow_contract.functions.setup(
-        escrow.reputation_oracle, escrow.recording_oracle,
-        reputation_oracle_stake, recording_oracle_stake, hmt_amount,
-        escrow.manifest_url, escrow.manifest_hash).buildTransaction({
-            'from':
-            escrow.gas_payer,
-            'gas':
-            gas,
-            'nonce':
-            nonce
+        job.reputation_oracle, job.recording_oracle, reputation_oracle_stake,
+        recording_oracle_stake, hmt_amount, job.manifest_url,
+        job.manifest_hash).buildTransaction({
+            'from': job.gas_payer,
+            'gas': gas,
+            'nonce': nonce
         })
-    tx_hash = sign_and_send_transaction(tx_dict, escrow.gas_payer_priv)
+    tx_hash = sign_and_send_transaction(tx_dict, job.gas_payer_priv)
     wait_on_transaction(tx_hash)
-    return _status(escrow_contract, escrow.gas_payer) == 1
+    return _status(escrow_contract, job.gas_payer) == 1
 
 
 def _transfer_to_address(address: str,
@@ -766,26 +763,26 @@ def _transfer_to_address(address: str,
 
 def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
                private_key: bytes) -> Contract:
-    """Accesses an already deployed Escrow solidity contract and initializes an Escrow class
+    """Accesses an already deployed Job solidity contract and initializes an Job class
     based on the downloaded manifest from IPFS.
 
     Args:
-        escrow_address (str): ethereum address of the deployed Escrow solidity contract.
+        escrow_address (str): ethereum address of the deployed Job solidity contract.
         private_key (bytes): private key of the job requester or their agent.
 
     Returns:
-        Escrow: returns the Escrow class with attributes initialized.
+        Job: returns the Job class with attributes initialized.
 
     """
     job = get_escrow(escrow_address)
     url = _manifest_url(job, gas_payer)
     manifest_dict = download(url, private_key)
     escrow_manifest = Manifest(manifest_dict)
-    escrow = Escrow(escrow_manifest, gas_payer, gas_payer_priv)
-    return escrow
+    job = Job(escrow_manifest, gas_payer, gas_payer_priv)
+    return job
 
 
-def initialize_job(escrow: Escrow) -> str:
+def initialize_job(job: Job) -> str:
     """Initialize a new job and launch it without funds on the blockchain.
 
     This is the first step of putting a new job on the blockchain.
@@ -799,8 +796,7 @@ def initialize_job(escrow: Escrow) -> str:
     factory = None
 
     if not FACTORY_ADDR:
-        factory_address = deploy_factory(escrow.gas_payer,
-                                         escrow.gas_payer_priv)
+        factory_address = deploy_factory(job.gas_payer, job.gas_payer_priv)
         factory = get_factory(factory_address)
         FACTORY_ADDR = factory_address
         if not FACTORY_ADDR:
@@ -808,31 +804,31 @@ def initialize_job(escrow: Escrow) -> str:
 
     if not factory:
         factory = get_factory(FACTORY_ADDR)
-        counter = _counter(factory, escrow.gas_payer)
+        counter = _counter(factory, job.gas_payer)
         LOG.debug("Factory counter is at:{}".format(counter))
 
-    _create_escrow(factory, escrow.gas_payer, escrow.gas_payer_priv)
-    escrow_address = _last_address(factory, escrow.gas_payer)
+    _create_escrow(factory, job.gas_payer, job.gas_payer_priv)
+    escrow_address = _last_address(factory, job.gas_payer)
 
     LOG.info("New Pokémon!:{}".format(escrow_address))
     return escrow_address
 
 
-def setup_job(escrow: Escrow) -> bool:
+def setup_job(job: Job) -> bool:
     """Once a job hash been put on blockchain, and is funded, this function will
     setup the job for labeling (Pending):
 
     Args:
-        escrow (Escrow): the Escrow object with initialized class attributes.
+        job (Job): the Job object with initialized class attributes.
 
     Returns:
         bool: returns True if the contract is in "Pending" state.
 
     """
-    return _setup(escrow)
+    return _setup(job)
 
 
-def abort_job(escrow: Escrow) -> bool:
+def abort_job(job: Job) -> bool:
     """Return all leftover funds to the contract launcher and destroys the contract.
 
     Once a job hash been put on blockchain, and is funded, this function can return
@@ -840,24 +836,24 @@ def abort_job(escrow: Escrow) -> bool:
     is in "Partial" state.
 
     Args:
-        escrow_contract (Contract): the deployed Escrow solidity contract.
+        escrow_contract (Contract): the deployed Job solidity contract.
 
     Returns:
         bool: returns True if the contract is in "Cancelled" state.
     
     """
-    escrow_contract = escrow.job_contract
-    gas_payer = escrow.gas_payer
-    gas_payer_priv = escrow.gas_payer_priv
-    return _abort(escrow, gas_payer, gas_payer_priv)
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
+    return _abort(job, gas_payer, gas_payer_priv)
 
 
-def store_results(escrow: Escrow, intermediate_results_url: str,
+def store_results(job: Job, intermediate_results_url: str,
                   intermediate_results_hash: str) -> bool:
     """Store intermediate results in the contract
 
     Args:
-        escrow_contract (Contract): the deployed Escrow solidity contract.
+        escrow_contract (Contract): the deployed Job solidity contract.
         intermediate_results_url (str): The url of the answers to the questions.
         intermediate_results_hash (str): The hash of the plaintext of the manifest.
 
@@ -865,9 +861,9 @@ def store_results(escrow: Escrow, intermediate_results_url: str,
         bool: returns True if the results storage was successful
     
     """
-    escrow_contract = escrow.job_contract
-    gas_payer = escrow.gas_payer
-    gas_payer_priv = escrow.gas_payer_priv
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
     return _store_results(escrow_contract, gas_payer, gas_payer_priv,
                           intermediate_results_url, intermediate_results_hash)
 
@@ -875,20 +871,20 @@ def store_results(escrow: Escrow, intermediate_results_url: str,
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 
-def status(escrow: Escrow) -> Enum:
+def status(job: Job) -> Enum:
     """User friendly status.
 
-    Returns the status of an Escrow solidity contract:
+    Returns the status of an Job solidity contract:
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
 
     Args:
-        escrow_contract (Contract): the deployed Escrow solidity contract.
+        escrow_contract (Contract): the deployed Job solidity contract.
 
     Returns:
         Status: returns the enum which represents the state.
 
     """
-    escrow_contract = escrow.job_contract
-    gas_payer = escrow.gas_payer
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
     status_ = _status(escrow_contract, gas_payer)
     return Status(status_ + 1)
