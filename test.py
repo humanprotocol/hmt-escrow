@@ -109,8 +109,7 @@ class JobTest(unittest.TestCase):
     def setUp(self):
         """Set up the fields for Job class testing, based on the test manifest."""
         self.manifest = a_manifest()
-        self.contract = hmt_escrow.Job(self.manifest, GAS_PAYER,
-                                       GAS_PAYER_PRIV)
+        self.job = hmt_escrow.Job(self.manifest, GAS_PAYER, GAS_PAYER_PRIV)
         self.per_job_cost = Decimal(self.manifest['task_bid_price'])
         self.total_tasks = self.manifest['job_total_tasks']
         self.oracle_stake = self.manifest['oracle_stake']
@@ -118,72 +117,64 @@ class JobTest(unittest.TestCase):
 
     def test_deploy(self):
         """Tests that deploy assigns correct field values to Job class state."""
-        self.contract.deploy(PUB2)
-        self.assertEqual(self.contract.amount, self.amount)
-        self.assertEqual(self.contract.oracle_stake, self.oracle_stake)
-        self.assertEqual(self.contract.number_of_answers, self.total_tasks)
+        self.job.deploy(PUB2)
+        self.assertEqual(self.job.amount, self.amount)
+        self.assertEqual(self.job.oracle_stake, self.oracle_stake)
+        self.assertEqual(self.job.number_of_answers, self.total_tasks)
 
     def test_fund(self):
         """Tests that fund calls _transfer_to_address with correct parameters."""
         hmt_escrow._transfer_to_address = MagicMock()
-        self.contract.deploy(PUB2)
-        self.contract.fund()
+        self.job.deploy(PUB2)
+        self.job.fund()
         hmt_escrow._transfer_to_address.assert_called_once_with(
-            self.contract.job_contract.address, self.amount,
-            self.contract.gas_payer, self.contract.gas_payer_priv)
+            self.job, self.amount)
 
     def test_abort(self):
         """Tests that abort calls _abort with correct parameters."""
         hmt_escrow._abort = MagicMock()
-        self.contract.deploy(PUB2)
-        self.contract.abort()
-        hmt_escrow._abort.assert_called_once_with(self.contract.job_contract,
-                                                  self.contract.gas_payer,
-                                                  self.contract.gas_payer_priv)
+        self.job.deploy(PUB2)
+        self.job.abort()
+        hmt_escrow._abort.assert_called_once_with(self.job)
 
     def test_complete(self):
         """Tests that complete calls _complete with correct parameters."""
         hmt_escrow._complete = MagicMock()
-        self.contract.deploy(PUB2)
-        self.contract.complete()
-        hmt_escrow._complete.assert_called_once_with(
-            self.contract.job_contract, self.contract.gas_payer,
-            self.contract.gas_payer_priv)
+        self.job.deploy(PUB2)
+        self.job.complete()
+        hmt_escrow._complete.assert_called_once_with(self.job)
 
     def test_setup(self):
         """Tests that launch calls _setup with correct parameters."""
         hmt_escrow._setup = MagicMock()
-        self.contract.deploy(PUB2)
-        self.contract.setup()
-        hmt_escrow._setup.assert_called_once_with(self.contract)
+        self.job.deploy(PUB2)
+        self.job.setup()
+        hmt_escrow._setup.assert_called_once_with(self.job)
 
     def test_store_intermediate(self):
         """Tests that store_intermediate calls _store_results without parameters."""
         hmt_escrow._store_intermediate_results = MagicMock()
-        self.contract.deploy(PUB2)
-        self.contract.store_intermediate_results({}, PUB2)
+        self.job.deploy(PUB2)
+        self.job.store_intermediate_results({}, PUB2)
         hmt_escrow._store_intermediate_results.assert_called_once()
 
     def test_refund(self):
         """Tests that refund calls _refund with correct parameters."""
         hmt_escrow._refund = MagicMock()
-        self.contract.deploy(PUB2)
-        self.contract.refund()
-        hmt_escrow._refund.assert_called_once_with(
-            self.contract.job_contract, self.contract.gas_payer,
-            self.contract.gas_payer_priv)
+        self.job.deploy(PUB2)
+        self.job.refund()
+        hmt_escrow._refund.assert_called_once_with(self.job)
 
     def test_bulk_payout(self):
         """Tests that bulk_payout calls _bulk_payout with correct amounts after HMT decimal conversion."""
         hmt_escrow._bulk_payout = MagicMock()
-        self.contract.deploy(PUB2)
+        self.job.deploy(PUB2)
         payouts = [(TO_ADDR, 10), (TO_ADDR2, 20)]
-        self.contract.bulk_payout(payouts, {}, PUB2)
+        self.job.bulk_payout(payouts, {}, PUB2)
         assert_addrs = [TO_ADDR, TO_ADDR2]
         assert_amounts = [10, 20]
         hmt_escrow._bulk_payout.assert_called_once_with(
-            self.contract.job_contract, assert_addrs, assert_amounts, ANY, ANY,
-            self.contract.gas_payer, self.contract.gas_payer_priv)
+            self.job, assert_addrs, assert_amounts, ANY, ANY)
 
 
 class EncryptionTest(unittest.TestCase):
