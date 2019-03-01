@@ -17,8 +17,6 @@ from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
-GAS_PAYER = Web3.toChecksumAddress(os.getenv("GAS_PAYER"))
-GAS_PAYER_PRIV = str(os.getenv("GAS_PAYER_PRIV"))
 FACTORY_ADDR = os.getenv("FACTORY_ADDR")
 if FACTORY_ADDR:
     FACTORY_ADDR = Web3.toChecksumAddress(FACTORY_ADDR)
