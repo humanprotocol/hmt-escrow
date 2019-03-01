@@ -124,11 +124,10 @@ class JobTest(unittest.TestCase):
 
     def test_fund(self):
         """Tests that fund calls _transfer_to_address with correct parameters."""
-        hmt_escrow._transfer_to_address = MagicMock()
+        hmt_escrow._fund = MagicMock()
         self.job.deploy(PUB2)
         self.job.fund()
-        hmt_escrow._transfer_to_address.assert_called_once_with(
-            self.job, self.amount)
+        hmt_escrow._fund.assert_called_once_with(self.job)
 
     def test_abort(self):
         """Tests that abort calls _abort with correct parameters."""
