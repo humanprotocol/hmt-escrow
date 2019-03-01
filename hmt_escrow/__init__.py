@@ -21,6 +21,7 @@ if FACTORY_ADDR:
     FACTORY_ADDR = Web3.toChecksumAddress(FACTORY_ADDR)
 
 LOG = logging.getLogger("hmt_escrow")
+Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 
 class Job:
@@ -81,12 +82,21 @@ class Job:
             bool: returns True if Class initialization and Ethereum and IPFS transactions succeed.
 
         """
-        job_address = initialize_job(self)
+        job_address = _initialize(self)
         self.job_contract = get_escrow(job_address)
         (hash_, manifest_url) = upload(self.serialized_manifest, public_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
         return True
+
+    def setup(self) -> bool:
+        """Sets up the Job solidity contract with Job's class attributes.
+
+        Returns:
+            bool: returns True if job is pending.
+
+        """
+        return _setup(self)
 
     def fund(self) -> bool:
         """Funds the Job solidity contract set in Job's class attributes.
@@ -105,7 +115,7 @@ class Job:
             bool: returns True if contract initiator is refunded and contract gets destroyed successfully.
 
         """
-        return abort_job(self)
+        return _abort(self.job_contract, self.gas_payer, self.gas_payer_priv)
 
     def refund(self) -> bool:
         """Transfers back the money to the funder of the Job solidity contract but doesn't destroy it.
@@ -119,15 +129,6 @@ class Job:
         """
         return _refund(self.job_contract, self.gas_payer, self.gas_payer_priv)
 
-    def setup(self) -> bool:
-        """Sets up the Job solidity contract with Job's class attributes.
-
-        Returns:
-            bool: returns True if job is pending.
-
-        """
-        return setup_job(self)
-
     def status(self) -> Enum:
         """Returns the status of a contract.
 
@@ -135,7 +136,8 @@ class Job:
             Enum: returns the status as an enumeration.
 
         """
-        return status(self)
+        status_ = _status(self.job_contract, self.gas_payer)
+        return Status(status_ + 1)
 
     def store_intermediate_results(self, results: Dict,
                                    public_key: bytes) -> bool:
@@ -150,7 +152,8 @@ class Job:
 
         """
         (hash_, url) = upload(results, public_key)
-        return store_results(self, url, hash_)
+        return _store_intermediate_results(self.job_contract, self.gas_payer,
+                                           self.gas_payer_priv, url, hash_)
 
     def bulk_payout(self, payouts: List[Tuple[str, int]], results: Dict,
                     public_key: bytes) -> bool:
@@ -458,12 +461,12 @@ def _bulk_payout(escrow_contract: Contract,
     return True
 
 
-def _store_results(escrow_contract: Contract,
-                   uri: str,
-                   hash_: str,
-                   gas_payer: str,
-                   gas_payer_priv: str,
-                   gas: int = DEFAULT_GAS) -> bool:
+def _store_intermediate_results(escrow_contract: Contract,
+                                uri: str,
+                                hash_: str,
+                                gas_payer: str,
+                                gas_payer_priv: str,
+                                gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's storeResults method that creates a transaction to the network.
 
     Args:
@@ -717,6 +720,38 @@ def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
     return _status(escrow_contract, job.gas_payer) == 1
 
 
+def _initialize(job: Job) -> str:
+    """Initialize a new job and launch it without funds on the blockchain.
+
+    This is the first step of putting a new job on the blockchain.
+    After this function is called the user can add funds, abort, or set the job up for pending.
+
+    Returns:
+        str: returns the address of the contract launched on the blockchain.
+
+    """
+    global FACTORY_ADDR
+    factory = None
+
+    if not FACTORY_ADDR:
+        factory_address = deploy_factory(job.gas_payer, job.gas_payer_priv)
+        factory = get_factory(factory_address)
+        FACTORY_ADDR = factory_address
+        if not FACTORY_ADDR:
+            raise Exception("Unable to get address from factory")
+
+    if not factory:
+        factory = get_factory(FACTORY_ADDR)
+        counter = _counter(factory, job.gas_payer)
+        LOG.debug("Factory counter is at:{}".format(counter))
+
+    _create_escrow(factory, job.gas_payer, job.gas_payer_priv)
+    escrow_address = _last_address(factory, job.gas_payer)
+
+    LOG.info("New Pokémon!:{}".format(escrow_address))
+    return escrow_address
+
+
 def _transfer_to_address(address: str,
                          amount: Decimal,
                          gas_payer: str,
@@ -777,111 +812,3 @@ def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
     escrow_manifest = Manifest(manifest_dict)
     job = Job(escrow_manifest, gas_payer, gas_payer_priv)
     return job
-
-
-def initialize_job(job: Job) -> str:
-    """Initialize a new job and launch it without funds on the blockchain.
-
-    This is the first step of putting a new job on the blockchain.
-    After this function is called the user can add funds, abort, or set the job up for pending.
-
-    Returns:
-        str: returns the address of the contract launched on the blockchain.
-
-    """
-    global FACTORY_ADDR
-    factory = None
-
-    if not FACTORY_ADDR:
-        factory_address = deploy_factory(job.gas_payer, job.gas_payer_priv)
-        factory = get_factory(factory_address)
-        FACTORY_ADDR = factory_address
-        if not FACTORY_ADDR:
-            raise Exception("Unable to get address from factory")
-
-    if not factory:
-        factory = get_factory(FACTORY_ADDR)
-        counter = _counter(factory, job.gas_payer)
-        LOG.debug("Factory counter is at:{}".format(counter))
-
-    _create_escrow(factory, job.gas_payer, job.gas_payer_priv)
-    escrow_address = _last_address(factory, job.gas_payer)
-
-    LOG.info("New Pokémon!:{}".format(escrow_address))
-    return escrow_address
-
-
-def setup_job(job: Job) -> bool:
-    """Once a job hash been put on blockchain, and is funded, this function will
-    setup the job for labeling (Pending):
-
-    Args:
-        job (Job): the Job object with initialized class attributes.
-
-    Returns:
-        bool: returns True if the contract is in "Pending" state.
-
-    """
-    return _setup(job)
-
-
-def abort_job(job: Job) -> bool:
-    """Return all leftover funds to the contract launcher and destroys the contract.
-
-    Once a job hash been put on blockchain, and is funded, this function can return
-    the money to the funder of the contract. This function cannot run if the contract
-    is in "Partial" state.
-
-    Args:
-        escrow_contract (Contract): the deployed Job solidity contract.
-
-    Returns:
-        bool: returns True if the contract is in "Cancelled" state.
-    
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-    return _abort(job, gas_payer, gas_payer_priv)
-
-
-def store_results(job: Job, intermediate_results_url: str,
-                  intermediate_results_hash: str) -> bool:
-    """Store intermediate results in the contract
-
-    Args:
-        escrow_contract (Contract): the deployed Job solidity contract.
-        intermediate_results_url (str): The url of the answers to the questions.
-        intermediate_results_hash (str): The hash of the plaintext of the manifest.
-
-    Returns:
-        bool: returns True if the results storage was successful
-    
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-    return _store_results(escrow_contract, gas_payer, gas_payer_priv,
-                          intermediate_results_url, intermediate_results_hash)
-
-
-Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
-
-
-def status(job: Job) -> Enum:
-    """User friendly status.
-
-    Returns the status of an Job solidity contract:
-    enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
-
-    Args:
-        escrow_contract (Contract): the deployed Job solidity contract.
-
-    Returns:
-        Status: returns the enum which represents the state.
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    status_ = _status(escrow_contract, gas_payer)
-    return Status(status_ + 1)

@@ -137,7 +137,7 @@ class JobTest(unittest.TestCase):
         hmt_escrow._abort = MagicMock()
         self.contract.deploy(PUB2)
         self.contract.abort()
-        hmt_escrow._abort.assert_called_once_with(self.contract,
+        hmt_escrow._abort.assert_called_once_with(self.contract.job_contract,
                                                   self.contract.gas_payer,
                                                   self.contract.gas_payer_priv)
 
@@ -159,10 +159,10 @@ class JobTest(unittest.TestCase):
 
     def test_store_intermediate(self):
         """Tests that store_intermediate calls _store_results without parameters."""
-        hmt_escrow._store_results = MagicMock()
+        hmt_escrow._store_intermediate_results = MagicMock()
         self.contract.deploy(PUB2)
         self.contract.store_intermediate_results({}, PUB2)
-        hmt_escrow._store_results.assert_called_once()
+        hmt_escrow._store_intermediate_results.assert_called_once()
 
     def test_refund(self):
         """Tests that refund calls _refund with correct parameters."""
