@@ -27,8 +27,8 @@ Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 class Job:
     def __init__(self,
                  manifest: Manifest,
-                 address: str,
-                 private_key: str,
+                 gas_payer: str,
+                 gas_payer_priv: str,
                  initialized=False):
         """Initialize the class attributes for the Job class.
 
@@ -49,12 +49,12 @@ class Job:
         if self.initialized:
             raise Exception("Unable to reinitialize if we already have")
 
-        credentials_valid = _validate_credentials(address, private_key)
+        credentials_valid = _validate_credentials(gas_payer, gas_payer)
         if not credentials_valid:
             raise ValueError("Given private key doesn't match the address")
 
-        self.gas_payer = Web3.toChecksumAddress(address)
-        self.gas_payer_priv = private_key
+        self.gas_payer = Web3.toChecksumAddress(gas_payer)
+        self.gas_payer_priv = gas_payer_priv
 
         serialized_manifest = dict(manifest.serialize())
         self.serialized_manifest = serialized_manifest
