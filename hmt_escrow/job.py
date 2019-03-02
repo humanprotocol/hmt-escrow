@@ -153,11 +153,13 @@ class Job:
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
-        We can't setup a job without deploying it first.
         >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+
+        We can't setup a job without deploying it first.
         >>> job.setup()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
+
         >>> job.deploy(rep_oracle_pub_key)
         True
 
@@ -179,11 +181,75 @@ class Job:
         """
         return _setup(self)
 
-    def abort(self) -> bool:
-        """Transfers back the money to the funder of the Job solidity contract and destroys it.
+    def bulk_payout(self, payouts: List[Tuple[str, Decimal]], results: Dict,
+                    public_key: bytes) -> bool:
+        """Performs a payout to multiple ethereum addresses.
+
+        When the payout happens, final results are uploaded to IPFS and
+        contract's state is updated.
+
+        Args:
+            payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts to pay.
+            results (Dict): the final results of the job.
+            public_key (bytes): the public key of the job requester or their agent.
 
         Returns:
-            bool: returns True if contract initiator is refunded and contract gets destroyed successfully.
+            bool: returns True if bulk payout and IPFS upload succeeds.
+
+        """
+        (hash_, url) = upload(results, public_key)
+
+        eth_addrs = [eth_addr for eth_addr, amount in payouts]
+        amounts = [amount for eth_addr, amount in payouts]
+
+        return _bulk_payout(self, eth_addrs, amounts, url, hash_)
+
+    def abort(self) -> bool:
+        """Kills the contract and returns the HMT back to the gas payer.
+        The contract cannot be aborted if the contract is in Partial, Paid or Complete state.
+
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+
+        The escrow contract is in Pending state after setup so it can be aborted.
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> job.abort()
+        True
+
+        The escrow contract is in Partial state after the first payout and it can't be aborted.
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+        >>> job.abort()
+        False
+        >>> _status(job)
+        2
+
+        The escrow contract is in Paid state after the second payout and it can't be aborted.
+        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
+        >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
+        True
+        >>> job.abort()
+        False
+        >>> _status(job)
+        3
+            
+        Returns:
+            bool: returns True if contract has been destroyed successfully.
 
         """
         return _abort(self)
@@ -224,29 +290,6 @@ class Job:
         """
         (hash_, url) = upload(results, public_key)
         return _store_intermediate_results(self, url, hash_)
-
-    def bulk_payout(self, payouts: List[Tuple[str, int]], results: Dict,
-                    public_key: bytes) -> bool:
-        """Performs a payout to multiple ethereum addresses.
-
-        When the payout happens, final results are uploaded to IPFS and
-        contract's state is updated.
-
-        Args:
-            payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts to pay.
-            results (Dict): the final results of the job.
-            public_key (bytes): the public key of the job requester or their agent.
-
-        Returns:
-            bool: returns True if bulk payout and IPFS upload succeeds.
-
-        """
-        (hash_, url) = upload(results, public_key)
-
-        eth_addrs = [eth_addr for eth_addr, amount in payouts]
-        amounts = [amount for eth_addr, amount in payouts]
-
-        return _bulk_payout(self, eth_addrs, amounts, url, hash_)
 
     def complete(self) -> bool:
         """Moves the Job solidity contract to a "Complete" state.
@@ -417,7 +460,7 @@ def _balance(job: Job, gas: int = DEFAULT_GAS) -> int:
 
 def _bulk_payout(job: Job,
                  addresses: List[str],
-                 amounts: List[int],
+                 amounts: List[Decimal],
                  uri: str,
                  hash_: str,
                  gas: int = DEFAULT_GAS) -> bool:
@@ -559,6 +602,7 @@ def _abort(job: Job, gas: int = DEFAULT_GAS) -> bool:
 
     """
     escrow_contract = job.job_contract
+    escrow_address = escrow_contract.address
     gas_payer = job.gas_payer
     gas_payer_priv = job.gas_payer_priv
 
@@ -576,7 +620,9 @@ def _abort(job: Job, gas: int = DEFAULT_GAS) -> bool:
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
 
-    return _status(job) == 5
+    # After abort the contract should be destroyed
+    contract_code = w3.eth.getCode(escrow_address)
+    return contract_code == b"\x00"
 
 
 def _refund(job: Job, gas: int = DEFAULT_GAS) -> bool:
