@@ -138,6 +138,9 @@ class Job:
 
         Returns:
             bool: returns True if contract is funded with Job's amount.
+        
+        Raises:
+            AttributeError: if trying to fund the job before deploying it.
 
         """
         return _fund(self)
