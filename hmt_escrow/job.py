@@ -127,7 +127,8 @@ class Job:
         return _fund(self)
 
     def setup(self) -> bool:
-        """Sets up the Job solidity contract with Job's class attributes.
+        """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
+        The contract needs to be deployed and funded first.
 
         >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
