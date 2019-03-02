@@ -183,18 +183,51 @@ class Job:
 
     def bulk_payout(self, payouts: List[Tuple[str, Decimal]], results: Dict,
                     public_key: bytes) -> bool:
-        """Performs a payout to multiple ethereum addresses.
+        """Performs a payout to multiple ethereum addresses. When the payout happens,
+        final results are uploaded to IPFS and contract's state is updated to Partial or Paid
+        depending on contract's balance.
 
-        When the payout happens, final results are uploaded to IPFS and
-        contract's state is updated.
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+
+        The escrow contract is still in Partial state as there's still balance left.
+        >>> _balance(job)
+        30000000000000000000
+        >>> _status(job)
+        2
+
+        Trying to pay more than the contract balance results in failure.
+        >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('40.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        False
+
+        >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+        >>> _balance(job)
+        0
+        >>> _status(job)
+        3
 
         Args:
-            payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts to pay.
-            results (Dict): the final results of the job.
-            public_key (bytes): the public key of the job requester or their agent.
+            payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts.
+            results (Dict): the final answer results stored by the Reputation Oracle.
+            public_key (bytes): the public key of the Reputation Oracle.
 
         Returns:
-            bool: returns True if bulk payout and IPFS upload succeeds.
+            bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
         (hash_, url) = upload(results, public_key)
@@ -458,6 +491,15 @@ def _balance(job: Job, gas: int = DEFAULT_GAS) -> int:
     })
 
 
+def _bulk_paid(job: Job, gas: int = DEFAULT_GAS) -> int:
+    escrow_contract = job.job_contract
+    gas_payer = job.gas_payer
+    return escrow_contract.functions.getBulkPaid().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
 def _bulk_payout(job: Job,
                  addresses: List[str],
                  amounts: List[Decimal],
@@ -504,7 +546,7 @@ def _bulk_payout(job: Job,
                                                    })
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
-    return True
+    return _bulk_paid(job) == True
 
 
 def _store_intermediate_results(job: Job,
