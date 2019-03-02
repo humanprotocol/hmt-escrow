@@ -29,7 +29,7 @@ contract Escrow {
     uint private expiration;
 
     uint256[] private finalAmounts;
-    bool private oraclesPaid;
+    bool private bulkPaid;
 
     constructor(address _eip20, address _canceler, uint _expiration) public {
         eip20 = _eip20;
@@ -37,6 +37,8 @@ contract Escrow {
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
     }
+
+
 
     function getStatus() public view returns (EscrowStatuses) {
         return status;
@@ -87,6 +89,10 @@ contract Escrow {
         return finalResultsHash;
     }
 
+    function getBulkPaid() public view returns (bool) {
+        return bulkPaid;
+    }
+
     // The escrower puts the Token in the contract without an agentless
     // and assigsn a reputation oracle to payout the bounty of size of the
     // amount specified
@@ -116,7 +122,7 @@ contract Escrow {
         recordingOracle = _recordingOracle;
         reputationOracleStake = _reputationOracleStake;
         recordingOracleStake = _recordingOracleStake;
-        oraclesPaid = false;
+        bulkPaid = false;
 
         manifestUrl = _url;
         manifestHash = _hash;
@@ -184,27 +190,38 @@ contract Escrow {
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
+        bulkPaid = false;
+
+        uint256 aggregatedBulkAmount = 0;
+        for (uint256 i; i < _amounts.length; i++) {
+            aggregatedBulkAmount += _amounts[i];
+        }
+
+        if (balance < aggregatedBulkAmount) {
+            return bulkPaid;
+        }
+
         intermediateResultsUrl = _url;
         intermediateResultsHash = _hash;
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
-        token.transferBulk(_recipients, finalAmounts, _txId);
-        delete finalAmounts;
-        
-        bool success = token.transfer(reputationOracle, reputationOracleFee);
-        success = token.transfer(recordingOracle, recordingOracleFee);
+        if (token.transferBulk(_recipients, finalAmounts, _txId) == _recipients.length) {
+            delete finalAmounts;
+            bulkPaid = token.transfer(reputationOracle, reputationOracleFee);
+            bulkPaid = token.transfer(recordingOracle, recordingOracleFee);
+        }
 
         balance = getBalance();
-        if (success) {
+        if (bulkPaid) {
             if (status == EscrowStatuses.Pending) {
                 status = EscrowStatuses.Partial;
             }
-            if (balance == 0) {
+            if (balance == 0 && (status == EscrowStatuses.Pending || status == EscrowStatuses.Partial)) {
                 status = EscrowStatuses.Paid;
             }
         }
-        return success;
+        return bulkPaid;
     }
 
     function finalizePayouts(uint256[] _amounts) public returns (uint256, uint256) {
