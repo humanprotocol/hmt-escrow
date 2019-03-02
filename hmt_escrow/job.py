@@ -92,8 +92,8 @@ class Job:
 
     def deploy(self, public_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
-        to IPFS with the public key of the Reputation oracle and stores 
-        the url to the escrow contract.
+        to IPFS with the public key of the Reputation Oracle and stores 
+        the IPFS url to the escrow contract.
 
         Examples:
         >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
@@ -118,10 +118,26 @@ class Job:
         return True
 
     def fund(self) -> bool:
-        """Funds the Job solidity contract set in Job's class attributes.
+        """Funds the escrow contract with the amount in Job's class attributes.
+        The contract needs to be deployed first.
+
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+
+        We can't fund a job without deploying it first.
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.fund()
+        Traceback (most recent call last):
+        AttributeError: 'Job' object has no attribute 'job_contract'
+
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
 
         Returns:
-            bool: returns True if contract is funded.
+            bool: returns True if contract is funded with Job's amount.
 
         """
         return _fund(self)
