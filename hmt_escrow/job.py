@@ -416,7 +416,8 @@ class Job:
         })
         return download(intermediate_results_url, private_key)
 
-    def final_results(self, private_key: bytes) -> Dict:
+    def final_results(self, private_key: bytes,
+                      gas: int = DEFAULT_GAS) -> Dict:
         """Retrieves the final results.
 
         Args:
@@ -426,7 +427,12 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(_final_results_url(self), private_key)
+        final_results_url = self.job_contract.functions.getFinalResultsUrl(
+        ).call({
+            'from': self.gas_payer,
+            'gas': gas
+        })
+        return download(final_results_url, private_key)
 
 
 def _validate_credentials(address: str, private_key: str) -> bool:
@@ -478,27 +484,6 @@ def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
     return escrow_contract.functions.getStatus().call({
         'from': gas_payer,
         'gas': gas
-    })
-
-
-def _final_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getFinalResultsUrl method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the final results url
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    return escrow_contract.functions.getFinalResultsUrl().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
     })
 
 
