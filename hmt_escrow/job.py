@@ -384,7 +384,7 @@ class Job:
                 str(e)))
             return False
 
-    def get_manifest(self, private_key: bytes) -> Dict:
+    def manifest(self, private_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup the job.
 
         Args:
@@ -396,7 +396,7 @@ class Job:
         """
         return download(_manifest_url(self, self.gas_payer), private_key)
 
-    def get_intermediate_results(self, private_key: bytes) -> Dict:
+    def intermediate_results(self, private_key: bytes) -> Dict:
         """Retrieves the intermediate results.
 
         Args:
@@ -408,7 +408,7 @@ class Job:
         """
         return download(_intermediate_results_url(self), private_key)
 
-    def get_final_results(self, private_key: bytes) -> Dict:
+    def final_results(self, private_key: bytes) -> Dict:
         """Retrieves the final results.
 
         Args:
