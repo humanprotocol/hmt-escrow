@@ -17,8 +17,6 @@ from basemodels import Manifest
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
 FACTORY_ADDR = os.getenv("FACTORY_ADDR")
-if FACTORY_ADDR:
-    FACTORY_ADDR = Web3.toChecksumAddress(FACTORY_ADDR)
 
 LOG = logging.getLogger("hmt_escrow")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
@@ -113,8 +111,7 @@ class Job:
         factory = _check_factory(self)
         _create_escrow(self, factory)
         job_address = _last_address(self, factory)
-        LOG.info("Job's escrow deployed to:{}".
-                 format(job_address))
+        LOG.info("Job's escrow contract deployed to:{}".format(job_address))
 
         self.job_contract = get_escrow(job_address)
         (hash_, manifest_url) = upload(self.serialized_manifest, public_key)
@@ -855,7 +852,7 @@ def _check_factory(job: Job, gas: int = DEFAULT_GAS) -> Contract:
             raise Exception("Unable to get address from factory")
 
     if not factory:
-        factory = get_factory(FACTORY_ADDR)
+        factory = get_factory(Web3.toChecksumAddress(FACTORY_ADDR))
         counter = _counter(job, factory)
         LOG.debug("Factory counter is at:{}".format(counter))
     return factory
