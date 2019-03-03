@@ -439,8 +439,10 @@ class Job:
         status_ = _status(self)
         return Status(status_ + 1)
 
-    def store_intermediate_results(self, results: Dict,
-                                   public_key: bytes) -> bool:
+    def store_intermediate_results(self,
+                                   results: Dict,
+                                   public_key: bytes,
+                                   gas: int = GAS_LIMIT) -> bool:
         """Stores intermediate results with Reputation Oracle's public key to IPFS.
 
         Args:
@@ -452,7 +454,19 @@ class Job:
 
         """
         (hash_, url) = upload(results, public_key)
-        return _store_intermediate_results(self, url, hash_)
+
+        w3 = get_w3()
+        nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+        tx_dict = self.job_contract.functions.storeResults(
+            url, hash_).buildTransaction({
+                'from': self.gas_payer,
+                'gas': gas,
+                'nonce': nonce
+            })
+        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+        wait_on_transaction(tx_hash)
+        return True
 
     def complete(self) -> bool:
         """Moves the Job solidity contract to a "Complete" state.
@@ -597,46 +611,6 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
         'from': gas_payer,
         'gas': gas
     })
-
-
-def _store_intermediate_results(job: Job,
-                                uri: str,
-                                hash_: str,
-                                gas: int = GAS_LIMIT) -> bool:
-    """Wrapper function that calls Job solidity contract's storeResults method that creates a transaction to the network.
-
-    Args:
-        escrow_contract (Contract): the contract to be updated.
-        uri (str): intermediate manifest result url getting updated to the Job solidity contract's state.
-        hash_ (str): intermediate manifest result hash getting updated to the Job solidity contract's state.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if intermediate results were successfully updated
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    tx_dict = escrow_contract.functions.storeResults(uri,
-                                                     hash_).buildTransaction({
-                                                         'from':
-                                                         gas_payer,
-                                                         'gas':
-                                                         gas,
-                                                         'nonce':
-                                                         nonce
-                                                     })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-    return True
 
 
 def _complete(job: Job, gas: int = GAS_LIMIT) -> bool:
