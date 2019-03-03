@@ -287,17 +287,60 @@ class Job:
         """
         return _abort(self)
 
-    def refund(self) -> bool:
-        """Transfers back the money to the funder of the Job solidity contract but doesn't destroy it.
+    def cancel(self) -> bool:
+        """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
 
-        Softer version of abort as the Job solidity contract is not destroyed.
-        Higher in gas costs however than abort.
+        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+
+        The escrow contract is in Pending state after setup so it can be cancelled.
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> job.cancel()
+        True
+
+        Contract balance is zero and status is "Cancelled".
+        >>> _balance(job)
+        0
+        >>> _status(job)
+        5
+
+        The escrow contract is in Partial state after the first payout and it can't be cancelled.
+        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+        >>> job.cancel()
+        False
+        >>> _status(job)
+        2
+
+        The escrow contract is in Paid state after the second payout and it can't be cancelled.
+        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
+        >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
+        True
+        >>> job.cancel()
+        False
+        >>> _status(job)
+        3
 
         Returns:
-            bool: returns True if refund to contract initiator succeeds.
+            bool: returns True if gas payer has been paid back and contract is in "Cancelled" state.
 
         """
-        return _refund(self)
+        return _cancel(self)
 
     def status(self) -> Enum:
         """Returns the status of a contract.
@@ -405,13 +448,13 @@ def _validate_credentials(address: str, private_key: str) -> bool:
 def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
     """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
 
-    Description of status codes:
-    0: Launched
-    1: Pending
-    2: Partial
-    3: Paid
-    4: Complete
-    5: Cancelled
+    Enums:
+        0: Launched
+        1: Pending
+        2: Partial
+        3: Paid
+        4: Complete
+        5: Cancelled
 
     Args:
         escrow_contract (Contract): the contract to be read.
@@ -667,7 +710,7 @@ def _abort(job: Job, gas: int = DEFAULT_GAS) -> bool:
     return contract_code == b"\x00"
 
 
-def _refund(job: Job, gas: int = DEFAULT_GAS) -> bool:
+def _cancel(job: Job, gas: int = DEFAULT_GAS) -> bool:
     """Wrapper function that calls Job solidity contract's refund method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -692,7 +735,7 @@ def _refund(job: Job, gas: int = DEFAULT_GAS) -> bool:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
 
-    tx_dict = escrow_contract.functions.refund().buildTransaction({
+    tx_dict = escrow_contract.functions.cancel().buildTransaction({
         'from':
         gas_payer,
         'gas':
