@@ -481,27 +481,6 @@ def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
     })
 
 
-def _intermediate_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
-    """Wrapper function that calls Job solidity contract's getIntermediateResultsUrl method in a read-only manner.
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the intermediate results url
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    return escrow_contract.functions.getIntermediateResultsUrl().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
-
-
 def _final_results_url(job: Job, gas: int = DEFAULT_GAS) -> str:
     """Wrapper function that calls Job solidity contract's getFinalResultsUrl method in a read-only manner.
 
