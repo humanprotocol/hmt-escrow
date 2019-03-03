@@ -221,8 +221,11 @@ class Job:
         wait_on_transaction(tx_hash)
         return _status(self) == 1
 
-    def bulk_payout(self, payouts: List[Tuple[str, Decimal]], results: Dict,
-                    public_key: bytes) -> bool:
+    def bulk_payout(self,
+                    payouts: List[Tuple[str, Decimal]],
+                    results: Dict,
+                    public_key: bytes,
+                    gas: int = GAS_LIMIT) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
         depending on contract's balance.
@@ -273,9 +276,23 @@ class Job:
         (hash_, url) = upload(results, public_key)
 
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
-        amounts = [amount for eth_addr, amount in payouts]
+        hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
-        return _bulk_payout(self, eth_addrs, amounts, url, hash_)
+        w3 = get_w3()
+        nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+        tx_dict = self.job_contract.functions.bulkPayOut(
+            eth_addrs, hmt_amounts, url, hash_, 1).buildTransaction({
+                'from':
+                self.gas_payer,
+                'gas':
+                gas,
+                'nonce':
+                nonce
+            })
+        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+        wait_on_transaction(tx_hash)
+        return _bulk_paid(self) == True
 
     def abort(self) -> bool:
         """Kills the contract and returns the HMT back to the gas payer.
@@ -454,8 +471,7 @@ class Job:
         })
         return download(intermediate_results_url, private_key)
 
-    def final_results(self, private_key: bytes,
-                      gas: int = GAS_LIMIT) -> Dict:
+    def final_results(self, private_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results.
 
         Args:
@@ -551,55 +567,6 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
         'from': gas_payer,
         'gas': gas
     })
-
-
-def _bulk_payout(job: Job,
-                 addresses: List[str],
-                 amounts: List[Decimal],
-                 uri: str,
-                 hash_: str,
-                 gas: int = GAS_LIMIT) -> bool:
-    """Wrapper function that calls Job solidity contract's bulkPayout method that creates a transaction to the network.
-
-    Handles the conversion of the oracle_stake and fundable amount to contract's native values.
-    amount: Multiply by 10^18 to get the correct amount in HMT dictated by solidity contract's decimals.
-
-    Args:
-        escrow_contract (Contract): the contract to be updated.
-        addresses (list): ethereum addresses receiving payouts.
-        amounts (list): corresponding list of HMT to be paid.
-        uri (str): final manifest result url getting updated to the Job solidity contract's state.
-        hash_ (str): final manifest result hash getting updated to the Job solidity contract's state.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if the payout was successful.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out.
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    hmt_amounts = [int(amount * 10**18) for amount in amounts]
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    tx_dict = escrow_contract.functions.bulkPayOut(addresses, hmt_amounts, uri,
-                                                   hash_, 1).buildTransaction({
-                                                       'from':
-                                                       gas_payer,
-                                                       'gas':
-                                                       gas,
-                                                       'nonce':
-                                                       nonce
-                                                   })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-    return _bulk_paid(job) == True
 
 
 def _store_intermediate_results(job: Job,
@@ -819,8 +786,7 @@ def _last_address(job: Job, factory_contract: Contract,
     })
 
 
-def _create_escrow(job: Job,
-                   factory_contract: Contract,
+def _create_escrow(job: Job, factory_contract: Contract,
                    gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls EscrowFactory solidity contract's createEscrow method that creates a transaction to the network.
 
