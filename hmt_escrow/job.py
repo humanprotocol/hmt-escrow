@@ -110,7 +110,12 @@ class Job:
             bool: returns True if Class initialization and Ethereum and IPFS transactions succeed.
 
         """
-        job_address = _initialize(self)
+        factory = _check_factory(self)
+        _create_escrow(self, factory)
+        job_address = _last_address(self, factory)
+        LOG.info("Job's escrow deployed to:{}".
+                 format(job_address))
+
         self.job_contract = get_escrow(job_address)
         (hash_, manifest_url) = upload(self.serialized_manifest, public_key)
         self.manifest_url = manifest_url
@@ -790,24 +795,6 @@ def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
     tx_hash = sign_and_send_transaction(tx_dict, job.gas_payer_priv)
     wait_on_transaction(tx_hash)
     return _status(job) == 1
-
-
-def _initialize(job: Job) -> str:
-    """Initialize a new job and launch it without funds on the blockchain.
-
-    This is the first step of putting a new job on the blockchain.
-    After this function is called the user can add funds, abort, or set the job up for pending.
-
-    Returns:
-        str: returns the address of the contract launched on the blockchain.
-
-    """
-    factory = _check_factory(job)
-    _create_escrow(job, factory)
-    escrow_address = _last_address(job, factory)
-
-    LOG.info("New Pokémon!:{}".format(escrow_address))
-    return escrow_address
 
 
 def _fund(job: Job, gas: int = DEFAULT_GAS) -> bool:
