@@ -119,7 +119,7 @@ class Job:
         self.manifest_hash = hash_
         return True
 
-    def fund(self) -> bool:
+    def fund(self, gas: int = DEFAULT_GAS) -> bool:
         """Funds the escrow contract with the amount in Job's class attributes.
         The contract needs to be deployed first.
 
@@ -145,7 +145,24 @@ class Job:
             AttributeError: if trying to fund the job before deploying it.
 
         """
-        return _fund(self)
+        hmtoken_contract = get_hmtoken()
+        hmt_amount = int(self.amount * 10**18)
+
+        w3 = get_w3()
+        nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+        tx_dict = hmtoken_contract.functions.transfer(
+            self.job_contract.address, hmt_amount).buildTransaction({
+                'from':
+                self.gas_payer,
+                'gas':
+                gas,
+                'nonce':
+                nonce
+            })
+        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+        wait_on_transaction(tx_hash)
+        return _balance(self) == hmt_amount
 
     def setup(self) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
@@ -762,48 +779,6 @@ def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
     tx_hash = sign_and_send_transaction(tx_dict, job.gas_payer_priv)
     wait_on_transaction(tx_hash)
     return _status(job) == 1
-
-
-def _fund(job: Job, gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls HMToken solidity contract's transfer method that creates a transaction to the network.
-
-    Handles the conversion of the oracle_stake and fundable amount to contract's native values:
-    amount: Multiply by 10^18 to get the correct amount in HMT dictated by solidity contract's decimals.
-
-    Args:
-        address (str): an ethereum address to receive HMT.
-        amount (Decimal): the amount of HMT to be paid before the decimal conversion.
-        gas_payer (str): an ethereum address paying the gas costs.
-        gas_payer_priv (str): the private key of the gas payer.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if contract's status is in "Pending" state.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out.
-
-    """
-    address = job.job_contract.address
-    amount = job.amount
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    hmtoken_contract = get_hmtoken()
-    hmt_amount = int(amount * 10**18)
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    tx_dict = hmtoken_contract.functions.transfer(
-        address, hmt_amount).buildTransaction({
-            'from': gas_payer,
-            'gas': gas,
-            'nonce': nonce
-        })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-    return _balance(job) == hmt_amount
 
 
 def _check_factory(job: Job, gas: int = DEFAULT_GAS) -> Contract:
