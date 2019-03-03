@@ -802,24 +802,7 @@ def _initialize(job: Job) -> str:
         str: returns the address of the contract launched on the blockchain.
 
     """
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    global FACTORY_ADDR
-    factory = None
-
-    if not FACTORY_ADDR:
-        factory_address = deploy_factory(gas_payer, gas_payer_priv)
-        factory = get_factory(factory_address)
-        FACTORY_ADDR = factory_address
-        if not FACTORY_ADDR:
-            raise Exception("Unable to get address from factory")
-
-    if not factory:
-        factory = get_factory(FACTORY_ADDR)
-        counter = _counter(job, factory)
-        LOG.debug("Factory counter is at:{}".format(counter))
-
+    factory = _check_factory(job)
     _create_escrow(job, factory)
     escrow_address = _last_address(job, factory)
 
@@ -867,6 +850,28 @@ def _fund(job: Job, gas: int = DEFAULT_GAS) -> bool:
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
     return _balance(job) == hmt_amount
+
+
+def _check_factory(job: Job, gas: int = DEFAULT_GAS) -> Contract:
+    gas_payer = job.gas_payer
+    gas_payer_priv = job.gas_payer_priv
+
+    global FACTORY_ADDR
+    factory_address_valid = Web3.isChecksumAddress(FACTORY_ADDR)
+    factory = None
+
+    if not factory_address_valid:
+        factory_address = deploy_factory(gas_payer, gas_payer_priv)
+        factory = get_factory(factory_address)
+        FACTORY_ADDR = factory_address
+        if not FACTORY_ADDR:
+            raise Exception("Unable to get address from factory")
+
+    if not factory:
+        factory = get_factory(FACTORY_ADDR)
+        counter = _counter(job, factory)
+        LOG.debug("Factory counter is at:{}".format(counter))
+    return factory
 
 
 def _counter(job: Job, factory_contract: Contract,
