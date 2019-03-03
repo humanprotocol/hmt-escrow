@@ -398,7 +398,8 @@ class Job:
         """
         return download(_manifest_url(self, self.gas_payer), private_key)
 
-    def intermediate_results(self, private_key: bytes) -> Dict:
+    def intermediate_results(self, private_key: bytes,
+                             gas: int = DEFAULT_GAS) -> Dict:
         """Retrieves the intermediate results.
 
         Args:
@@ -408,7 +409,12 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(_intermediate_results_url(self), private_key)
+        intermediate_results_url = self.job_contract.functions.getIntermediateResultsUrl(
+        ).call({
+            'from': self.gas_payer,
+            'gas': gas
+        })
+        return download(intermediate_results_url, private_key)
 
     def final_results(self, private_key: bytes) -> Dict:
         """Retrieves the final results.
