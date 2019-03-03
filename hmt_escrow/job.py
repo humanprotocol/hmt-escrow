@@ -294,7 +294,7 @@ class Job:
         wait_on_transaction(tx_hash)
         return _bulk_paid(self) == True
 
-    def abort(self) -> bool:
+    def abort(self, gas: int = GAS_LIMIT) -> bool:
         """Kills the contract and returns the HMT back to the gas payer.
         The contract cannot be aborted if the contract is in Partial, Paid or Complete state.
 
@@ -342,7 +342,23 @@ class Job:
             bool: returns True if contract has been destroyed successfully.
 
         """
-        return _abort(self)
+        w3 = get_w3()
+        nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+        tx_dict = self.job_contract.functions.abort().buildTransaction({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas,
+            'nonce':
+            nonce
+        })
+        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+        wait_on_transaction(tx_hash)
+
+        # After abort the contract should be destroyed
+        contract_code = w3.eth.getCode(self.job_contract.address)
+        return contract_code == b"\x00"
 
     def cancel(self) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
@@ -643,48 +659,6 @@ def _complete(job: Job, gas: int = GAS_LIMIT) -> bool:
     tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
     wait_on_transaction(tx_hash)
     return _status(job) == 4
-
-
-def _abort(job: Job, gas: int = GAS_LIMIT) -> bool:
-    """Wrapper function that calls Job solidity contract's abort method that creates a transaction to the network.
-
-    Makes a separate call to check the status of the contract by using internal helper function _status.
-
-    Args:
-        escrow_contract (Contract): the contract to be updated.
-        gas_payer (str): an ethereum address paying the gas costs.
-        gas_payer_priv (str): the private key of the gas payer.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if contract's status is in "Cancelled" state.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out
-
-    """
-    escrow_contract = job.job_contract
-    escrow_address = escrow_contract.address
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    tx_dict = escrow_contract.functions.abort().buildTransaction({
-        'from':
-        gas_payer,
-        'gas':
-        gas,
-        'nonce':
-        nonce
-    })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-
-    # After abort the contract should be destroyed
-    contract_code = w3.eth.getCode(escrow_address)
-    return contract_code == b"\x00"
 
 
 def _cancel(job: Job, gas: int = GAS_LIMIT) -> bool:
