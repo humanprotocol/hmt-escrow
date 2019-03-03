@@ -15,7 +15,7 @@ from eth_bridge import get_hmtoken, get_contract_interface, wait_on_transaction,
 from storage import download, upload
 from basemodels import Manifest
 
-DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
+GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 FACTORY_ADDR = os.getenv("FACTORY_ADDR")
 
 LOG = logging.getLogger("hmt_escrow")
@@ -119,7 +119,7 @@ class Job:
         self.manifest_hash = hash_
         return True
 
-    def fund(self, gas: int = DEFAULT_GAS) -> bool:
+    def fund(self, gas: int = GAS_LIMIT) -> bool:
         """Funds the escrow contract with the amount in Job's class attributes.
         The contract needs to be deployed first.
 
@@ -164,7 +164,7 @@ class Job:
         wait_on_transaction(tx_hash)
         return _balance(self) == hmt_amount
 
-    def setup(self, gas: int = DEFAULT_GAS) -> bool:
+    def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
@@ -437,7 +437,7 @@ class Job:
         return download(_manifest_url(self, self.gas_payer), private_key)
 
     def intermediate_results(self, private_key: bytes,
-                             gas: int = DEFAULT_GAS) -> Dict:
+                             gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the intermediate results.
 
         Args:
@@ -455,7 +455,7 @@ class Job:
         return download(intermediate_results_url, private_key)
 
     def final_results(self, private_key: bytes,
-                      gas: int = DEFAULT_GAS) -> Dict:
+                      gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results.
 
         Args:
@@ -497,7 +497,7 @@ def _validate_credentials(address: str, private_key: str) -> bool:
     return Web3.toChecksumAddress(address) == calculated_address
 
 
-def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
+def _status(job: Job, gas: int = GAS_LIMIT) -> int:
     """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
 
     Enums:
@@ -525,7 +525,7 @@ def _status(job: Job, gas: int = DEFAULT_GAS) -> int:
     })
 
 
-def _balance(job: Job, gas: int = DEFAULT_GAS) -> int:
+def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
     """Wrapper function that calls Job solidity contract's getBalance method in a read-only manner.
 
     Args:
@@ -544,7 +544,7 @@ def _balance(job: Job, gas: int = DEFAULT_GAS) -> int:
     })
 
 
-def _bulk_paid(job: Job, gas: int = DEFAULT_GAS) -> int:
+def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
     escrow_contract = job.job_contract
     gas_payer = job.gas_payer
     return escrow_contract.functions.getBulkPaid().call({
@@ -558,7 +558,7 @@ def _bulk_payout(job: Job,
                  amounts: List[Decimal],
                  uri: str,
                  hash_: str,
-                 gas: int = DEFAULT_GAS) -> bool:
+                 gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls Job solidity contract's bulkPayout method that creates a transaction to the network.
 
     Handles the conversion of the oracle_stake and fundable amount to contract's native values.
@@ -605,7 +605,7 @@ def _bulk_payout(job: Job,
 def _store_intermediate_results(job: Job,
                                 uri: str,
                                 hash_: str,
-                                gas: int = DEFAULT_GAS) -> bool:
+                                gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls Job solidity contract's storeResults method that creates a transaction to the network.
 
     Args:
@@ -642,7 +642,7 @@ def _store_intermediate_results(job: Job,
     return True
 
 
-def _complete(job: Job, gas: int = DEFAULT_GAS) -> bool:
+def _complete(job: Job, gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls Job solidity contract's complete method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -678,7 +678,7 @@ def _complete(job: Job, gas: int = DEFAULT_GAS) -> bool:
     return _status(job) == 4
 
 
-def _abort(job: Job, gas: int = DEFAULT_GAS) -> bool:
+def _abort(job: Job, gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls Job solidity contract's abort method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -720,7 +720,7 @@ def _abort(job: Job, gas: int = DEFAULT_GAS) -> bool:
     return contract_code == b"\x00"
 
 
-def _cancel(job: Job, gas: int = DEFAULT_GAS) -> bool:
+def _cancel(job: Job, gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls Job solidity contract's refund method that creates a transaction to the network.
 
     Makes a separate call to check the status of the contract by using internal helper function _status.
@@ -759,7 +759,7 @@ def _cancel(job: Job, gas: int = DEFAULT_GAS) -> bool:
     return _status(job) == 5
 
 
-def _check_factory(job: Job, gas: int = DEFAULT_GAS) -> Contract:
+def _check_factory(job: Job, gas: int = GAS_LIMIT) -> Contract:
     gas_payer = job.gas_payer
     gas_payer_priv = job.gas_payer_priv
 
@@ -782,7 +782,7 @@ def _check_factory(job: Job, gas: int = DEFAULT_GAS) -> Contract:
 
 
 def _counter(job: Job, factory_contract: Contract,
-             gas: int = DEFAULT_GAS) -> int:
+             gas: int = GAS_LIMIT) -> int:
     """Wrapper function that calls EscrowFactory solidity contract's getCounter method in a read-only manner.
 
     Args:
@@ -801,7 +801,7 @@ def _counter(job: Job, factory_contract: Contract,
 
 
 def _last_address(job: Job, factory_contract: Contract,
-                  gas: int = DEFAULT_GAS) -> str:
+                  gas: int = GAS_LIMIT) -> str:
     """Wrapper function that calls EscrowFactory solidity contract's getLastAddress method in a read-only manner.
 
     Args:
@@ -821,7 +821,7 @@ def _last_address(job: Job, factory_contract: Contract,
 
 def _create_escrow(job: Job,
                    factory_contract: Contract,
-                   gas: int = DEFAULT_GAS) -> bool:
+                   gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls EscrowFactory solidity contract's createEscrow method that creates a transaction to the network.
 
     Args:
@@ -855,7 +855,7 @@ def _create_escrow(job: Job,
 
 def _manifest_url(escrow_contract: Contract,
                   gas_payer: str,
-                  gas: int = DEFAULT_GAS) -> str:
+                  gas: int = GAS_LIMIT) -> str:
     """Wrapper function that calls Job solidity contract's getManifestUrl method in a read-only manner.
 
     Args:
