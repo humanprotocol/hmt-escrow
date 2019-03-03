@@ -219,7 +219,7 @@ class Job:
             })
         tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
         wait_on_transaction(tx_hash)
-        return _status(self) == 1
+        return self.status(gas) == Status.Pending
 
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
@@ -248,8 +248,8 @@ class Job:
         The escrow contract is still in Partial state as there's still balance left.
         >>> _balance(job)
         30000000000000000000
-        >>> _status(job)
-        2
+        >>> job.status()
+        <Status.Partial: 3>
 
         Trying to pay more than the contract balance results in failure.
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('40.0'))]
@@ -261,8 +261,8 @@ class Job:
         True
         >>> _balance(job)
         0
-        >>> _status(job)
-        3
+        >>> job.status()
+        <Status.Paid: 4>
 
         Args:
             payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts.
@@ -326,8 +326,8 @@ class Job:
         True
         >>> job.abort()
         False
-        >>> _status(job)
-        2
+        >>> job.status()
+        <Status.Partial: 3>
 
         The escrow contract is in Paid state after the second payout and it can't be aborted.
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
@@ -335,8 +335,8 @@ class Job:
         True
         >>> job.abort()
         False
-        >>> _status(job)
-        3
+        >>> job.status()
+        <Status.Paid: 4>
             
         Returns:
             bool: returns True if contract has been destroyed successfully.
@@ -381,8 +381,8 @@ class Job:
         Contract balance is zero and status is "Cancelled".
         >>> _balance(job)
         0
-        >>> _status(job)
-        5
+        >>> job.status()
+        <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
         >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
@@ -397,8 +397,8 @@ class Job:
         True
         >>> job.cancel()
         False
-        >>> _status(job)
-        2
+        >>> job.status()
+        <Status.Partial: 3>
 
         The escrow contract is in Paid state after the second payout and it can't be cancelled.
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
@@ -406,8 +406,8 @@ class Job:
         True
         >>> job.cancel()
         False
-        >>> _status(job)
-        3
+        >>> job.status()
+        <Status.Paid: 4>
 
         Returns:
             bool: returns True if gas payer has been paid back and contract is in "Cancelled" state.
@@ -427,16 +427,21 @@ class Job:
         tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
         wait_on_transaction(tx_hash)
 
-        return _status(self) == 5
+        return self.status(gas) == Status.Cancelled
 
-    def status(self) -> Enum:
+    def status(self, gas: int = GAS_LIMIT) -> Enum:
         """Returns the status of a contract.
 
         Returns:
             Enum: returns the status as an enumeration.
 
         """
-        status_ = _status(self)
+        status_ = self.job_contract.functions.getStatus().call({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas
+        })
         return Status(status_ + 1)
 
     def store_intermediate_results(self,
@@ -492,7 +497,7 @@ class Job:
             })
             tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
             wait_on_transaction(tx_hash)
-            return _status(self) == 4
+            return self.status() == Status.Complete
         except Exception as e:
             LOG.error("Unable to complete contract:{} is the exception".format(
                 str(e)))
@@ -568,34 +573,6 @@ def _validate_credentials(address: str, private_key: str) -> bool:
     pub_key = priv_key.public_key
     calculated_address = pub_key.to_checksum_address()
     return Web3.toChecksumAddress(address) == calculated_address
-
-
-def _status(job: Job, gas: int = GAS_LIMIT) -> int:
-    """Wrapper function that calls Job solidity contract's getStatus method in a read-only manner.
-
-    Enums:
-        0: Launched
-        1: Pending
-        2: Partial
-        3: Paid
-        4: Complete
-        5: Cancelled
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas_payer (str): an ethereum address paying the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        int: returns the number equivalent to the status of the contract.
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    return escrow_contract.functions.getStatus().call({
-        'from': gas_payer,
-        'gas': gas
-    })
 
 
 def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
