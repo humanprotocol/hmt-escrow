@@ -468,7 +468,7 @@ class Job:
         wait_on_transaction(tx_hash)
         return True
 
-    def complete(self) -> bool:
+    def complete(self, gas: int = GAS_LIMIT) -> bool:
         """Moves the Job solidity contract to a "Complete" state.
 
         Returns:
@@ -479,7 +479,20 @@ class Job:
             
         """
         try:
-            return _complete(self)
+            w3 = get_w3()
+            nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+            tx_dict = self.job_contract.functions.complete().buildTransaction({
+                'from':
+                self.gas_payer,
+                'gas':
+                gas,
+                'nonce':
+                nonce
+            })
+            tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+            wait_on_transaction(tx_hash)
+            return _status(self) == 4
         except Exception as e:
             LOG.error("Unable to complete contract:{} is the exception".format(
                 str(e)))
@@ -611,81 +624,6 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
         'from': gas_payer,
         'gas': gas
     })
-
-
-def _complete(job: Job, gas: int = GAS_LIMIT) -> bool:
-    """Wrapper function that calls Job solidity contract's complete method that creates a transaction to the network.
-
-    Makes a separate call to check the status of the contract by using internal helper function _status.
-
-    Args:
-        escrow_contract (Contract): the contract to be updated.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if contract's status is in "Complete" state.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    tx_dict = escrow_contract.functions.complete().buildTransaction({
-        'from':
-        gas_payer,
-        'gas':
-        gas,
-        'nonce':
-        nonce
-    })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-    return _status(job) == 4
-
-
-def _cancel(job: Job, gas: int = GAS_LIMIT) -> bool:
-    """Wrapper function that calls Job solidity contract's refund method that creates a transaction to the network.
-
-    Makes a separate call to check the status of the contract by using internal helper function _status.
-
-    Args:
-        escrow_contract (Contract): the contract to be updated.
-        gas_payer (str): an ethereum address paying the gas costs.
-        gas_payer_priv (str): the private key of the gas payer.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if contract's status is in "Cancelled" state.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out
-
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    tx_dict = escrow_contract.functions.cancel().buildTransaction({
-        'from':
-        gas_payer,
-        'gas':
-        gas,
-        'nonce':
-        nonce
-    })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-
-    return _status(job) == 5
 
 
 def _check_factory(job: Job, gas: int = GAS_LIMIT) -> Contract:
