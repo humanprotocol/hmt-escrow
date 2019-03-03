@@ -164,7 +164,7 @@ class Job:
         wait_on_transaction(tx_hash)
         return _balance(self) == hmt_amount
 
-    def setup(self) -> bool:
+    def setup(self, gas: int = DEFAULT_GAS) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
@@ -198,7 +198,28 @@ class Job:
             AttributeError: if trying to setup the job before deploying it.
 
         """
-        return _setup(self)
+        reputation_oracle_stake = int(self.oracle_stake * 100)
+        recording_oracle_stake = int(self.oracle_stake * 100)
+        reputation_oracle = str(
+            self.serialized_manifest["reputation_oracle_addr"])
+        recording_oracle = str(
+            self.serialized_manifest["recording_oracle_addr"])
+        hmt_amount = int(self.amount * 10**18)
+
+        w3 = get_w3()
+        nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+        tx_dict = self.job_contract.functions.setup(
+            reputation_oracle, recording_oracle, reputation_oracle_stake,
+            recording_oracle_stake, hmt_amount, self.manifest_url,
+            self.manifest_hash).buildTransaction({
+                'from': self.gas_payer,
+                'gas': gas,
+                'nonce': nonce
+            })
+        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+        wait_on_transaction(tx_hash)
+        return _status(self) == 1
 
     def bulk_payout(self, payouts: List[Tuple[str, Decimal]], results: Dict,
                     public_key: bytes) -> bool:
@@ -736,49 +757,6 @@ def _cancel(job: Job, gas: int = DEFAULT_GAS) -> bool:
     wait_on_transaction(tx_hash)
 
     return _status(job) == 5
-
-
-def _setup(job: Job, gas: int = DEFAULT_GAS) -> bool:
-    """Wrapper function that calls Job solidity contract's setup method that creates a transaction to the network.
-
-    Handles the conversion of the oracle_stake and fundable amount to contract's native values:
-    oracle_stake: Multiply by 100 to an integer value between 0 and 100.
-    amount: Multiply by 10^18 to get the correct amount in HMT dictated by solidity contract's decimals.
-
-    Args:
-        job (Job): the Job class preferrably already initialized
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if contract's status is in "Pending" state.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out.
-
-    """
-    escrow_contract = job.job_contract
-    reputation_oracle_stake = int(job.oracle_stake * 100)
-    recording_oracle_stake = int(job.oracle_stake * 100)
-    reputation_oracle = str(job.serialized_manifest["reputation_oracle_addr"])
-    recording_oracle = str(job.serialized_manifest["recording_oracle_addr"])
-    manifest_url = job.manifest_url
-    manifest_hash = job.manifest_hash
-    hmt_amount = int(job.amount * 10**18)
-
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(job.gas_payer)
-
-    tx_dict = escrow_contract.functions.setup(
-        reputation_oracle, recording_oracle, reputation_oracle_stake,
-        recording_oracle_stake, hmt_amount, manifest_url,
-        manifest_hash).buildTransaction({
-            'from': job.gas_payer,
-            'gas': gas,
-            'nonce': nonce
-        })
-    tx_hash = sign_and_send_transaction(tx_dict, job.gas_payer_priv)
-    wait_on_transaction(tx_hash)
-    return _status(job) == 1
 
 
 def _check_factory(job: Job, gas: int = DEFAULT_GAS) -> Contract:
