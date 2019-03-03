@@ -740,5 +740,4 @@ if __name__ == "__main__":
     import doctest
     from test_job import test_manifest
     from storage import upload
-    from unittest.mock import MagicMock
     doctest.testmod()
