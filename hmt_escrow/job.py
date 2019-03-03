@@ -360,7 +360,7 @@ class Job:
         contract_code = w3.eth.getCode(self.job_contract.address)
         return contract_code == b"\x00"
 
-    def cancel(self) -> bool:
+    def cancel(self, gas: int = GAS_LIMIT) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
 
         >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
@@ -413,7 +413,21 @@ class Job:
             bool: returns True if gas payer has been paid back and contract is in "Cancelled" state.
 
         """
-        return _cancel(self)
+        w3 = get_w3()
+        nonce = w3.eth.getTransactionCount(self.gas_payer)
+
+        tx_dict = self.job_contract.functions.cancel().buildTransaction({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas,
+            'nonce':
+            nonce
+        })
+        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
+        wait_on_transaction(tx_hash)
+
+        return _status(self) == 5
 
     def status(self) -> Enum:
         """Returns the status of a contract.
