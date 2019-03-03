@@ -138,7 +138,7 @@ contract Escrow {
         selfdestruct(canceler);
     }
 
-    function refund() public returns (bool) {
+    function cancel() public returns (bool) {
         require(msg.sender == canceler, "Address calling not the canceler");
         require(status != EscrowStatuses.Partial, "Escrow in Partial status state");
         require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
