@@ -63,6 +63,15 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     This can be manifest files, results, or anything that's been already
     encrypted.
 
+    >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, gas_payer_priv)
+    >>> manifest_dict == job.serialized_manifest
+    True
+
     Args:
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
