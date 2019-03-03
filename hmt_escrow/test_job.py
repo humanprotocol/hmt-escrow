@@ -15,19 +15,16 @@ from web3 import Web3
 
 os.environ['HMT_ETH_SERVER'] = os.getenv('HMT_ETH_SERVER',
                                          "http://localhost:8545")
-import hmt_escrow
 import basemodels
-from hmt_escrow.storage import _decrypt, _encrypt, upload
+from storage import _decrypt, _encrypt, upload
 
 REQ_JSON = 'file:///tmp/req.json'
 ANS_JSON = 'file:///tmp/ans.json'
 CALLBACK_URL = 'http://google.com/webback'
 
 GAS_PAYER = Web3.toChecksumAddress(
-    os.getenv("GAS_PAYER", "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"))
-GAS_PAYER_PRIV = os.getenv(
-    "GAS_PAYER_PRIV",
-    "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
+    "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92")
+GAS_PAYER_PRIV = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
 
 ADDR = GAS_PAYER
 TO_ADDR = '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
@@ -49,14 +46,14 @@ REC_ORACLE = Web3.toChecksumAddress(
 FACTORY_ADDR = os.getenv("FACTORYADDR", None)
 
 
-def a_manifest(number_of_tasks=100,
-               bid_amount=1.0,
-               oracle_stake=0.05,
-               expiration_date=0,
-               minimum_trust=.1,
-               request_type=IMAGE_LABEL_BINARY,
-               request_config=None,
-               job_mode='batch') -> basemodels.Manifest:
+def test_manifest(number_of_tasks=100,
+                  bid_amount=1.0,
+                  oracle_stake=0.05,
+                  expiration_date=0,
+                  minimum_trust=.1,
+                  request_type=IMAGE_LABEL_BINARY,
+                  request_config=None,
+                  job_mode='batch') -> basemodels.Manifest:
     model = {
         'requester_restricted_answer_set': {
             '0': {
@@ -77,9 +74,9 @@ def a_manifest(number_of_tasks=100,
         'minimum_trust_server': minimum_trust,
         'minimum_trust_client': minimum_trust,
         'requester_accuracy_target': minimum_trust,
-        'recording_oracle_addr': REC_ORACLE,
-        'reputation_oracle_addr': REP_ORACLE,
-        'reputation_agent_addr': REP_ORACLE,
+        'recording_oracle_addr': GAS_PAYER,
+        'reputation_oracle_addr': GAS_PAYER,
+        'reputation_agent_addr': GAS_PAYER,
         'instant_result_delivery_webhook': CALLBACK_URL,
         'requester_question': {
             "en": "How much money are we to make"
@@ -110,9 +107,9 @@ class JobTest(unittest.TestCase):
         """Set up the fields for Job class testing, based on the test manifest."""
         self.manifest = a_manifest()
         self.job = hmt_escrow.Job(self.manifest, GAS_PAYER, GAS_PAYER_PRIV)
-        self.per_job_cost = Decimal(self.manifest['task_bid_price'])
-        self.total_tasks = self.manifest['job_total_tasks']
-        self.oracle_stake = self.manifest['oracle_stake']
+        self.per_job_cost = Decimal(self.manifest["task_bid_price"])
+        self.total_tasks = self.manifest["job_total_tasks"]
+        self.oracle_stake = self.manifest["oracle_stake"]
         self.amount = self.per_job_cost * self.total_tasks
 
     def test_deploy(self):
@@ -120,7 +117,8 @@ class JobTest(unittest.TestCase):
         self.job.deploy(PUB2)
         self.assertEqual(self.job.amount, self.amount)
         self.assertEqual(self.job.oracle_stake, self.oracle_stake)
-        self.assertEqual(self.job.number_of_answers, self.total_tasks)
+        self.assertEqual(self.job.serialized_manifest["job_total_tasks"],
+                         self.total_tasks)
 
     def test_fund(self):
         """Tests that fund calls _transfer_to_address with correct parameters."""
