@@ -94,30 +94,6 @@ def test_manifest(number_of_tasks=100,
 
     return manifest
 
-
-class EncryptionTest(unittest.TestCase):
-    def test_encryption_decryption_identity(self):
-        """Tests _decrypt of _encrypt message returns the same message."""
-        plaintext = 'asdfasdf'
-        cipher = _encrypt(PUB2, plaintext)
-        self.assertEqual(_decrypt(PRIV2, cipher), plaintext)
-
-
-def add_bytes(args):
-    pass
-
-
-def encrypt(public_key, msg):
-    pass
-
-
-class StorageTest(unittest.TestCase):
-    @patch('hmt_escrow.storage.API.add_bytes', side_effect=add_bytes)
-    @patch('hmt_escrow.storage._encrypt', side_effect=encrypt)
-    def test_upload(self, add_bytes, _encrypt):
-        upload(a_manifest().serialize(), PUB1)
-
-
 if __name__ == "__main__":
     logging.basicConfig()
     logging.getLogger("urllib3").setLevel(logging.INFO)
