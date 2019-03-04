@@ -53,7 +53,7 @@ class Job:
         Examples:
         >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.gas_payer == gas_payer
         True
         >>> job.gas_payer_priv == gas_payer_priv
@@ -97,7 +97,7 @@ class Job:
         >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.deploy(rep_oracle_pub_key)
         True
 
@@ -128,7 +128,7 @@ class Job:
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
         We can't fund a job without deploying it first.
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.fund()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
@@ -172,7 +172,7 @@ class Job:
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
 
         We can't setup a job without deploying it first.
         >>> job.setup()
@@ -234,7 +234,7 @@ class Job:
         >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -303,7 +303,7 @@ class Job:
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
         The escrow contract is in Pending state after setup so it can be aborted.
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -314,7 +314,7 @@ class Job:
         True
 
         The escrow contract is in Partial state after the first payout and it can't be aborted.
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -368,7 +368,7 @@ class Job:
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
         The escrow contract is in Pending state after setup so it can be cancelled.
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -385,7 +385,7 @@ class Job:
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
-        >>> job = Job(test_manifest(), gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, gas_payer, gas_payer_priv)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -738,6 +738,6 @@ def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
 
 if __name__ == "__main__":
     import doctest
-    from test_job import test_manifest
+    from test_manifest import manifest
     from storage import upload
     doctest.testmod()
