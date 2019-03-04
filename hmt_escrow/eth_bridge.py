@@ -12,7 +12,7 @@ AttributeDict = Dict[str, Union[int, str]]
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
 
-LOG = logging.getLogger("api.eth_bridge")
+LOG = logging.getLogger("hmt_escrow.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
     os.getenv("HMTOKEN_ADDR", '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
 
