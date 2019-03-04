@@ -30,6 +30,10 @@ CONTRACTS = compile_files([
 def get_w3() -> Web3:
     """Set up the web3 provider for serving transactions to the ethereum network.
 
+    >>> w3 = get_w3()
+    >>> type(w3)
+    <class 'web3.main.Web3'>
+    
     Returns:
         Web3: returns the web3 provider.
 
@@ -215,3 +219,8 @@ def deploy_factory(gas_payer: str, gas_payer_priv: str,
         gas,
         args=[HMTOKEN_ADDR])
     return contract_address
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
