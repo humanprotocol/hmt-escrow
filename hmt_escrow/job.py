@@ -11,7 +11,7 @@ from web3.contract import Contract
 from eth_keys import keys
 from eth_utils import decode_hex
 
-from eth_bridge import get_hmtoken, get_contract_interface, wait_on_transaction, get_escrow, get_factory, deploy_factory, get_w3, sign_and_send_transaction
+from eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
 from storage import download, upload
 from basemodels import Manifest
 
@@ -151,7 +151,7 @@ class Job:
         w3 = get_w3()
         nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-        tx_dict = hmtoken_contract.functions.transfer(
+        txn_dict = hmtoken_contract.functions.transfer(
             self.job_contract.address, hmt_amount).buildTransaction({
                 'from':
                 self.gas_payer,
@@ -160,8 +160,7 @@ class Job:
                 'nonce':
                 nonce
             })
-        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-        wait_on_transaction(tx_hash)
+        handle_transaction(txn_dict, self.gas_payer_priv)
         return _balance(self) == hmt_amount
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
@@ -209,7 +208,7 @@ class Job:
         w3 = get_w3()
         nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-        tx_dict = self.job_contract.functions.setup(
+        txn_dict = self.job_contract.functions.setup(
             reputation_oracle, recording_oracle, reputation_oracle_stake,
             recording_oracle_stake, hmt_amount, self.manifest_url,
             self.manifest_hash).buildTransaction({
@@ -217,8 +216,7 @@ class Job:
                 'gas': gas,
                 'nonce': nonce
             })
-        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-        wait_on_transaction(tx_hash)
+        handle_transaction(txn_dict, self.gas_payer_priv)
         return self.status(gas) == Status.Pending
 
     def bulk_payout(self,
@@ -281,7 +279,7 @@ class Job:
         w3 = get_w3()
         nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-        tx_dict = self.job_contract.functions.bulkPayOut(
+        txn_dict = self.job_contract.functions.bulkPayOut(
             eth_addrs, hmt_amounts, url, hash_, 1).buildTransaction({
                 'from':
                 self.gas_payer,
@@ -290,8 +288,7 @@ class Job:
                 'nonce':
                 nonce
             })
-        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-        wait_on_transaction(tx_hash)
+        handle_transaction(txn_dict, self.gas_payer_priv)
         return _bulk_paid(self) == True
 
     def abort(self, gas: int = GAS_LIMIT) -> bool:
@@ -345,7 +342,7 @@ class Job:
         w3 = get_w3()
         nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-        tx_dict = self.job_contract.functions.abort().buildTransaction({
+        txn_dict = self.job_contract.functions.abort().buildTransaction({
             'from':
             self.gas_payer,
             'gas':
@@ -353,8 +350,7 @@ class Job:
             'nonce':
             nonce
         })
-        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-        wait_on_transaction(tx_hash)
+        handle_transaction(txn_dict, self.gas_payer_priv)
 
         # After abort the contract should be destroyed
         contract_code = w3.eth.getCode(self.job_contract.address)
@@ -416,7 +412,7 @@ class Job:
         w3 = get_w3()
         nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-        tx_dict = self.job_contract.functions.cancel().buildTransaction({
+        txn_dict = self.job_contract.functions.cancel().buildTransaction({
             'from':
             self.gas_payer,
             'gas':
@@ -424,8 +420,7 @@ class Job:
             'nonce':
             nonce
         })
-        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-        wait_on_transaction(tx_hash)
+        handle_transaction(txn_dict, self.gas_payer_priv)
 
         return self.status(gas) == Status.Cancelled
 
@@ -463,14 +458,13 @@ class Job:
         w3 = get_w3()
         nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-        tx_dict = self.job_contract.functions.storeResults(
+        txn_dict = self.job_contract.functions.storeResults(
             url, hash_).buildTransaction({
                 'from': self.gas_payer,
                 'gas': gas,
                 'nonce': nonce
             })
-        tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-        wait_on_transaction(tx_hash)
+        handle_transaction(txn_dict, self.gas_payer_priv)
         return True
 
     def complete(self, gas: int = GAS_LIMIT) -> bool:
@@ -487,16 +481,13 @@ class Job:
             w3 = get_w3()
             nonce = w3.eth.getTransactionCount(self.gas_payer)
 
-            tx_dict = self.job_contract.functions.complete().buildTransaction({
-                'from':
-                self.gas_payer,
-                'gas':
-                gas,
-                'nonce':
-                nonce
-            })
-            tx_hash = sign_and_send_transaction(tx_dict, self.gas_payer_priv)
-            wait_on_transaction(tx_hash)
+            txn_dict = self.job_contract.functions.complete().buildTransaction(
+                {
+                    'from': self.gas_payer,
+                    'gas': gas,
+                    'nonce': nonce
+                })
+            handle_transaction(txn_dict, self.gas_payer_priv)
             return self.status() == Status.Complete
         except Exception as e:
             LOG.error("Unable to complete contract:{} is the exception".format(
@@ -683,7 +674,7 @@ def _create_escrow(job: Job, factory_contract: Contract,
 
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
-    tx_dict = factory_contract.functions.createEscrow().buildTransaction({
+    txn_dict = factory_contract.functions.createEscrow().buildTransaction({
         'from':
         gas_payer,
         'gas':
@@ -691,8 +682,7 @@ def _create_escrow(job: Job, factory_contract: Contract,
         'nonce':
         nonce
     })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
+    handle_transaction(txn_dict, gas_payer_priv)
     return True
 
 
