@@ -96,6 +96,18 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
 
+    >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> msg = "test"
+    >>> _decrypt(priv_key, _encrypt(pub_key, msg)) == msg
+    True
+    
+    Using a wrong public key to decrypt a message results in failure.
+    >>> false_pub_key = b"74c81fe41b30f741b31185052664a10c3256e2f08bcfb20c8f54e733bef58972adcf84e4f5d70a979681fd39d7f7847d2c0d3b5d4aead806c4fec4d8534be114"
+    >>> _decrypt(priv_key, _encrypt(false_pub_key, msg)) == msg
+    Traceback (most recent call last):
+    p2p.exceptions.DecryptionError: Failed to verify tag
+
     Args:
         private_key (bytes): The private_key to decrypt the message with.
         msg (bytes): The message to be decrypted.
@@ -111,6 +123,12 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
 
 def _encrypt(public_key: bytes, msg: str) -> bytes:
     """Use ECIES to encrypt a message with a given public key and optional MAC.
+
+    >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> msg = "test"
+    >>> _decrypt(priv_key, _encrypt(pub_key, msg)) == msg
+    True
 
     Args:
         public_key (bytes): The public_key to encrypt the message with.
