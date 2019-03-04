@@ -17,4 +17,6 @@ until curl --silent ipfs:5001; do
   sleep 1
 done
 
+$JOB
+$STORAGE
 $ETH_BRIDGE

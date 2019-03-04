@@ -6,9 +6,9 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
-from typing import Dict, Tuple, Union, Optional
+from typing import Dict, Tuple, Optional, Any
 
-AttributeDict = Dict[str, Union[int, str]]
+AttributeDict = Dict[str, Any]
 
 DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
 
@@ -47,44 +47,17 @@ def get_w3() -> Web3:
     return w3
 
 
-def wait_on_transaction(tx_hash: str) -> AttributeDict:
-    """Waits for transaction to complete.
-
-    Args:
-        tx_hash (str): transaction hash that had been deployed to the network.
-
-    Returns:
-        AttributedDict: returns the transaction receipt.
-    
-    Raises:
-        TimeoutError: if timeout expires.
-
-    """
+def handle_transaction(txn_dict: Dict[str, Any],
+                       priv_key: Optional[str] = None) -> AttributeDict:
     w3 = get_w3()
-    LOG.debug("Waiting to get transaction recipt")
+    signed_txn = w3.eth.account.signTransaction(txn_dict, private_key=priv_key)
+    txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+
     try:
-        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash, timeout=240)
+        txn_receipt = w3.eth.waitForTransactionReceipt(txn_hash, timeout=240)
     except TimeoutError as e:
         raise e
-    return tx_receipt
-
-
-def sign_and_send_transaction(tx_hash: str,
-                              private_key: Optional[str] = None) -> str:
-    """Locally signs and sends the transaction with a given private key to the network.
-
-    Args:
-        tx_hash (str): transaction hash that had been deployed to the network.
-        private_key (Optional[str]): the private key used to locally sign the transaction
-    
-    Returns:
-        str: returns the transaction hash back.
-
-    """
-    w3 = get_w3()
-    signed_txn = w3.eth.account.signTransaction(
-        tx_hash, private_key=private_key)
-    return w3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    return txn_receipt
 
 
 def get_contract_interface(contract_entrypoint):
@@ -178,16 +151,13 @@ def deploy_contract(contract_interface,
     # Get transaction hash from deployed contract
     LOG.debug("Deploying contract with gas:{}".format(gas))
 
-    tx_dict = contract.constructor(*args).buildTransaction({
+    txn_dict = contract.constructor(*args).buildTransaction({
         'from': gas_payer,
         'gas': gas,
         'nonce': nonce
     })
-    tx_hash = sign_and_send_transaction(tx_dict, gas_payer_priv)
-    wait_on_transaction(tx_hash)
-
-    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
-    contract_address = tx_receipt.contractAddress
+    txn_receipt = handle_transaction(txn_dict, gas_payer_priv)
+    contract_address = txn_receipt['contractAddress']
 
     contract = w3.eth.contract(
         address=contract_address,
