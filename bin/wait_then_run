@@ -3,6 +3,7 @@ set -exu
 DONE=false
 JOB=${1-'python3 hmt_escrow/job.py -v'}
 STORAGE=${1-'python3 hmt_escrow/storage.py -v'}
+ETH_BRIDGE=${1-'python3 hmt_escrow/eth_bridge.py -v'}
 
 until test -f /deployed/hmt.address.json; do
   echo "waiting for hmt.address.json .."
@@ -15,5 +16,5 @@ until curl --silent ipfs:5001; do
   echo "sleeping"
   sleep 1
 done
-$JOB
-$STORAGE
+
+$ETH_BRIDGE
