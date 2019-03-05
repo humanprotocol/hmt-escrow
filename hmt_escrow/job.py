@@ -49,7 +49,7 @@ class Job:
         """Initializes a Job instance with values from a Manifest class and 
         checks that the provided credentials are valid.
 
-        Examples:
+        Creating a new Job instance initializes the critical attributes correctly.
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -64,19 +64,27 @@ class Job:
         >>> job.amount
         Decimal('100.0')
 
+        Creating a new Job instance wit
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
+        ... }
+        >>> job = Job(manifest, credentials)
+        Traceback (most recent call last):
+        ValueError: Given private key doesn't match the ethereum address
+
         Args:
             manifest (Manifest): an instance of the Manifest class.
-            gas_payer (str): an ethereum address paying for the gas costs.
-            gas_payer_priv (str): the private key of the gas_payer.
+            credentials (Dict[str, str]): an ethereum address and its private key.
         
         Raises:
-            Exception: if the Job has been already initialized.
             ValueError: if the credentials are not valid.
 
         """
         credentials_valid = _validate_credentials(**credentials)
         if not credentials_valid:
-            raise ValueError("Given private key doesn't match the address")
+            raise ValueError(
+                "Given private key doesn't match the ethereum address")
 
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
