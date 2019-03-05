@@ -45,18 +45,19 @@ class Job:
 
     """
 
-    def __init__(self, manifest: Manifest, gas_payer: str,
-                 gas_payer_priv: str):
+    def __init__(self, manifest: Manifest, credentials: Dict[str, str]):
         """Initializes a Job instance with values from a Manifest class and 
         checks that the provided credentials are valid.
 
         Examples:
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
-        >>> job.gas_payer == gas_payer
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> job = Job(manifest, credentials)
+        >>> job.gas_payer == credentials["gas_payer"]
         True
-        >>> job.gas_payer_priv == gas_payer_priv
+        >>> job.gas_payer_priv == credentials["gas_payer_priv"]
         True
         >>> job.oracle_stake
         Decimal('0.05')
@@ -73,7 +74,7 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
-        credentials_valid = _validate_credentials(gas_payer, gas_payer_priv)
+        credentials_valid = _validate_credentials(**credentials)
         if not credentials_valid:
             raise ValueError("Given private key doesn't match the address")
 
@@ -83,8 +84,8 @@ class Job:
         oracle_stake = Decimal(serialized_manifest["oracle_stake"])
 
         self.serialized_manifest = serialized_manifest
-        self.gas_payer = Web3.toChecksumAddress(gas_payer)
-        self.gas_payer_priv = gas_payer_priv
+        self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
+        self.gas_payer_priv = credentials["gas_payer_priv"]
         self.oracle_stake = oracle_stake
         self.amount = Decimal(per_job_cost * number_of_answers)
 
@@ -94,10 +95,12 @@ class Job:
         the IPFS url to the escrow contract.
 
         Examples:
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
 
@@ -123,12 +126,14 @@ class Job:
         """Funds the escrow contract with the amount in Job's class attributes.
         The contract needs to be deployed first.
 
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
         We can't fund a job without deploying it first.
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.fund()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
@@ -163,11 +168,13 @@ class Job:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
 
         We can't setup a job without deploying it first.
         >>> job.setup()
@@ -225,11 +232,13 @@ class Job:
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
         depending on contract's balance.
 
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -288,12 +297,14 @@ class Job:
         """Kills the contract and returns the HMT back to the gas payer.
         The contract cannot be aborted if the contract is in Partial, Paid or Complete state.
 
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
         The escrow contract is in Pending state after setup so it can be aborted.
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -304,7 +315,7 @@ class Job:
         True
 
         The escrow contract is in Partial state after the first payout and it can't be aborted.
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -349,12 +360,14 @@ class Job:
     def cancel(self, gas: int = GAS_LIMIT) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
 
-        >>> gas_payer = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
-        >>> gas_payer_priv = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
         >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
 
         The escrow contract is in Pending state after setup so it can be cancelled.
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -371,7 +384,7 @@ class Job:
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
-        >>> job = Job(manifest, gas_payer, gas_payer_priv)
+        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -520,13 +533,17 @@ class Job:
         return download(final_results_url, private_key)
 
 
-def _validate_credentials(address: str, private_key: str) -> bool:
+def _validate_credentials(**credentials) -> bool:
     """Validates whether the given ethereum private key maps to the address
     by calculating the checksum address from the private key and comparing that
     to the given address.
 
     Tests:
-    >>> _validate_credentials("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")
+    >>> credentials = {
+    ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> _validate_credentials(**credentials)
     True
 
     Args:
@@ -537,11 +554,13 @@ def _validate_credentials(address: str, private_key: str) -> bool:
         bool: returns True if the calculated and the given address match.
 
     """
-    priv_key_bytes = decode_hex(private_key)
-    priv_key = keys.PrivateKey(priv_key_bytes)
-    pub_key = priv_key.public_key
-    calculated_address = pub_key.to_checksum_address()
-    return Web3.toChecksumAddress(address) == calculated_address
+    addr = credentials["gas_payer"]
+    priv_key = credentials["gas_payer_priv"]
+
+    priv_key_bytes = decode_hex(priv_key)
+    pub_key = keys.PrivateKey(priv_key_bytes).public_key
+    calculated_addr = pub_key.to_checksum_address()
+    return Web3.toChecksumAddress(addr) == calculated_addr
 
 
 def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
@@ -677,8 +696,8 @@ def _manifest_url(escrow_contract: Contract,
     })
 
 
-def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
-               private_key: bytes) -> Contract:
+def access_job(escrow_address: str, private_key: bytes,
+               credentials: Dict[str, str]) -> Contract:
     """Accesses an already deployed Job solidity contract and initializes an Job class
     based on the downloaded manifest from IPFS.
 
@@ -690,11 +709,12 @@ def access_job(escrow_address: str, gas_payer: str, gas_payer_priv: str,
         Job: returns the Job class with attributes initialized.
 
     """
+    gas_payer = credentials["gas_payer"]
     job = get_escrow(escrow_address)
     url = _manifest_url(job, gas_payer)
     manifest_dict = download(url, private_key)
     escrow_manifest = Manifest(manifest_dict)
-    job = Job(escrow_manifest, gas_payer, gas_payer_priv)
+    job = Job(escrow_manifest, credentials)
     return job
 
 
