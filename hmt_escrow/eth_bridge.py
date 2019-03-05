@@ -6,7 +6,7 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
-from typing import Dict, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
 
@@ -47,10 +47,22 @@ def get_w3() -> Web3:
     return w3
 
 
-def handle_transaction(txn_dict: Dict[str, Any],
-                       priv_key: Optional[str] = None) -> AttributeDict:
+def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
+    gas_payer = kwargs["gas_payer"]
+    gas_payer_priv = kwargs["gas_payer_priv"]
+    gas = kwargs["gas"]
+
     w3 = get_w3()
-    signed_txn = w3.eth.account.signTransaction(txn_dict, private_key=priv_key)
+    nonce = w3.eth.getTransactionCount(gas_payer)
+
+    txn_dict = txn_func(*args).buildTransaction({
+        'from': gas_payer,
+        'gas': gas,
+        'nonce': nonce
+    })
+
+    signed_txn = w3.eth.account.signTransaction(
+        txn_dict, private_key=gas_payer_priv)
     txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     try:
@@ -127,47 +139,6 @@ def get_factory(factory_address: str) -> Contract:
     return escrow_factory
 
 
-def deploy_contract(contract_interface,
-                    gas_payer: str,
-                    gas_payer_priv: str,
-                    gas: int = DEFAULT_GAS,
-                    args=[]) -> Tuple[Contract, str]:
-    """Deploy a given contract to the ethereum network.
-
-    Args:
-        contract_interface: the interface of a contract containing the abi and the binary.
-        gas (int): maximum amount of gas the caller is ready to pay.
-        args: additional arguments like the HMToken address.
-
-    Returns:
-        Tuple[Contract, str]: returns a tuple of the solidity contract and its ethereum address.
-        
-    """
-    w3 = get_w3()
-    contract = w3.eth.contract(
-        abi=contract_interface['abi'], bytecode=contract_interface['bin'])
-    nonce = w3.eth.getTransactionCount(gas_payer)
-
-    # Get transaction hash from deployed contract
-    LOG.debug("Deploying contract with gas:{}".format(gas))
-
-    txn_dict = contract.constructor(*args).buildTransaction({
-        'from': gas_payer,
-        'gas': gas,
-        'nonce': nonce
-    })
-    txn_receipt = handle_transaction(txn_dict, gas_payer_priv)
-    contract_address = txn_receipt['contractAddress']
-
-    contract = w3.eth.contract(
-        address=contract_address,
-        abi=contract_interface['abi'],
-    )
-
-    LOG.info("New contract at:{} ".format(contract_address))
-    return contract, contract_address
-
-
 def deploy_factory(gas_payer: str, gas_payer_priv: str,
                    gas: int = DEFAULT_GAS) -> str:
     """Deploy an EscrowFactory solidity contract to the ethereum network.
@@ -179,15 +150,21 @@ def deploy_factory(gas_payer: str, gas_payer_priv: str,
         str: returns the contract address of the newly deployed factory.
 
     """
-
+    w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
-    (contract, contract_address) = deploy_contract(
-        contract_interface,
-        gas_payer,
-        gas_payer_priv,
-        gas,
-        args=[HMTOKEN_ADDR])
+    factory = w3.eth.contract(
+        abi=contract_interface['abi'], bytecode=contract_interface['bin'])
+
+    txn_func = factory.constructor
+    func_args = [HMTOKEN_ADDR]
+    txn_info = {
+        "gas_payer": gas_payer,
+        "gas_payer_priv": gas_payer_priv,
+        "gas": gas
+    }
+    txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
+    contract_address = txn_receipt['contractAddress']
     return contract_address
 
 
