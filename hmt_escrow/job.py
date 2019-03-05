@@ -148,19 +148,15 @@ class Job:
         hmtoken_contract = get_hmtoken()
         hmt_amount = int(self.amount * 10**18)
 
-        w3 = get_w3()
-        nonce = w3.eth.getTransactionCount(self.gas_payer)
+        txn_func = hmtoken_contract.functions.transfer
+        func_args = [self.job_contract.address, hmt_amount]
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-        txn_dict = hmtoken_contract.functions.transfer(
-            self.job_contract.address, hmt_amount).buildTransaction({
-                'from':
-                self.gas_payer,
-                'gas':
-                gas,
-                'nonce':
-                nonce
-            })
-        handle_transaction(txn_dict, self.gas_payer_priv)
+        handle_transaction(txn_func, *func_args, **txn_info)
         return _balance(self) == hmt_amount
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
@@ -205,18 +201,19 @@ class Job:
             self.serialized_manifest["recording_oracle_addr"])
         hmt_amount = int(self.amount * 10**18)
 
-        w3 = get_w3()
-        nonce = w3.eth.getTransactionCount(self.gas_payer)
-
-        txn_dict = self.job_contract.functions.setup(
+        txn_func = self.job_contract.functions.setup
+        func_args = [
             reputation_oracle, recording_oracle, reputation_oracle_stake,
             recording_oracle_stake, hmt_amount, self.manifest_url,
-            self.manifest_hash).buildTransaction({
-                'from': self.gas_payer,
-                'gas': gas,
-                'nonce': nonce
-            })
-        handle_transaction(txn_dict, self.gas_payer_priv)
+            self.manifest_hash
+        ]
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
+
+        handle_transaction(txn_func, *func_args, **txn_info)
         return self.status(gas) == Status.Pending
 
     def bulk_payout(self,
@@ -276,19 +273,15 @@ class Job:
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
-        w3 = get_w3()
-        nonce = w3.eth.getTransactionCount(self.gas_payer)
+        txn_func = self.job_contract.functions.bulkPayOut
+        func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-        txn_dict = self.job_contract.functions.bulkPayOut(
-            eth_addrs, hmt_amounts, url, hash_, 1).buildTransaction({
-                'from':
-                self.gas_payer,
-                'gas':
-                gas,
-                'nonce':
-                nonce
-            })
-        handle_transaction(txn_dict, self.gas_payer_priv)
+        handle_transaction(txn_func, *func_args, **txn_info)
         return _bulk_paid(self) == True
 
     def abort(self, gas: int = GAS_LIMIT) -> bool:
@@ -339,20 +332,17 @@ class Job:
             bool: returns True if contract has been destroyed successfully.
 
         """
-        w3 = get_w3()
-        nonce = w3.eth.getTransactionCount(self.gas_payer)
+        txn_func = self.job_contract.functions.abort
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-        txn_dict = self.job_contract.functions.abort().buildTransaction({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas,
-            'nonce':
-            nonce
-        })
-        handle_transaction(txn_dict, self.gas_payer_priv)
+        handle_transaction(txn_func, *[], **txn_info)
 
         # After abort the contract should be destroyed
+        w3 = get_w3()
         contract_code = w3.eth.getCode(self.job_contract.address)
         return contract_code == b"\x00"
 
@@ -409,18 +399,14 @@ class Job:
             bool: returns True if gas payer has been paid back and contract is in "Cancelled" state.
 
         """
-        w3 = get_w3()
-        nonce = w3.eth.getTransactionCount(self.gas_payer)
+        txn_func = self.job_contract.functions.cancel
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-        txn_dict = self.job_contract.functions.cancel().buildTransaction({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas,
-            'nonce':
-            nonce
-        })
-        handle_transaction(txn_dict, self.gas_payer_priv)
+        handle_transaction(txn_func, *[], **txn_info)
 
         return self.status(gas) == Status.Cancelled
 
@@ -455,16 +441,15 @@ class Job:
         """
         (hash_, url) = upload(results, public_key)
 
-        w3 = get_w3()
-        nonce = w3.eth.getTransactionCount(self.gas_payer)
+        txn_func = self.job_contract.functions.storeResults
+        func_args = [url, hash_]
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-        txn_dict = self.job_contract.functions.storeResults(
-            url, hash_).buildTransaction({
-                'from': self.gas_payer,
-                'gas': gas,
-                'nonce': nonce
-            })
-        handle_transaction(txn_dict, self.gas_payer_priv)
+        handle_transaction(txn_func, *[], **txn_info)
         return True
 
     def complete(self, gas: int = GAS_LIMIT) -> bool:
@@ -477,22 +462,15 @@ class Job:
             Exception: if contract was not in "Paid" or "Complete" state when called.
             
         """
-        try:
-            w3 = get_w3()
-            nonce = w3.eth.getTransactionCount(self.gas_payer)
+        txn_func = self.job_contract.functions.complete
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-            txn_dict = self.job_contract.functions.complete().buildTransaction(
-                {
-                    'from': self.gas_payer,
-                    'gas': gas,
-                    'nonce': nonce
-                })
-            handle_transaction(txn_dict, self.gas_payer_priv)
-            return self.status() == Status.Complete
-        except Exception as e:
-            LOG.error("Unable to complete contract:{} is the exception".format(
-                str(e)))
-            return False
+        handle_transaction(txn_func, *[], **txn_info)
+        return self.status() == Status.Complete
 
     def manifest(self, private_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup the job.
@@ -669,20 +647,14 @@ def _create_escrow(job: Job, factory_contract: Contract,
         TimeoutError: if wait_on_transaction times out.
 
     """
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
+    txn_func = factory_contract.functions.createEscrow
+    txn_info = {
+        "gas_payer": job.gas_payer,
+        "gas_payer_priv": job.gas_payer_priv,
+        "gas": gas
+    }
 
-    w3 = get_w3()
-    nonce = w3.eth.getTransactionCount(gas_payer)
-    txn_dict = factory_contract.functions.createEscrow().buildTransaction({
-        'from':
-        gas_payer,
-        'gas':
-        gas,
-        'nonce':
-        nonce
-    })
-    handle_transaction(txn_dict, gas_payer_priv)
+    handle_transaction(txn_func, *[], **txn_info)
     return True
 
 
