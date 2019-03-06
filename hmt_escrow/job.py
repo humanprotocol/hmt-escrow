@@ -16,7 +16,6 @@ from storage import download, upload
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
-FACTORY_ADDR = os.getenv("FACTORY_ADDR")
 
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
