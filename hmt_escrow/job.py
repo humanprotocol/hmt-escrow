@@ -898,14 +898,30 @@ def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
 def _manifest_url(escrow_contract: Contract,
                   gas_payer: str,
                   gas: int = GAS_LIMIT) -> str:
-    """Wrapper function that calls Job solidity contract's getManifestUrl method in a read-only manner.
+    """Retrieves the deployd manifest url uploaded on Job initialization.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(manifest, credentials)
+    >>> job.deploy(rep_oracle_pub_key)
+    True
+    >>> job.fund()
+    True
+    >>> job.setup()
+    True
+    >>> _manifest_url(job.job_contract, job.gas_payer) == job.manifest_url
+    True
 
     Args:
         escrow_contract (Contract): the contract to be read.
+        gas_payer (str): an ethereum address paying for the gas costs.
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
-        str: returns the manifest url
+        str: returns the manifest url of the Job.
 
     """
     return escrow_contract.functions.getManifestUrl().call({
