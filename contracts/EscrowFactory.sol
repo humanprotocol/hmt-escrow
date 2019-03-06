@@ -3,7 +3,8 @@ import "./Escrow.sol";
 
 contract EscrowFactory {
     uint private counter;
-    address private lastAddress;
+    mapping(address => uint) private escrowCounters;
+    address private lastEscrow;
     address private eip20;
     event Launched(address eip20, address escrow);
 
@@ -13,25 +14,35 @@ contract EscrowFactory {
 
     function createEscrow() public returns (address) {
         Escrow escrow = new Escrow(eip20, msg.sender, 8640000);
-        ++counter;
-        lastAddress = address(escrow);
-        emit Launched(eip20, lastAddress);
-        return lastAddress;
+        counter++;
+        escrowCounters[address(escrow)] = counter;
+        lastEscrow = address(escrow);
+        emit Launched(eip20, lastEscrow);
     }
 
     function getCounter() public view returns (uint) {
         return counter;
     }
 
-    function getLastAddress() public view returns (address) {
-        return lastAddress;
+    function getLastEscrow() public view returns (address) {
+        return lastEscrow;
+    }
+
+    function getEscrowCounter(address _address) public view returns (uint) {
+        uint escrowCounter = escrowCounters[_address];
+        return escrowCounter;
     }
 
     function getEIP20() public view returns (address) {
         return eip20;
     }
 
-    function isChild(address child) public view returns (bool) {
-        return getLastAddress() == child;
+    function isChild(address _child) public view returns (bool) {
+        return getEscrowCounter(_child) == getCounter();
+    }
+
+    function hasEscrow(address _address) public view returns (bool) {
+        uint escrowCounter = getEscrowCounter(_address);
+        return escrowCounter > 0;
     }
 }
