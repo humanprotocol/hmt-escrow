@@ -36,6 +36,8 @@ class Job:
 
     Attributes:
         serialized_manifest (Dict[str, Any]): a dict representation of the Manifest model.
+        factory_contract (Contract): the factory contract used to create Job's escrow contract.
+        job_contract (Contract): the escrow contract of the Job.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas_payer_priv (str): the private key of the gas_payer.
         amount (Decimal): an amount to be stored in the escrow contract.
