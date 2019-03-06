@@ -172,7 +172,7 @@ class Job:
         }
 
         handle_transaction(txn_func, *func_args, **txn_info)
-        return _balance(self) == hmt_amount
+        return _balance(self.job_contract, self.gas_payer) == hmt_amount
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
@@ -259,7 +259,7 @@ class Job:
         True
 
         The escrow contract is still in Partial state as there's still balance left.
-        >>> _balance(job)
+        >>> _balance(job.job_contract, job.gas_payer)
         30000000000000000000
         >>> job.status()
         <Status.Partial: 3>
@@ -273,7 +273,7 @@ class Job:
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
-        >>> _balance(job)
+        >>> _balance(job.job_contract, job.gas_payer)
         0
         >>> job.status()
         <Status.Paid: 4>
@@ -388,7 +388,7 @@ class Job:
         True
 
         Contract balance is zero and status is "Cancelled".
-        >>> _balance(job)
+        >>> _balance(job.job_contract, job.gas_payer)
         0
         >>> job.status()
         <Status.Cancelled: 6>
@@ -705,19 +705,32 @@ def _validate_credentials(**credentials) -> bool:
     return Web3.toChecksumAddress(addr) == calculated_addr
 
 
-def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
-    """Wrapper function that calls Job solidity contract's getBalance method in a read-only manner.
+def _balance(escrow_contract: Contract, gas_payer: str,
+             gas: int = GAS_LIMIT) -> int:
+    """Retrieve the balance of a Job in HMT.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(manifest, credentials)
+    >>> job.deploy(rep_oracle_pub_key)
+    True
+    >>> job.fund()
+    True
+    >>> _balance(job.job_contract, job.gas_payer)
+    100000000000000000000
 
     Args:
         escrow_contract (Contract): the contract to be read.
+        gas_payer (str): an ethereum address calling the contract.
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
-        int: returns the balance of the contract.
+        int: returns the balance of the contract in HMT.
 
     """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
     return escrow_contract.functions.getBalance().call({
         'from': gas_payer,
         'gas': gas
