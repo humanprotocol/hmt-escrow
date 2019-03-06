@@ -714,8 +714,8 @@ def _validate_credentials(**credentials) -> bool:
 
 
 def _init_factory(credentials: Dict[str, str],
-                   factory_addr: Optional[str],
-                   gas: int = GAS_LIMIT) -> Contract:
+                  factory_addr: Optional[str],
+                  gas: int = GAS_LIMIT) -> Contract:
     """Takes an optional factory address and returns its contract representation. Alternatively
     a new factory is created.
 
@@ -789,6 +789,33 @@ def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
 
 
 def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
+    """Checks if the last bulk payment has succeeded.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
+    >>> job = Job(manifest, credentials)
+    >>> job.deploy(rep_oracle_pub_key)
+    True
+    >>> job.fund()
+    True
+    >>> job.setup()
+    True
+
+    No payout has been performed yet.
+    >>> _bulk_paid(job)
+    False
+
+    Bulk has been paid upon successful bulk payout.
+    >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
+    >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+    True
+    >>> _bulk_paid(job)
+    True
+
+    """
     escrow_contract = job.job_contract
     gas_payer = job.gas_payer
     return escrow_contract.functions.getBulkPaid().call({
