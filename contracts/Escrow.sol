@@ -201,8 +201,8 @@ contract Escrow {
             return bulkPaid;
         }
 
-        intermediateResultsUrl = _url;
-        intermediateResultsHash = _hash;
+        finalResultsUrl = _url;
+        finalResultsHash = _hash;
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
