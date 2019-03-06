@@ -29,7 +29,6 @@ class Job:
 
     A typical Job goes through the following stages:
     Deploy: deploy an escrow contract to the network.
-    Fund: store HMT in the contract.
     Setup: store relevant attributes in the contract state.
     Pay: pay all websites in HMT when all the Job's tasks have been completed.
 
@@ -47,9 +46,10 @@ class Job:
     """
 
     def __init__(self,
-                 manifest: Manifest,
+                 escrow_manifest: Manifest,
                  credentials: Dict[str, str],
-                 factory_addr: str = None):
+                 factory_addr: str = None,
+                 escrow_addr: str = None):
         """Initializes a Job instance with values from a Manifest class and 
         checks that the provided credentials are valid. An optional factory
         address is used to initialize the factory of the Job. Alternatively
@@ -70,6 +70,39 @@ class Job:
         >>> job.amount
         Decimal('100.0')
 
+        Initializing a new Job instance with a factory address succeeds.
+        >>> factory_addr = deploy_factory(**credentials)
+        >>> job = Job(manifest, credentials, factory_addr)
+        >>> job.factory_contract.address == factory_addr
+        True
+        
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
+
+        Initializing an existing Job instance with a factory and escrow address succeeds.
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+        ...     "rep_oracle_priv_key": b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> escrow_addr = job.job_contract.address
+        >>> factory_addr = job.factory_contract.address
+        >>> manifest_url = _manifest_url(job.job_contract, job.gas_payer)
+
+        >>> new_job = Job(manifest, credentials, factory_addr, escrow_addr)
+        >>> new_job.manifest_url == manifest_url
+        True
+        >>> new_job.job_contract.address == escrow_addr
+        True
+        >>> new_job.factory_contract.address == factory_addr
+        True
+        >>> new_job.launch(rep_oracle_pub_key)
+        Traceback (most recent call last):
+        AttributeError: The escrow has been already deployed.
+
         Creating a new Job instance with falsy credentials fails.
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
@@ -77,7 +110,7 @@ class Job:
         ... }
         >>> job = Job(manifest, credentials)
         Traceback (most recent call last):
-        ValueError: Given private key doesn't match the ethereum address
+        ValueError: Given private key doesn't match the ethereum address.
 
         Args:
             manifest (Manifest): an instance of the Manifest class.
@@ -91,22 +124,45 @@ class Job:
         credentials_valid = _validate_credentials(**credentials)
         if not credentials_valid:
             raise ValueError(
-                "Given private key doesn't match the ethereum address")
+                "Given private key doesn't match the ethereum address.")
 
-        factory_contract = _init_factory(credentials, factory_addr)
+        self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
+        self.gas_payer_priv = credentials["gas_payer_priv"]
+
+        if escrow_addr and factory_addr:
+            if not _factory_contains_escrow(factory_addr, escrow_addr,
+                                            self.gas_payer):
+                raise ValueError(
+                    "Given factory address doesn't contain the given escrow address."
+                )
+            self._access_job(factory_addr, escrow_addr, **credentials)
+        else:
+            self.factory_contract = _init_factory(factory_addr, credentials)
+            self._initialize_job(escrow_manifest)
+
+    def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
+        gas_payer = credentials["gas_payer"]
+        rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
+
+        self.factory_contract = get_factory(factory_addr)
+        self.job_contract = get_escrow(escrow_addr)
+        self.manifest_hash = _manifest_hash(self.job_contract, gas_payer)
+        self.manifest_url = _manifest_url(self.job_contract, gas_payer)
+        manifest_dict = download(self.manifest_url, rep_oracle_priv_key)
+        escrow_manifest = Manifest(manifest_dict)
+        self._initialize_job(escrow_manifest)
+
+    def _initialize_job(self, manifest: Manifest):
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         oracle_stake = Decimal(serialized_manifest["oracle_stake"])
 
         self.serialized_manifest = serialized_manifest
-        self.factory_contract = factory_contract
-        self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
-        self.gas_payer_priv = credentials["gas_payer_priv"]
         self.oracle_stake = oracle_stake
         self.amount = Decimal(per_job_cost * number_of_answers)
 
-    def deploy(self, pub_key: bytes) -> bool:
+    def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
         to IPFS with the public key of the Reputation Oracle and stores 
         the IPFS url to the escrow contract.
@@ -119,8 +175,10 @@ class Job:
         >>> job = Job(manifest, credentials)
 
         Deploying a new Job to the ethereum network succeeds.
-        >>> job.deploy(rep_oracle_pub_key)
+        >>> job.launch(rep_oracle_pub_key)
         True
+        >>> job.status()
+        <Status.Launched: 1>
 
         Args:
             pub_key (bytes): the public key of the Reputation Oracle.
@@ -129,6 +187,9 @@ class Job:
             bool: returns True if Job initialization and Ethereum and IPFS transactions succeed.
 
         """
+        if hasattr(self, "job_contract"):
+            raise AttributeError("The escrow has been already deployed.")
+
         _create_escrow(self)
         job_addr = _last_escrow_addr(self)
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
@@ -137,50 +198,7 @@ class Job:
         (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
-        return True
-
-    def fund(self, gas: int = GAS_LIMIT) -> bool:
-        """Funds the escrow contract with the amount specified originally in
-        the manifest in the Job class attributes.
-
-        >>> credentials = {
-        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        ... }
-        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
-
-        A Job can't be funded without deploying it first.
-        >>> job.fund()
-        Traceback (most recent call last):
-        AttributeError: 'Job' object has no attribute 'job_contract'
-
-        Deploying the Job first results in funding succeeding.
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
-        True
-
-        Returns:
-            bool: returns True if contract is funded with Job's amount.
-        
-        Raises:
-            AttributeError: if trying to fund the job before deploying it.
-
-        """
-        hmtoken_contract = get_hmtoken()
-        hmt_amount = int(self.amount * 10**18)
-
-        txn_func = hmtoken_contract.functions.transfer
-        func_args = [self.job_contract.address, hmt_amount]
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
-
-        handle_transaction(txn_func, *func_args, **txn_info)
-        return _balance(self) == hmt_amount
+        return self.status() == Status.Launched and _balance(self) == 0
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
@@ -193,20 +211,12 @@ class Job:
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
 
-        A Job can't be funded without deploying it first.
+        A Job can't be setup without deploying it first.
         >>> job.setup()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
 
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-
-        A Job can't be set up without funding it first.
-        >>> job.setup()
-        False
-
-        Deploying and funding the Job first results in set up succeeding.
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -226,20 +236,30 @@ class Job:
             self.serialized_manifest["recording_oracle_addr"])
         hmt_amount = int(self.amount * 10**18)
 
+        # Fund the escrow contract with HMT.
+        hmtoken_contract = get_hmtoken()
+        txn_func = hmtoken_contract.functions.transfer
+        func_args = [self.job_contract.address, hmt_amount]
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
+        handle_transaction(txn_func, *func_args, **txn_info)
+
+        # Setup the escrow contract with manifest and IPFS data.
         txn_func = self.job_contract.functions.setup
         func_args = [
             reputation_oracle, recording_oracle, reputation_oracle_stake,
-            recording_oracle_stake, hmt_amount, self.manifest_url,
-            self.manifest_hash
+            recording_oracle_stake, self.manifest_url, self.manifest_hash
         ]
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
             "gas": gas
         }
-
         handle_transaction(txn_func, *func_args, **txn_info)
-        return self.status(gas) == Status.Pending
+        return self.status() == Status.Pending and _balance(self) == hmt_amount
 
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
@@ -256,9 +276,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -296,7 +314,6 @@ class Job:
 
         """
         (hash_, url) = upload(results, pub_key)
-
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
@@ -323,9 +340,7 @@ class Job:
         >>> job = Job(manifest, credentials)
 
         The escrow contract is in Pending state after setup so it can be aborted.
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -334,9 +349,7 @@ class Job:
 
         The escrow contract is in Partial state after the first payout and it can't be aborted.
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -386,9 +399,7 @@ class Job:
         >>> job = Job(manifest, credentials)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -403,9 +414,7 @@ class Job:
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -438,7 +447,6 @@ class Job:
         }
 
         handle_transaction(txn_func, *[], **txn_info)
-
         return self.status(gas) == Status.Cancelled
 
     def store_intermediate_results(self,
@@ -454,9 +462,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -478,7 +484,6 @@ class Job:
 
         """
         (hash_, url) = upload(results, pub_key)
-
         txn_func = self.job_contract.functions.storeResults
         func_args = [url, hash_]
         txn_info = {
@@ -501,7 +506,7 @@ class Job:
         >>> job = Job(manifest, credentials)
         
         After deployment status is "Launched".
-        >>> job.deploy(rep_oracle_pub_key)
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.status()
         <Status.Launched: 1>
@@ -527,9 +532,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -575,9 +578,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -607,9 +608,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -646,9 +645,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(manifest, credentials)
-        >>> job.deploy(rep_oracle_pub_key)
-        True
-        >>> job.fund()
+        >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
         True
@@ -713,8 +710,24 @@ def _validate_credentials(**credentials) -> bool:
     return Web3.toChecksumAddress(addr) == calculated_addr
 
 
-def _init_factory(credentials: Dict[str, str],
-                  factory_addr: Optional[str],
+def _factory_contains_escrow(factory_addr: str,
+                             escrow_addr: str,
+                             gas_payer: str,
+                             gas: int = GAS_LIMIT) -> bool:
+    if not factory_addr or not escrow_addr:
+        return False
+
+    factory_contract = get_factory(factory_addr)
+    return factory_contract.functions.hasEscrow(escrow_addr).call({
+        'from':
+        gas_payer,
+        'gas':
+        gas
+    })
+
+
+def _init_factory(factory_addr: Optional[str],
+                  credentials: Dict[str, str],
                   gas: int = GAS_LIMIT) -> Contract:
     """Takes an optional factory address and returns its contract representation. Alternatively
     a new factory is created.
@@ -766,9 +779,9 @@ def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(manifest, credentials)
-    >>> job.deploy(rep_oracle_pub_key)
+    >>> job.launch(rep_oracle_pub_key)
     True
-    >>> job.fund()
+    >>> job.setup()
     True
     >>> _balance(job)
     100000000000000000000
@@ -797,9 +810,7 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(manifest, credentials)
-    >>> job.deploy(rep_oracle_pub_key)
-    True
-    >>> job.fund()
+    >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
     True
@@ -841,7 +852,7 @@ def _last_escrow_addr(job: Job, gas: int = GAS_LIMIT) -> str:
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> factory_addr = deploy_factory(**credentials)
     >>> job = Job(manifest, credentials, factory_addr)
-    >>> job.deploy(rep_oracle_pub_key)
+    >>> job.launch(rep_oracle_pub_key)
     True
     >>> _last_escrow_addr(job) == job.job_contract.address
     True
@@ -854,7 +865,7 @@ def _last_escrow_addr(job: Job, gas: int = GAS_LIMIT) -> str:
         str: returns an escrow contract address.
 
     """
-    return job.factory_contract.functions.getLastAddress().call({
+    return job.factory_contract.functions.getLastEscrow().call({
         'from':
         job.gas_payer,
         'gas':
@@ -906,9 +917,7 @@ def _manifest_url(escrow_contract: Contract,
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(manifest, credentials)
-    >>> job.deploy(rep_oracle_pub_key)
-    True
-    >>> job.fund()
+    >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
     True
@@ -930,26 +939,37 @@ def _manifest_url(escrow_contract: Contract,
     })
 
 
-def access_job(escrow_addr: str, priv_key: bytes,
-               credentials: Dict[str, str]) -> Contract:
-    """Accesses an already deployed Job solidity contract and initializes an Job class
-    based on the downloaded manifest from IPFS.
+def _manifest_hash(escrow_contract: Contract,
+                   gas_payer: str,
+                   gas: int = GAS_LIMIT) -> str:
+    """Retrieves the deployd manifest hash uploaded on Job initialization.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(manifest, credentials)
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> job.setup()
+    True
+    >>> _manifest_hash(job.job_contract, job.gas_payer) == job.manifest_hash
+    True
 
     Args:
-        escrow_addr (str): ethereum address of the deployed Job solidity contract.
-        priv_key (bytes): private key of the job requester or their agent.
-
+        escrow_contract (Contract): the contract to be read.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
     Returns:
-        Job: returns the Job class with attributes initialized.
+        str: returns the manifest hash of Job's escrow contract.
 
     """
-    gas_payer = credentials["gas_payer"]
-    job = get_escrow(escrow_addr)
-    url = _manifest_url(job, gas_payer)
-    manifest_dict = download(url, priv_key)
-    escrow_manifest = Manifest(manifest_dict)
-    job = Job(escrow_manifest, credentials)
-    return job
+    return escrow_contract.functions.getManifestHash().call({
+        'from': gas_payer,
+        'gas': gas
+    })
 
 
 if __name__ == "__main__":
