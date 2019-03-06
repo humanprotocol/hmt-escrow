@@ -102,11 +102,11 @@ def get_hmtoken() -> Contract:
     return contract
 
 
-def get_escrow(escrow_address: str) -> Contract:
+def get_escrow(escrow_addr: str) -> Contract:
     """Retrieve the Escrow contract from a given address.
 
     Args:
-        escrow_address (str): the ethereum address of the Escrow contract.
+        escrow_addr (str): the ethereum address of the Escrow contract.
 
     Returns:
         Contract: returns the Escrow solidity contract.
@@ -117,15 +117,15 @@ def get_escrow(escrow_address: str) -> Contract:
     contract_interface = get_contract_interface(
         '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
     escrow = w3.eth.contract(
-        address=escrow_address, abi=contract_interface['abi'])
+        address=escrow_addr, abi=contract_interface['abi'])
     return escrow
 
 
-def get_factory(factory_address: str) -> Contract:
+def get_factory(factory_addr: str) -> Contract:
     """Retrieve the EscrowFactory contract from a given address.
 
     Args:
-        factory_address (str): the ethereum address of the Escrow contract.
+        factory_addr (str): the ethereum address of the Escrow contract.
 
     Returns:
         Contract: returns the EscrowFactory solidity contract.
@@ -135,12 +135,11 @@ def get_factory(factory_address: str) -> Contract:
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
     escrow_factory = w3.eth.contract(
-        address=factory_address, abi=contract_interface['abi'])
+        address=factory_addr, abi=contract_interface['abi'])
     return escrow_factory
 
 
-def deploy_factory(gas_payer: str, gas_payer_priv: str,
-                   gas: int = DEFAULT_GAS) -> str:
+def deploy_factory(gas: int = DEFAULT_GAS, **credentials) -> str:
     """Deploy an EscrowFactory solidity contract to the ethereum network.
 
     Args:
@@ -150,6 +149,9 @@ def deploy_factory(gas_payer: str, gas_payer_priv: str,
         str: returns the contract address of the newly deployed factory.
 
     """
+    gas_payer = credentials["gas_payer"]
+    gas_payer_priv = credentials["gas_payer_priv"]
+
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
@@ -164,8 +166,8 @@ def deploy_factory(gas_payer: str, gas_payer_priv: str,
         "gas": gas
     }
     txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
-    contract_address = txn_receipt['contractAddress']
-    return contract_address
+    contract_addr = txn_receipt['contractAddress']
+    return contract_addr
 
 
 if __name__ == "__main__":
