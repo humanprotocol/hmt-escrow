@@ -28,7 +28,7 @@ class Job:
     has to follow the Manifest model specification at https://github.com/hCaptcha/hmt-basemodels.
 
     A typical Job goes through the following stages:
-    Deploy: deploy an escrow contract to the network.
+    Launch: deploy an escrow contract to the network.
     Setup: store relevant attributes in the contract state.
     Pay: pay all websites in HMT when all the Job's tasks have been completed.
 
@@ -39,7 +39,6 @@ class Job:
         gas_payer (str): an ethereum address paying for the gas costs.
         gas_payer_priv (str): the private key of the gas_payer.
         amount (Decimal): an amount to be stored in the escrow contract.
-        oracle_stake (Decimal): a percentage the Reputation and Recording Oracles get.
         manifest_url (str): the location of the serialized manifest in IPFS.
         manifest_hash (str): SHA-1 hashed version of the serialized manifest.
 
@@ -65,8 +64,8 @@ class Job:
         True
         >>> job.gas_payer_priv == credentials["gas_payer_priv"]
         True
-        >>> job.oracle_stake
-        Decimal('0.05')
+        >>> job.serialized_manifest["oracle_stake"]
+        '0.05'
         >>> job.amount
         Decimal('100.0')
 
@@ -156,10 +155,7 @@ class Job:
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
-        oracle_stake = Decimal(serialized_manifest["oracle_stake"])
-
         self.serialized_manifest = serialized_manifest
-        self.oracle_stake = oracle_stake
         self.amount = Decimal(per_job_cost * number_of_answers)
 
     def launch(self, pub_key: bytes) -> bool:
@@ -190,11 +186,13 @@ class Job:
         if hasattr(self, "job_contract"):
             raise AttributeError("The escrow has been already deployed.")
 
+        # Use factory to deploy a new escrow contract.
         _create_escrow(self)
         job_addr = _last_escrow_addr(self)
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
-
         self.job_contract = get_escrow(job_addr)
+
+        # Upload the manifest to IPFS.
         (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
@@ -228,8 +226,11 @@ class Job:
             AttributeError: if trying to setup the job before deploying it.
 
         """
-        reputation_oracle_stake = int(self.oracle_stake * 100)
-        recording_oracle_stake = int(self.oracle_stake * 100)
+        # Prepare setup arguments for the escrow contract.
+        reputation_oracle_stake = int(Decimal(
+            self.serialized_manifest["oracle_stake"]) * 100)
+        recording_oracle_stake = int(Decimal(
+            self.serialized_manifest["oracle_stake"]) * 100)
         reputation_oracle = str(
             self.serialized_manifest["reputation_oracle_addr"])
         recording_oracle = str(
