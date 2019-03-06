@@ -64,7 +64,7 @@ class Job:
         >>> job.amount
         Decimal('100.0')
 
-        Creating a new Job instance wit
+        Creating a new Job instance with falsy credentials fails.
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
@@ -102,13 +102,14 @@ class Job:
         to IPFS with the public key of the Reputation Oracle and stores 
         the IPFS url to the escrow contract.
 
-        Examples:
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
         >>> job = Job(manifest, credentials)
+
+        Deploying a new Job to the ethereum network succeeds.
         >>> job.deploy(rep_oracle_pub_key)
         True
 
@@ -116,7 +117,7 @@ class Job:
             public_key (bytes): the public key of the Reputation Oracle.
 
         Returns:
-            bool: returns True if Class initialization and Ethereum and IPFS transactions succeed.
+            bool: returns True if Job initialization and Ethereum and IPFS transactions succeed.
 
         """
         factory = _check_factory(self)
@@ -131,21 +132,22 @@ class Job:
         return True
 
     def fund(self, gas: int = GAS_LIMIT) -> bool:
-        """Funds the escrow contract with the amount in Job's class attributes.
-        The contract needs to be deployed first.
+        """Funds the escrow contract with the amount specified originally in
+        the manifest in the Job class attributes.
 
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
-
-        We can't fund a job without deploying it first.
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
         >>> job = Job(manifest, credentials)
+
+        A Job can't be funded without deploying it first.
         >>> job.fund()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
 
+        Deploying the Job first results in funding succeeding.
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -180,11 +182,10 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
-
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
         >>> job = Job(manifest, credentials)
 
-        We can't setup a job without deploying it first.
+        A Job can't be funded without deploying it first.
         >>> job.setup()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
@@ -192,10 +193,11 @@ class Job:
         >>> job.deploy(rep_oracle_pub_key)
         True
 
-        We can't setup a job without funding it first.
+        A Job can't be set up without funding it first.
         >>> job.setup()
         False
 
+        Deploying and funding the Job first results in set up succeeding.
         >>> job.fund()
         True
         >>> job.setup()
@@ -244,8 +246,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
-
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
         >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
@@ -268,6 +269,7 @@ class Job:
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         False
 
+        Paying the remaining amount empties the escrow and updates the status correctly.
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
@@ -309,10 +311,10 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
+        >>> job = Job(manifest, credentials)
 
         The escrow contract is in Pending state after setup so it can be aborted.
-        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -372,10 +374,10 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> rep_oracle_pub_key = b'94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf'
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
+        >>> job = Job(manifest, credentials)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
-        >>> job = Job(manifest, credentials)
         >>> job.deploy(rep_oracle_pub_key)
         True
         >>> job.fund()
@@ -431,26 +433,33 @@ class Job:
 
         return self.status(gas) == Status.Cancelled
 
-    def status(self, gas: int = GAS_LIMIT) -> Enum:
-        """Returns the status of a contract.
-
-        Returns:
-            Enum: returns the status as an enumeration.
-
-        """
-        status_ = self.job_contract.functions.getStatus().call({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas
-        })
-        return Status(status_ + 1)
-
     def store_intermediate_results(self,
                                    results: Dict,
                                    public_key: bytes,
                                    gas: int = GAS_LIMIT) -> bool:
-        """Stores intermediate results with Reputation Oracle's public key to IPFS.
+        """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
+        and updates the contract's state.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(manifest, credentials)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+
+        Storing intermediate results uploads and updates results url correctly.
+        >>> results = {"results": True}
+        >>> job.store_intermediate_results(results, rep_oracle_pub_key)
+        True
+        >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> job.intermediate_results(rep_oracle_priv_key)
+        {'results': True}
 
         Args:
             results (Dict): intermediate results of the Recording Oracle.
@@ -470,17 +479,73 @@ class Job:
             "gas": gas
         }
 
-        handle_transaction(txn_func, *[], **txn_info)
+        handle_transaction(txn_func, *func_args, **txn_info)
         return True
 
-    def complete(self, gas: int = GAS_LIMIT) -> bool:
-        """Moves the Job solidity contract to a "Complete" state.
+    def status(self, gas: int = GAS_LIMIT) -> Enum:
+        """Returns the status of the Job.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
+        >>> job = Job(manifest, credentials)
+        
+        After deployment status is "Launched".
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.status()
+        <Status.Launched: 1>
 
         Returns:
-            bool: returns True if the contract is in "Complete" state.
-        
-        Raises:
-            Exception: if contract was not in "Paid" or "Complete" state when called.
+            Enum: returns the status as an enumeration.
+
+        """
+        status_ = self.job_contract.functions.getStatus().call({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas
+        })
+        return Status(status_ + 1)
+
+    def complete(self, gas: int = GAS_LIMIT) -> bool:
+        """Completes the Job if it has been paid.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"94e67e63b2bf9b960b5a284aef8f4cc2c41ce08b083b89d17c027eb6f11994140d99c0aeadbf32fbcdac4785c5550bf28eefd0d339c74a033d55b1765b6503bf"
+        >>> job = Job(manifest, credentials)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+
+        A Job can't be completed when it is still in partially paid state.
+        >>> job.status()
+        <Status.Partial: 3>
+        >>> job.complete()
+        False
+
+        Job completes in paid state correctly.
+        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('80.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+        >>> job.complete()
+        True
+        >>> job.status()
+        <Status.Complete: 5>
+
+        Returns:
+            bool: returns True if the contract has been completed.
             
         """
         txn_func = self.job_contract.functions.complete
@@ -494,7 +559,25 @@ class Job:
         return self.status() == Status.Complete
 
     def manifest(self, private_key: bytes) -> Dict:
-        """Retrieves the initial manifest used to setup the job.
+        """Retrieves the initial manifest used to setup a Job.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(manifest, credentials)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+        >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> manifest = job.manifest(rep_oracle_priv_key)
+        >>> manifest_amount = int(int(manifest["job_total_tasks"]) * Decimal(manifest["task_bid_price"]))
+        >>> manifest_amount == job.amount
+        True
 
         Args:
             private_key (bytes): the private key used to download the manifest.
@@ -503,11 +586,34 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(_manifest_url(self, self.gas_payer), private_key)
+        return download(
+            _manifest_url(self.job_contract, self.gas_payer), private_key)
 
     def intermediate_results(self, private_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
-        """Retrieves the intermediate results.
+        """Reputation Oracle retrieves the intermediate results stored by the Recording Oracle.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(manifest, credentials)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+
+        Trying to download the results with the wrong key fails.
+        >>> results = {"results": True}
+        >>> job.store_intermediate_results(results, rep_oracle_pub_key)
+        True
+        >>> rep_oracle_false_priv_key = b"486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
+        >>> job.intermediate_results(rep_oracle_false_priv_key)
+        Traceback (most recent call last):
+        p2p.exceptions.DecryptionError: Failed to verify tag
 
         Args:
             private_key (bytes): the private key of the Reputation Oracle.
@@ -524,7 +630,28 @@ class Job:
         return download(intermediate_results_url, private_key)
 
     def final_results(self, private_key: bytes, gas: int = GAS_LIMIT) -> Dict:
-        """Retrieves the final results.
+        """Retrieves the final results stored by the Reputation Oracle.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(manifest, credentials)
+        >>> job.deploy(rep_oracle_pub_key)
+        True
+        >>> job.fund()
+        True
+        >>> job.setup()
+        True
+
+        Getting final results succeeds after payout.
+        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
+        >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
+        True
+        >>> rep_oracle_priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        >>> job.final_results(rep_oracle_priv_key)
+        {'results': 0}
 
         Args:
             private_key (bytes): the private key of the the job requester or their agent.
@@ -546,7 +673,7 @@ def _validate_credentials(**credentials) -> bool:
     by calculating the checksum address from the private key and comparing that
     to the given address.
 
-    Tests:
+    Validating right credentials succeeds.
     >>> credentials = {
     ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -554,9 +681,16 @@ def _validate_credentials(**credentials) -> bool:
     >>> _validate_credentials(**credentials)
     True
 
+    Validating falsy credentials fails.
+    >>> credentials = {
+    ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
+    ... }
+    >>> _validate_credentials(**credentials)
+    False
+
     Args:
-        address (str): 42 characters long ethereum address.
-        private_key (str): 64 characters long private key.
+        **credentials: an unpacked dict of an ethereum address and its private key.
     
     Returns:
         bool: returns True if the calculated and the given address match.
@@ -729,5 +863,5 @@ def access_job(escrow_address: str, private_key: bytes,
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
-    from storage import upload
+    from storage import upload, download
     doctest.testmod()
