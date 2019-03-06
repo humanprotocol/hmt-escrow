@@ -4,7 +4,7 @@ import logging
 
 from decimal import *
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from web3 import Web3
 from web3.contract import Contract
@@ -45,7 +45,10 @@ class Job:
 
     """
 
-    def __init__(self, manifest: Manifest, credentials: Dict[str, str]):
+    def __init__(self,
+                 manifest: Manifest,
+                 credentials: Dict[str, str],
+                 factory_addr: str = None):
         """Initializes a Job instance with values from a Manifest class and 
         checks that the provided credentials are valid.
 
@@ -86,12 +89,14 @@ class Job:
             raise ValueError(
                 "Given private key doesn't match the ethereum address")
 
+        factory_contract = _check_factory(credentials, factory_addr)
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         oracle_stake = Decimal(serialized_manifest["oracle_stake"])
 
         self.serialized_manifest = serialized_manifest
+        self.factory_contract = factory_contract
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
         self.oracle_stake = oracle_stake
@@ -120,12 +125,11 @@ class Job:
             bool: returns True if Job initialization and Ethereum and IPFS transactions succeed.
 
         """
-        factory = _check_factory(self)
-        _create_escrow(self, factory)
-        job_address = _last_address(self, factory)
-        LOG.info("Job's escrow contract deployed to:{}".format(job_address))
+        _create_escrow(self)
+        job_addr = _last_addr(self)
+        LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
 
-        self.job_contract = get_escrow(job_address)
+        self.job_contract = get_escrow(job_addr)
         (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
@@ -705,6 +709,23 @@ def _validate_credentials(**credentials) -> bool:
     return Web3.toChecksumAddress(addr) == calculated_addr
 
 
+def _check_factory(credentials: Dict[str, str],
+                   factory_addr: Optional[str],
+                   gas: int = GAS_LIMIT) -> Contract:
+    factory_addr_valid = Web3.isChecksumAddress(factory_addr)
+    factory = None
+
+    if not factory_addr_valid:
+        factory_addr = deploy_factory(**credentials)
+        factory = get_factory(factory_addr)
+        if not factory_addr:
+            raise Exception("Unable to get address from factory")
+
+    if not factory:
+        factory = get_factory(factory_addr)
+    return factory
+
+
 def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
     """Retrieve the balance of a Job in HMT.
 
@@ -745,49 +766,7 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
     })
 
 
-def _check_factory(job: Job, gas: int = GAS_LIMIT) -> Contract:
-    gas_payer = job.gas_payer
-    gas_payer_priv = job.gas_payer_priv
-
-    global FACTORY_ADDR
-    factory_address_valid = Web3.isChecksumAddress(FACTORY_ADDR)
-    factory = None
-
-    if not factory_address_valid:
-        factory_address = deploy_factory(gas_payer, gas_payer_priv)
-        factory = get_factory(factory_address)
-        FACTORY_ADDR = factory_address
-        if not FACTORY_ADDR:
-            raise Exception("Unable to get address from factory")
-
-    if not factory:
-        factory = get_factory(Web3.toChecksumAddress(FACTORY_ADDR))
-        counter = _counter(job, factory)
-        LOG.debug("Factory counter is at:{}".format(counter))
-    return factory
-
-
-def _counter(job: Job, factory_contract: Contract,
-             gas: int = GAS_LIMIT) -> int:
-    """Wrapper function that calls EscrowFactory solidity contract's getCounter method in a read-only manner.
-
-    Args:
-        factory_contract (Contract): the contract to be read.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        int: returns the balance of the contract
-
-    """
-    gas_payer = job.gas_payer
-    return factory_contract.functions.getCounter().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
-def _last_address(job: Job, factory_contract: Contract,
-                  gas: int = GAS_LIMIT) -> str:
+def _last_addr(job: Job, gas: int = GAS_LIMIT) -> str:
     """Wrapper function that calls EscrowFactory solidity contract's getLastAddress method in a read-only manner.
 
     Args:
@@ -798,15 +777,15 @@ def _last_address(job: Job, factory_contract: Contract,
         str: returns the last address of an job contract deployed by EscrowFactory
 
     """
-    gas_payer = job.gas_payer
-    return factory_contract.functions.getLastAddress().call({
-        'from': gas_payer,
-        'gas': gas
+    return job.factory_contract.functions.getLastAddress().call({
+        'from':
+        job.gas_payer,
+        'gas':
+        gas
     })
 
 
-def _create_escrow(job: Job, factory_contract: Contract,
-                   gas: int = GAS_LIMIT) -> bool:
+def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
     """Wrapper function that calls EscrowFactory solidity contract's createEscrow method that creates a transaction to the network.
 
     Args:
@@ -820,7 +799,7 @@ def _create_escrow(job: Job, factory_contract: Contract,
         TimeoutError: if wait_on_transaction times out.
 
     """
-    txn_func = factory_contract.functions.createEscrow
+    txn_func = job.factory_contract.functions.createEscrow
     txn_info = {
         "gas_payer": job.gas_payer,
         "gas_payer_priv": job.gas_payer_priv,
@@ -850,13 +829,13 @@ def _manifest_url(escrow_contract: Contract,
     })
 
 
-def access_job(escrow_address: str, priv_key: bytes,
+def access_job(escrow_addr: str, priv_key: bytes,
                credentials: Dict[str, str]) -> Contract:
     """Accesses an already deployed Job solidity contract and initializes an Job class
     based on the downloaded manifest from IPFS.
 
     Args:
-        escrow_address (str): ethereum address of the deployed Job solidity contract.
+        escrow_addr (str): ethereum address of the deployed Job solidity contract.
         priv_key (bytes): private key of the job requester or their agent.
 
     Returns:
@@ -864,7 +843,7 @@ def access_job(escrow_address: str, priv_key: bytes,
 
     """
     gas_payer = credentials["gas_payer"]
-    job = get_escrow(escrow_address)
+    job = get_escrow(escrow_addr)
     url = _manifest_url(job, gas_payer)
     manifest_dict = download(url, priv_key)
     escrow_manifest = Manifest(manifest_dict)
