@@ -90,7 +90,7 @@ class Job:
             raise ValueError(
                 "Given private key doesn't match the ethereum address")
 
-        factory_contract = _check_factory(credentials, factory_addr)
+        factory_contract = _init_factory(credentials, factory_addr)
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
@@ -127,7 +127,7 @@ class Job:
 
         """
         _create_escrow(self)
-        job_addr = _last_addr(self)
+        job_addr = _last_escrow_addr(self)
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
 
         self.job_contract = get_escrow(job_addr)
@@ -710,9 +710,36 @@ def _validate_credentials(**credentials) -> bool:
     return Web3.toChecksumAddress(addr) == calculated_addr
 
 
-def _check_factory(credentials: Dict[str, str],
+def _init_factory(credentials: Dict[str, str],
                    factory_addr: Optional[str],
                    gas: int = GAS_LIMIT) -> Contract:
+    """Takes an optional factory address and returns its contract representation. Alternatively
+    a new factory is created.
+
+    Initializing a new Job instance without a factory address succeeds.
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> job = Job(manifest, credentials)
+    >>> type(job.factory_contract)
+    <class 'web3.utils.datatypes.Contract'>
+
+    Initializing a new Job instance with a factory address succeeds.
+    >>> factory_addr = deploy_factory(**credentials)
+    >>> job = Job(manifest, credentials, factory_addr)
+    >>> job.factory_contract.address == factory_addr
+    True
+
+    Args:
+        credentials (Dict[str, str]): a dict of an ethereum address and its private key.
+        factory_addr (Optional[str]): an ethereum address of the escrow factory contract.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        bool: returns a factory contract.
+
+    """
     factory_addr_valid = Web3.isChecksumAddress(factory_addr)
     factory = None
 
@@ -767,7 +794,7 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
     })
 
 
-def _last_addr(job: Job, gas: int = GAS_LIMIT) -> str:
+def _last_escrow_addr(job: Job, gas: int = GAS_LIMIT) -> str:
     """Wrapper function that calls EscrowFactory solidity contract's getLastAddress method in a read-only manner.
 
     Args:
