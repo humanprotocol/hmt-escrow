@@ -97,7 +97,7 @@ class Job:
         self.oracle_stake = oracle_stake
         self.amount = Decimal(per_job_cost * number_of_answers)
 
-    def deploy(self, public_key: bytes) -> bool:
+    def deploy(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
         to IPFS with the public key of the Reputation Oracle and stores 
         the IPFS url to the escrow contract.
@@ -114,7 +114,7 @@ class Job:
         True
 
         Args:
-            public_key (bytes): the public key of the Reputation Oracle.
+            pub_key (bytes): the public key of the Reputation Oracle.
 
         Returns:
             bool: returns True if Job initialization and Ethereum and IPFS transactions succeed.
@@ -126,7 +126,7 @@ class Job:
         LOG.info("Job's escrow contract deployed to:{}".format(job_address))
 
         self.job_contract = get_escrow(job_address)
-        (hash_, manifest_url) = upload(self.serialized_manifest, public_key)
+        (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
         return True
@@ -236,7 +236,7 @@ class Job:
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
                     results: Dict,
-                    public_key: bytes,
+                    pub_key: bytes,
                     gas: int = GAS_LIMIT) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
@@ -281,13 +281,13 @@ class Job:
         Args:
             payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts.
             results (Dict): the final answer results stored by the Reputation Oracle.
-            public_key (bytes): the public key of the Reputation Oracle.
+            pub_key (bytes): the public key of the Reputation Oracle.
 
         Returns:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, public_key)
+        (hash_, url) = upload(results, pub_key)
 
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
@@ -435,7 +435,7 @@ class Job:
 
     def store_intermediate_results(self,
                                    results: Dict,
-                                   public_key: bytes,
+                                   pub_key: bytes,
                                    gas: int = GAS_LIMIT) -> bool:
         """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
         and updates the contract's state.
@@ -463,13 +463,13 @@ class Job:
 
         Args:
             results (Dict): intermediate results of the Recording Oracle.
-            public_key (bytes): public key of the Reputation Oracle.
+            pub_key (bytes): public key of the Reputation Oracle.
         
         Returns:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, public_key)
+        (hash_, url) = upload(results, pub_key)
 
         txn_func = self.job_contract.functions.storeResults
         func_args = [url, hash_]
@@ -558,7 +558,7 @@ class Job:
         handle_transaction(txn_func, *[], **txn_info)
         return self.status() == Status.Complete
 
-    def manifest(self, private_key: bytes) -> Dict:
+    def manifest(self, priv_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup a Job.
 
         >>> credentials = {
@@ -580,16 +580,16 @@ class Job:
         True
 
         Args:
-            private_key (bytes): the private key used to download the manifest.
+            priv_key (bytes): the private key used to download the manifest.
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
         return download(
-            _manifest_url(self.job_contract, self.gas_payer), private_key)
+            _manifest_url(self.job_contract, self.gas_payer), priv_key)
 
-    def intermediate_results(self, private_key: bytes,
+    def intermediate_results(self, priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
         """Reputation Oracle retrieves the intermediate results stored by the Recording Oracle.
 
@@ -616,7 +616,7 @@ class Job:
         p2p.exceptions.DecryptionError: Failed to verify tag
 
         Args:
-            private_key (bytes): the private key of the Reputation Oracle.
+            priv_key (bytes): the private key of the Reputation Oracle.
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
@@ -627,9 +627,9 @@ class Job:
             'from': self.gas_payer,
             'gas': gas
         })
-        return download(intermediate_results_url, private_key)
+        return download(intermediate_results_url, priv_key)
 
-    def final_results(self, private_key: bytes, gas: int = GAS_LIMIT) -> Dict:
+    def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results stored by the Reputation Oracle.
 
         >>> credentials = {
@@ -654,7 +654,7 @@ class Job:
         {'results': 0}
 
         Args:
-            private_key (bytes): the private key of the the job requester or their agent.
+            priv_key (bytes): the private key of the the job requester or their agent.
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
@@ -665,7 +665,7 @@ class Job:
             'from': self.gas_payer,
             'gas': gas
         })
-        return download(final_results_url, private_key)
+        return download(final_results_url, priv_key)
 
 
 def _validate_credentials(**credentials) -> bool:
@@ -838,14 +838,14 @@ def _manifest_url(escrow_contract: Contract,
     })
 
 
-def access_job(escrow_address: str, private_key: bytes,
+def access_job(escrow_address: str, priv_key: bytes,
                credentials: Dict[str, str]) -> Contract:
     """Accesses an already deployed Job solidity contract and initializes an Job class
     based on the downloaded manifest from IPFS.
 
     Args:
         escrow_address (str): ethereum address of the deployed Job solidity contract.
-        private_key (bytes): private key of the job requester or their agent.
+        priv_key (bytes): private key of the job requester or their agent.
 
     Returns:
         Job: returns the Job class with attributes initialized.
@@ -854,7 +854,7 @@ def access_job(escrow_address: str, private_key: bytes,
     gas_payer = credentials["gas_payer"]
     job = get_escrow(escrow_address)
     url = _manifest_url(job, gas_payer)
-    manifest_dict = download(url, private_key)
+    manifest_dict = download(url, priv_key)
     escrow_manifest = Manifest(manifest_dict)
     job = Job(escrow_manifest, credentials)
     return job
