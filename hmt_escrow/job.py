@@ -921,7 +921,7 @@ def _manifest_url(escrow_contract: Contract,
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
-        str: returns the manifest url of Job's escrow contracts.
+        str: returns the manifest url of Job's escrow contract.
 
     """
     return escrow_contract.functions.getManifestUrl().call({
