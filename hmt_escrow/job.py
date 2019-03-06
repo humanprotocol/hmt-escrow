@@ -863,14 +863,22 @@ def _last_escrow_addr(job: Job, gas: int = GAS_LIMIT) -> str:
 
 
 def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
-    """Wrapper function that calls EscrowFactory solidity contract's createEscrow method that creates a transaction to the network.
+    """Launches a new escrow contract to the ethereum network.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> job = Job(manifest, credentials)
+    >>> _create_escrow(job)
+    True
 
     Args:
-        factory_contract (Contract): the contract to be read.
+        job (Job): class instance of the Job class.
         gas (int): maximum amount of gas the caller is ready to pay.
     
     Returns:
-        bool: returns True if a new job (Pokémon) was successfully launched to the network.
+        bool: returns True if a new job was successfully launched to the network.
     
     Raises:
         TimeoutError: if wait_on_transaction times out.
