@@ -51,7 +51,9 @@ class Job:
                  credentials: Dict[str, str],
                  factory_addr: str = None):
         """Initializes a Job instance with values from a Manifest class and 
-        checks that the provided credentials are valid.
+        checks that the provided credentials are valid. An optional factory
+        address is used to initialize the factory of the Job. Alternatively
+        a new factory is created if no factory address is provided.
 
         Creating a new Job instance initializes the critical attributes correctly.
         >>> credentials = {
@@ -80,6 +82,7 @@ class Job:
         Args:
             manifest (Manifest): an instance of the Manifest class.
             credentials (Dict[str, str]): an ethereum address and its private key.
+            factory_addr (str): an ethereum address of the factory.
         
         Raises:
             ValueError: if the credentials are not valid.
