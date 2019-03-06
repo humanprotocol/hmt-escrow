@@ -172,7 +172,7 @@ class Job:
         }
 
         handle_transaction(txn_func, *func_args, **txn_info)
-        return _balance(self.job_contract, self.gas_payer) == hmt_amount
+        return _balance(self) == hmt_amount
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
@@ -259,7 +259,7 @@ class Job:
         True
 
         The escrow contract is still in Partial state as there's still balance left.
-        >>> _balance(job.job_contract, job.gas_payer)
+        >>> _balance(job)
         30000000000000000000
         >>> job.status()
         <Status.Partial: 3>
@@ -273,7 +273,7 @@ class Job:
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
-        >>> _balance(job.job_contract, job.gas_payer)
+        >>> _balance(job)
         0
         >>> job.status()
         <Status.Paid: 4>
@@ -388,7 +388,7 @@ class Job:
         True
 
         Contract balance is zero and status is "Cancelled".
-        >>> _balance(job.job_contract, job.gas_payer)
+        >>> _balance(job)
         0
         >>> job.status()
         <Status.Cancelled: 6>
@@ -705,8 +705,7 @@ def _validate_credentials(**credentials) -> bool:
     return Web3.toChecksumAddress(addr) == calculated_addr
 
 
-def _balance(escrow_contract: Contract, gas_payer: str,
-             gas: int = GAS_LIMIT) -> int:
+def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
     """Retrieve the balance of a Job in HMT.
 
     >>> credentials = {
@@ -719,7 +718,7 @@ def _balance(escrow_contract: Contract, gas_payer: str,
     True
     >>> job.fund()
     True
-    >>> _balance(job.job_contract, job.gas_payer)
+    >>> _balance(job)
     100000000000000000000
 
     Args:
@@ -731,8 +730,8 @@ def _balance(escrow_contract: Contract, gas_payer: str,
         int: returns the balance of the contract in HMT.
 
     """
-    return escrow_contract.functions.getBalance().call({
-        'from': gas_payer,
+    return job.job_contract.functions.getBalance().call({
+        'from': job.gas_payer,
         'gas': gas
     })
 
