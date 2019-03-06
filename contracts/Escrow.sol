@@ -38,8 +38,6 @@ contract Escrow {
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
     }
 
-
-
     function getStatus() public view returns (EscrowStatuses) {
         return status;
     }
@@ -101,7 +99,6 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
-        uint256 _amount,
         string _url,
         string _hash
     ) public
@@ -115,7 +112,6 @@ contract Escrow {
             _reputationOracleStake.add(_recordingOracleStake) <= 100,
             "Stake out of bounds"
         );
-        require(getBalance() >= _amount, "Amount too high");
         require(status == EscrowStatuses.Launched, "Escrow not in Launched status state");
 
         reputationOracle = _reputationOracle;
