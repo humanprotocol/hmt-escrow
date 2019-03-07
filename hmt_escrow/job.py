@@ -137,7 +137,7 @@ class Job:
             self._access_job(factory_addr, escrow_addr, **credentials)
         else:
             self.factory_contract = _init_factory(factory_addr, credentials)
-            self._initialize_job(escrow_manifest)
+            self._init_job(escrow_manifest)
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
@@ -158,9 +158,9 @@ class Job:
         self.manifest_url = _manifest_url(self.job_contract, gas_payer)
         manifest_dict = download(self.manifest_url, rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
-        self._initialize_job(escrow_manifest)
+        self._init_job(escrow_manifest)
 
-    def _initialize_job(self, manifest: Manifest):
+    def _init_job(self, manifest: Manifest):
         """Initialize a Job's class attributes with a given manifest.
 
         Args:
