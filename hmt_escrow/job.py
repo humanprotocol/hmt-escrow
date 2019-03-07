@@ -24,13 +24,13 @@ Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
     A Job  can be created from a manifest or by accessing an existing escrow contract 
-    from the Ethereum network with the external access_job function. The manifest
-    has to follow the Manifest model specification at https://github.com/hCaptcha/hmt-basemodels.
+    from the Ethereum network. The manifest has to follow the Manifest model 
+    specification at https://github.com/hCaptcha/hmt-basemodels.
 
     A typical Job goes through the following stages:
     Launch: deploy an escrow contract to the network.
     Setup: store relevant attributes in the contract state.
-    Pay: pay all websites in HMT when all the Job's tasks have been completed.
+    Pay: pay all job participatants in HMT when all the Job's tasks have been completed.
 
     Attributes:
         serialized_manifest (Dict[str, Any]): a dict representation of the Manifest model.
@@ -140,6 +140,15 @@ class Job:
             self._initialize_job(escrow_manifest)
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
+        """Given a factory and escrow address and credentials, access an already
+        launched manifest of an already deployed escrow contract.
+
+        Args:
+            factory_addr (str): an ethereum address of the escrow factory contract.
+            escrow_addr (str): an ethereum address of the escrow contract.
+            **credentials: an unpacked dict of an ethereum address and its private key.
+
+        """
         gas_payer = credentials["gas_payer"]
         rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
 
@@ -152,6 +161,12 @@ class Job:
         self._initialize_job(escrow_manifest)
 
     def _initialize_job(self, manifest: Manifest):
+        """Initialize a Job's class attributes with a given manifest.
+
+        Args:
+            manifest (Manifest): a dict representation of the Manifest model.
+        
+        """
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
         number_of_answers = int(serialized_manifest['job_total_tasks'])
@@ -715,9 +730,35 @@ def _factory_contains_escrow(factory_addr: str,
                              escrow_addr: str,
                              gas_payer: str,
                              gas: int = GAS_LIMIT) -> bool:
-    if not factory_addr or not escrow_addr:
-        return False
+    """Checks whether a given factory address contains a given escrow address.
 
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(manifest, credentials)
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> job.setup()
+    True
+
+    Factory contains the escrow address.
+    >>> factory_addr = job.factory_contract.address
+    >>> escrow_addr = job.job_contract.address
+    >>> _factory_contains_escrow(factory_addr, escrow_addr, job.gas_payer)
+    True
+    
+    Args:
+        factory_addr (str): an ethereum address of the escrow factory contract.
+        escrow_addr (str): an ethereum address of the escrow contract.
+        gas_payer (str): an ethereum address calling the contract.
+        gas (int): maximum amount of gas the caller is ready to pay.
+
+    Returns:
+        bool: returns True escrow belongs to the factory.
+
+    """
     factory_contract = get_factory(factory_addr)
     return factory_contract.functions.hasEscrow(escrow_addr).call({
         'from':
