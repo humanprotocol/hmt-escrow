@@ -87,7 +87,12 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
         Exception: if adding bytes with IPFS fails.
 
     """
-    manifest_ = json.dumps(msg, sort_keys=True)
+    try:
+        manifest_ = json.dumps(msg, sort_keys=True)
+    except Exception as e:
+        LOG.error("Can't extract the json from the dict")
+        raise e
+        
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
         key = API.add_bytes(_encrypt(public_key, manifest_))
