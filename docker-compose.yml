@@ -1,7 +1,7 @@
 version: '2'
 services:
 
-  api:
+  job:
     stdin_open: true
     tty: true
     environment:
