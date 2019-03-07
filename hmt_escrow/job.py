@@ -45,8 +45,8 @@ class Job:
     """
 
     def __init__(self,
-                 escrow_manifest: Manifest,
                  credentials: Dict[str, str],
+                 escrow_manifest: Manifest = None,
                  factory_addr: str = None,
                  escrow_addr: str = None):
         """Initializes a Job instance with values from a Manifest class and 
@@ -59,7 +59,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.gas_payer == credentials["gas_payer"]
         True
         >>> job.gas_payer_priv == credentials["gas_payer_priv"]
@@ -71,7 +71,7 @@ class Job:
 
         Initializing a new Job instance with a factory address succeeds.
         >>> factory_addr = deploy_factory(**credentials)
-        >>> job = Job(manifest, credentials, factory_addr)
+        >>> job = Job(credentials, manifest, factory_addr)
         >>> job.factory_contract.address == factory_addr
         True
         
@@ -91,7 +91,7 @@ class Job:
         >>> factory_addr = job.factory_contract.address
         >>> manifest_url = _manifest_url(job.job_contract, job.gas_payer)
 
-        >>> new_job = Job(manifest, credentials, factory_addr, escrow_addr)
+        >>> new_job = Job(credentials=credentials, factory_addr=factory_addr, escrow_addr=escrow_addr)
         >>> new_job.manifest_url == manifest_url
         True
         >>> new_job.job_contract.address == escrow_addr
@@ -107,7 +107,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
         ... }
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         Traceback (most recent call last):
         ValueError: Given private key doesn't match the ethereum address.
 
@@ -183,7 +183,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
 
         Deploying a new Job to the ethereum network succeeds.
         >>> job.launch(rep_oracle_pub_key)
@@ -222,7 +222,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
 
         A Job can't be setup without deploying it first.
         >>> job.setup()
@@ -242,10 +242,10 @@ class Job:
 
         """
         # Prepare setup arguments for the escrow contract.
-        reputation_oracle_stake = int(Decimal(
-            self.serialized_manifest["oracle_stake"]) * 100)
-        recording_oracle_stake = int(Decimal(
-            self.serialized_manifest["oracle_stake"]) * 100)
+        reputation_oracle_stake = int(
+            Decimal(self.serialized_manifest["oracle_stake"]) * 100)
+        recording_oracle_stake = int(
+            Decimal(self.serialized_manifest["oracle_stake"]) * 100)
         reputation_oracle = str(
             self.serialized_manifest["reputation_oracle_addr"])
         recording_oracle = str(
@@ -291,7 +291,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -353,7 +353,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
 
         The escrow contract is in Pending state after setup so it can be aborted.
         >>> job.launch(rep_oracle_pub_key)
@@ -364,7 +364,7 @@ class Job:
         True
 
         The escrow contract is in Partial state after the first payout and it can't be aborted.
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -412,7 +412,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
         >>> job.launch(rep_oracle_pub_key)
@@ -429,7 +429,7 @@ class Job:
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -477,7 +477,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -519,7 +519,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         
         After deployment status is "Launched".
         >>> job.launch(rep_oracle_pub_key)
@@ -547,7 +547,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -593,7 +593,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -623,7 +623,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -660,7 +660,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(manifest, credentials)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -737,7 +737,7 @@ def _factory_contains_escrow(factory_addr: str,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -779,13 +779,13 @@ def _init_factory(factory_addr: Optional[str],
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> type(job.factory_contract)
     <class 'web3.utils.datatypes.Contract'>
 
     Initializing a new Job instance with a factory address succeeds.
     >>> factory_addr = deploy_factory(**credentials)
-    >>> job = Job(manifest, credentials, factory_addr)
+    >>> job = Job(credentials, manifest, factory_addr)
     >>> job.factory_contract.address == factory_addr
     True
 
@@ -820,7 +820,7 @@ def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -851,7 +851,7 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -893,7 +893,7 @@ def _last_escrow_addr(job: Job, gas: int = GAS_LIMIT) -> str:
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> factory_addr = deploy_factory(**credentials)
-    >>> job = Job(manifest, credentials, factory_addr)
+    >>> job = Job(credentials, manifest, factory_addr)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> _last_escrow_addr(job) == job.job_contract.address
@@ -922,7 +922,7 @@ def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> _create_escrow(job)
     True
 
@@ -958,7 +958,7 @@ def _manifest_url(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -991,7 +991,7 @@ def _manifest_hash(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(manifest, credentials)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
