@@ -54,7 +54,7 @@ def download(key: str, private_key: bytes) -> Dict:
     try:
         ciphertext = API.cat(key)
     except Exception as e:
-        LOG.error("Reading the key with IPFS failed because of: {}".format(e))
+        LOG.warning("Reading the key with IPFS failed because of: {}".format(e))
         raise e
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
@@ -92,7 +92,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     try:
         key = API.add_bytes(_encrypt(public_key, manifest_))
     except Exception as e:
-        LOG.error("Adding bytes with IPFS failed because of: {}".format(e))
+        LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
     return hash_, key
 
