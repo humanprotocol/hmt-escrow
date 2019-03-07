@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
 
-DEFAULT_GAS = int(os.getenv("DEFAULT_GAS", 4712388))
+GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 LOG = logging.getLogger("hmt_escrow.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
@@ -201,7 +201,7 @@ def get_factory(factory_addr: str) -> Contract:
     return escrow_factory
 
 
-def deploy_factory(gas: int = DEFAULT_GAS, **credentials) -> str:
+def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     """Deploy an EscrowFactory solidity contract to the ethereum network.
 
     Args:

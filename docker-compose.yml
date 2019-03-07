@@ -7,7 +7,7 @@ services:
     environment:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
-      - DEFAULT_GAS=6700000
+      - GAS_LIMIT=6700000
       - IPFS_HOSTNAME=ipfs
     command: /work/bin/wait_then_run
     build: .
