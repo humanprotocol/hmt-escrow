@@ -48,6 +48,44 @@ def get_w3() -> Web3:
 
 
 def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
+    """Handles a transaction that updates the contract state by locally
+    signing, building, sending the transaction and returning a transaction
+    receipt.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(manifest, credentials)
+    >>> job.launch(rep_oracle_pub_key)
+    True
+
+    >>> gas = 4712388
+    >>> hmt_amount = int(job.amount * 10**18)
+    >>> hmtoken_contract = get_hmtoken()
+    >>> txn_func = hmtoken_contract.functions.transfer
+    >>> func_args = [job.job_contract.address, hmt_amount]
+    >>> txn_info = {
+    ... "gas_payer": job.gas_payer,
+    ... "gas_payer_priv": job.gas_payer_priv,
+    ... "gas": gas
+    ... }
+    >>> txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
+    >>> type(txn_receipt)
+    <class 'web3.datastructures.AttributeDict'>
+
+    Args:
+        txn_func: the transaction function to be handled.
+        *args: all the arguments the function takes.
+        **kwargs: the transaction data used to complete the transaction.
+    
+    Returns:
+        AttributeDict: returns the transaction receipt.
+    
+    Raises:
+        TimeoutError: if waiting for the transaction receipt times out.
+    """
     gas_payer = kwargs["gas_payer"]
     gas_payer_priv = kwargs["gas_payer_priv"]
     gas = kwargs["gas"]
@@ -90,6 +128,9 @@ def get_contract_interface(contract_entrypoint):
 def get_hmtoken() -> Contract:
     """Retrieve the HMToken contract from a given address.
 
+    >>> type(get_hmtoken())
+    <class 'web3.utils.datatypes.Contract'>
+
     Returns:
         Contract: returns the HMToken solidity contract.
 
@@ -105,8 +146,21 @@ def get_hmtoken() -> Contract:
 def get_escrow(escrow_addr: str) -> Contract:
     """Retrieve the Escrow contract from a given address.
 
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(manifest, credentials)
+
+    Deploying a new Job to the ethereum network succeeds.
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> type(get_escrow(job.job_contract.address))
+    <class 'web3.utils.datatypes.Contract'>
+
     Args:
-        escrow_addr (str): the ethereum address of the Escrow contract.
+        escrow_addr (str): an ethereum address of the escrow contract.
 
     Returns:
         Contract: returns the Escrow solidity contract.
@@ -123,6 +177,14 @@ def get_escrow(escrow_addr: str) -> Contract:
 
 def get_factory(factory_addr: str) -> Contract:
     """Retrieve the EscrowFactory contract from a given address.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> job = Job(manifest, credentials)
+    >>> type(get_factory(job.factory_contract.address))
+    <class 'web3.utils.datatypes.Contract'>
 
     Args:
         factory_addr (str): the ethereum address of the Escrow contract.
@@ -172,4 +234,6 @@ def deploy_factory(gas: int = DEFAULT_GAS, **credentials) -> str:
 
 if __name__ == "__main__":
     import doctest
+    from job import Job
+    from test_manifest import manifest
     doctest.testmod()
