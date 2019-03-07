@@ -46,5 +46,19 @@ contract('EscrowFactory', (accounts) => {
         assert(false);
       }
     });
+
+    it('finds the newly created escrow from deployed escrow', async () => {
+      try {
+        const initialCounter = await EscrowFactory.getCounter();
+        assert.equal(initialCounter.toNumber(), 0);
+
+        await EscrowFactory.createEscrow({ from: accounts[0] });
+        const escrowAddress = await EscrowFactory.getLastEscrow();
+        const hasEscrow = await EscrowFactory.hasEscrow(escrowAddress);
+        assert.equal(hasEscrow, true);
+      } catch (ex) {
+        assert(false);
+      }
+    });
   });
 });
