@@ -6,12 +6,11 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-web3 = "==4.8.2"
+web3 = "==4.8.3"
 ipfsapi = "*"
 py-solc = "*"
 yapf = "*"
-schematics = "==2.1.0"
-py-evm = "*"
+py-evm = "==0.2.0a37"
 mypy = "*"
 hmt-basemodels = "*"
 
