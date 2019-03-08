@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "676d0744483554aa18fe8b5d987fa027752e52bb570cae609a0cd45073db1c08"
+            "sha256": "84bc08101a236c174e29f670ceb74a6f11c8ca350454adbd938991d389b8b7bc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -162,10 +162,10 @@
         },
         "eth-typing": {
             "hashes": [
-                "sha256:321a40a22ecdb7f5f184f9b1a315f50498ef4bac7ef6068e7ceda931dffd74d2",
-                "sha256:9e4712e6fa74a58b1c1aa181e2269a21b8241c7c261eec887cbdecb40f438e9d"
+                "sha256:164d5fb164636b62a5729557953edfadc91e4f1b055cd591cace24913a917764",
+                "sha256:901fcda2ab7cb4d92314484ce4730b6e02f1fccd97d3e20f72a9bdb531624c45"
             ],
-            "version": "==2.0.0"
+            "version": "==2.1.0"
         },
         "eth-utils": {
             "hashes": [
@@ -240,11 +240,11 @@
         },
         "py-evm": {
             "hashes": [
-                "sha256:d528d4fbe06573572a92b94636e4937ee3614ab10acfa3a82cf77aa991b71243",
-                "sha256:ed137be4d8b2236660cba5df0f4f577dae9fc58f8b770779c1fd5dc1b06436c7"
+                "sha256:6020ac5f1717aabcc0779225774b80e1f97abcd38e0abeb8edf13810377685a5",
+                "sha256:d01a5e66f09ffe54f6085d5255fc18eff34dd4211bd3375e48dbe53169ad6dda"
             ],
             "index": "pypi",
-            "version": "==0.2.0a41"
+            "version": "==0.2.0a37"
         },
         "py-solc": {
             "hashes": [
@@ -318,7 +318,6 @@
                 "sha256:8fcc6182606fd0b24410a1dbb066d9bbddbe8da9c9509f47b743495706239283",
                 "sha256:a40b20635c0e43d18d3aff76220f6cd95ea4decb3f37765e49529b17d81b0439"
             ],
-            "index": "pypi",
             "version": "==2.1.0"
         },
         "semantic-version": {
@@ -381,11 +380,11 @@
         },
         "web3": {
             "hashes": [
-                "sha256:585ee922eb6a97a2843e59e011e0820eef3d7e9830a118fabe84e23a2d5d9bea",
-                "sha256:ca9414c2e314b05fc181a9aa9fb9622bed8e6f9c67a4f7a9ad8303868b910006"
+                "sha256:6772f7ca234c16febaa4d53f403062cb702509936b0deddab3968ce0bb8f50cb",
+                "sha256:6b8086ef2634f89e780c2fcba9e1a7e3c2cdac0edfaa8e5f15991d0afdcc5897"
             ],
             "index": "pypi",
-            "version": "==4.8.2"
+            "version": "==4.8.3"
         },
         "websockets": {
             "hashes": [
