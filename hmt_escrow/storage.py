@@ -46,7 +46,7 @@ def download(key: str, private_key: bytes) -> Dict:
 
     Returns:
         Dict: returns the contents of the filename which was previously uploaded.
-    
+
     Raises:
         Exception: if reading from IPFS fails.
 
@@ -83,7 +83,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     Returns:
         Tuple[str, str]: returns the contents of the filename which was previously uploaded.
-    
+
     Raises:
         Exception: if adding bytes with IPFS fails.
 
@@ -111,7 +111,7 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
     >>> msg = "test"
     >>> _decrypt(priv_key, _encrypt(pub_key, msg)) == msg
     True
-    
+
     Using a wrong public key to decrypt a message results in failure.
     >>> false_pub_key = b"74c81fe41b30f741b31185052664a10c3256e2f08bcfb20c8f54e733bef58972adcf84e4f5d70a979681fd39d7f7847d2c0d3b5d4aead806c4fec4d8534be114"
     >>> _decrypt(priv_key, _encrypt(false_pub_key, msg)) == msg
@@ -121,7 +121,7 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
     Args:
         private_key (bytes): The private_key to decrypt the message with.
         msg (bytes): The message to be decrypted.
-    
+
     Returns:
         str: returns the plaintext equivalent to the originally encrypted one.
 
@@ -143,7 +143,7 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
     Args:
         public_key (bytes): The public_key to encrypt the message with.
         msg (str): The message to be encrypted.
-    
+
     Returns:
         bytes: returns the cryptotext encrypted with the public key.
 
@@ -155,6 +155,6 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
 if __name__ == "__main__":
     import doctest
-    from job import Job
-    from test_manifest import manifest
+    from .job import Job
+    from .test_manifest import manifest
     doctest.testmod()

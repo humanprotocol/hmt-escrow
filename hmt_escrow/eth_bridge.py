@@ -33,7 +33,7 @@ def get_w3() -> Web3:
     >>> w3 = get_w3()
     >>> type(w3)
     <class 'web3.main.Web3'>
-    
+
     Returns:
         Web3: returns the web3 provider.
 
@@ -79,10 +79,10 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
         txn_func: the transaction function to be handled.
         *args: all the arguments the function takes.
         **kwargs: the transaction data used to complete the transaction.
-    
+
     Returns:
         AttributeDict: returns the transaction receipt.
-    
+
     Raises:
         TimeoutError: if waiting for the transaction receipt times out.
     """
@@ -115,7 +115,7 @@ def get_contract_interface(contract_entrypoint):
 
     Args:
         contract_entrypoint: the entrypoint of the compiled source.
-    
+
     Returns:
         returns the contract interface containing the contract abi.
 
@@ -164,7 +164,7 @@ def get_escrow(escrow_addr: str) -> Contract:
 
     Returns:
         Contract: returns the Escrow solidity contract.
-        
+
     """
 
     w3 = get_w3()
@@ -191,7 +191,7 @@ def get_factory(factory_addr: str) -> Contract:
 
     Returns:
         Contract: returns the EscrowFactory solidity contract.
-        
+
     """
     w3 = get_w3()
     contract_interface = get_contract_interface(
@@ -234,6 +234,6 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
 
 if __name__ == "__main__":
     import doctest
-    from job import Job
-    from test_manifest import manifest
+    from .job import Job
+    from .test_manifest import manifest
     doctest.testmod()
