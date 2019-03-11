@@ -1,7 +1,7 @@
 #!/bin/bash
 set -exu
 DONE=false
-JOB=${1-'python3 hmt_escrow/job.py -v'}
+JOB=${1-'python3 hmt_escrow/__init__.py -v'}
 STORAGE=${1-'python3 hmt_escrow/storage.py -v'}
 ETH_BRIDGE=${1-'python3 hmt_escrow/eth_bridge.py -v'}
 
