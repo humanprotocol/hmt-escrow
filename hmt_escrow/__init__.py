@@ -11,8 +11,8 @@ from web3.contract import Contract
 from eth_keys import keys
 from eth_utils import decode_hex
 
-from eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
-from storage import download, upload
+from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
+from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
