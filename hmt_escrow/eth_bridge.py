@@ -236,4 +236,4 @@ if __name__ == "__main__":
     import doctest
     from .job import Job
     from .test_manifest import manifest
-    doctest.testmod()
+    doctest.testmod(raise_on_error=True)
