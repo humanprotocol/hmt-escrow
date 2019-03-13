@@ -175,7 +175,7 @@ def get_escrow(escrow_addr: str) -> Contract:
     return escrow
 
 
-def get_factory(factory_addr: str) -> Contract:
+def get_factory(factory_addr: Optional[str]) -> Contract:
     """Retrieve the EscrowFactory contract from a given address.
 
     >>> credentials = {

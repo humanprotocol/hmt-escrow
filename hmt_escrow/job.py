@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import os
+import sys
 import logging
+
+# For accessing hmt_escrow files locally.
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from decimal import *
 from enum import Enum
@@ -11,8 +15,8 @@ from web3.contract import Contract
 from eth_keys import keys
 from eth_utils import decode_hex
 
-from eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
-from storage import download, upload
+from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
+from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
@@ -802,7 +806,7 @@ def _init_factory(factory_addr: Optional[str],
     factory = None
 
     if not factory_addr_valid:
-        factory_addr = deploy_factory(**credentials)
+        factory_addr = deploy_factory(GAS_LIMIT, **credentials)
         factory = get_factory(factory_addr)
         if not factory_addr:
             raise Exception("Unable to get address from factory")
@@ -1017,5 +1021,4 @@ def _manifest_hash(escrow_contract: Contract,
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
-    from storage import upload, download
     doctest.testmod()
