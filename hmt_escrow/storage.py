@@ -52,6 +52,7 @@ def download(key: str, private_key: bytes) -> Dict:
 
     """
     try:
+        LOG.debug("Downloading key: {}".format(key))
         ciphertext = API.cat(key)
     except Exception as e:
         LOG.warning(
