@@ -9,6 +9,7 @@ import timeout_decorator
 from typing import Dict, Tuple
 from eth_keys import keys
 from p2p import ecies
+from ipfsapi import Client
 
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC",
@@ -16,18 +17,19 @@ SHARED_MAC_DATA = os.getenv(
 
 LOG = logging.getLogger("hmt_escrow.storage")
 
-if not os.getenv("IPFS_DISABLE"):
-    _host = os.getenv("IPFS_HOSTNAME", 'localhost')
-    _port = int(os.getenv("IPFS_TCP_PORT", '5001'))
+
+@timeout_decorator.timeout(20)
+def connect(host: str, port: int) -> Client:
     try:
-        API = ipfsapi.connect(_host, _port)
+        ipfs_client = ipfsapi.connect(host, port)
+        return ipfs_client
     except Exception as e:
         raise e
         LOG.error("Connection with IPFS failed because of: {}".format(e))
 
 
 @timeout_decorator.timeout(20)
-def download(key: str, private_key: bytes) -> Dict:
+def download(ipfs_client: Client, key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
     >>> credentials = {
@@ -35,9 +37,9 @@ def download(key: str, private_key: bytes) -> Dict:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
+    >>> (hash_, manifest_url) = upload(ipfs_client, job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(ipfs_client, manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
@@ -53,7 +55,7 @@ def download(key: str, private_key: bytes) -> Dict:
 
     """
     try:
-        ciphertext = API.cat(key)
+        ciphertext = ipfs_client.cat(key)
     except Exception as e:
         LOG.warning(
             "Reading the key with IPFS failed because of: {}".format(e))
@@ -63,7 +65,8 @@ def download(key: str, private_key: bytes) -> Dict:
 
 
 @timeout_decorator.timeout(20)
-def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
+def upload(ipfs_client: Client, msg: Dict,
+           public_key: bytes) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -73,9 +76,9 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
+    >>> (hash_, manifest_url) = upload(ipfs_client, job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(ipfs_client, manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
@@ -98,7 +101,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
-        key = API.add_bytes(_encrypt(public_key, manifest_))
+        key = ipfs_client.add_bytes(_encrypt(public_key, manifest_))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
@@ -157,6 +160,7 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
 if __name__ == "__main__":
     import doctest
-    from job import Job
     from test_manifest import manifest
+    from test_ipfs import ipfs_client
+    from job import Job
     doctest.testmod()
