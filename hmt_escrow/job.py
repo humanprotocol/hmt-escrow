@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 import timeout_decorator
+import ipfsapi
 
 # For accessing hmt_escrow files locally.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,11 +17,14 @@ from web3.contract import Contract
 from eth_keys import keys
 from eth_utils import decode_hex
 
+from ipfsapi import Client
 from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
 from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
+IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
+IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
 
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
@@ -53,7 +57,8 @@ class Job:
                  credentials: Dict[str, str],
                  escrow_manifest: Manifest = None,
                  factory_addr: str = None,
-                 escrow_addr: str = None):
+                 escrow_addr: str = None,
+                 ipfs_client: Client = None):
         """Initializes a Job instance with values from a Manifest class and 
         checks that the provided credentials are valid. An optional factory
         address is used to initialize the factory of the Job. Alternatively
@@ -64,7 +69,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.gas_payer == credentials["gas_payer"]
         True
         >>> job.gas_payer_priv == credentials["gas_payer_priv"]
@@ -112,7 +117,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
         ... }
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         Traceback (most recent call last):
         ValueError: Given private key doesn't match the ethereum address.
 
@@ -129,6 +134,10 @@ class Job:
         if not credentials_valid:
             raise ValueError(
                 "Given private key doesn't match the ethereum address.")
+
+        self.ipfs_client = ipfs_client
+        if not ipfs_client:
+            self.ipfs_client = connect(IPFS_HOST, IPFS_PORT)
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
@@ -188,7 +197,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
 
         Deploying a new Job to the ethereum network succeeds.
         >>> job.launch(rep_oracle_pub_key)
@@ -213,7 +222,8 @@ class Job:
         self.job_contract = get_escrow(job_addr)
 
         # Upload the manifest to IPFS.
-        (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
+        (hash_, manifest_url) = upload(self.ipfs_client,
+                                       self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
         return self.status() == Status.Launched and _balance(self) == 0
@@ -227,7 +237,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
 
         A Job can't be setup without deploying it first.
         >>> job.setup()
@@ -296,7 +306,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -334,7 +344,7 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key)
+        (hash_, url) = upload(self.ipfs_client, results, pub_key)
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
@@ -358,7 +368,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
 
         The escrow contract is in Pending state after setup so it can be aborted.
         >>> job.launch(rep_oracle_pub_key)
@@ -369,7 +379,7 @@ class Job:
         True
 
         The escrow contract is in Partial state after the first payout and it can't be aborted.
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -417,7 +427,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
         >>> job.launch(rep_oracle_pub_key)
@@ -434,7 +444,7 @@ class Job:
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -482,7 +492,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -504,7 +514,7 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key)
+        (hash_, url) = upload(self.ipfs_client, results, pub_key)
         txn_func = self.job_contract.functions.storeResults
         func_args = [url, hash_]
         txn_info = {
@@ -524,7 +534,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         
         After deployment status is "Launched".
         >>> job.launch(rep_oracle_pub_key)
@@ -552,7 +562,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -599,7 +609,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -617,8 +627,9 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(
-            _manifest_url(self.job_contract, self.gas_payer), priv_key)
+        return download(self.ipfs_client,
+                        _manifest_url(self.job_contract, self.gas_payer),
+                        priv_key)
 
     def intermediate_results(self, priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
@@ -629,7 +640,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -656,7 +667,7 @@ class Job:
             'from': self.gas_payer,
             'gas': gas
         })
-        return download(intermediate_results_url, priv_key)
+        return download(self.ipfs_client, intermediate_results_url, priv_key)
 
     def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results stored by the Reputation Oracle.
@@ -666,7 +677,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -692,7 +703,7 @@ class Job:
             'from': self.gas_payer,
             'gas': gas
         })
-        return download(final_results_url, priv_key)
+        return download(self.ipfs_client, final_results_url, priv_key)
 
 
 def _validate_credentials(**credentials) -> bool:
@@ -743,7 +754,7 @@ def _factory_contains_escrow(factory_addr: str,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -785,7 +796,7 @@ def _init_factory(factory_addr: Optional[str],
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> type(job.factory_contract)
     <class 'web3.utils.datatypes.Contract'>
 
@@ -826,7 +837,7 @@ def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -857,7 +868,7 @@ def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -928,7 +939,7 @@ def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> _create_escrow(job)
     True
 
@@ -964,7 +975,7 @@ def _manifest_url(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -997,7 +1008,7 @@ def _manifest_hash(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest, ipfs_client=ipfs_client)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -1023,4 +1034,6 @@ def _manifest_hash(escrow_contract: Contract,
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
+    from test_ipfs import ipfs_client
+    from storage import connect
     doctest.testmod()
