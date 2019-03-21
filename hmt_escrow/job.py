@@ -165,6 +165,7 @@ class Job:
         """
         gas_payer = credentials["gas_payer"]
         rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
+        LOG.info(rep_oracle_priv_key)
 
         self.factory_contract = get_factory(factory_addr)
         self.job_contract = get_escrow(escrow_addr)
@@ -627,9 +628,9 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        return download(self.ipfs_client,
-                        _manifest_url(self.job_contract, self.gas_payer),
-                        priv_key)
+        key = self.manifest_url
+        LOG.debug("IPFS key:{}".format(key))
+        return download(self.ipfs_client, key, priv_key)
 
     def intermediate_results(self, priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
