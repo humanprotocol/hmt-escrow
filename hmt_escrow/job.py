@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+import timeout_decorator
 
 # For accessing hmt_escrow files locally.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -160,7 +161,7 @@ class Job:
         self.job_contract = get_escrow(escrow_addr)
         self.manifest_hash = _manifest_hash(self.job_contract, gas_payer)
         self.manifest_url = _manifest_url(self.job_contract, gas_payer)
-        manifest_dict = download(self.manifest_url, rep_oracle_priv_key)
+        manifest_dict = self.manifest(rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
         self._init_job(escrow_manifest)
 
@@ -589,6 +590,7 @@ class Job:
         handle_transaction(txn_func, *[], **txn_info)
         return self.status() == Status.Complete
 
+    @timeout_decorator.timeout(20)
     def manifest(self, priv_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup a Job.
 
