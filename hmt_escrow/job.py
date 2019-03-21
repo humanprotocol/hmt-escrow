@@ -708,7 +708,14 @@ class Job:
 
         """
         key = self.manifest_url
-        return download(self.ipfs_client, key, priv_key)
+        try:
+            manifest_dict = download(self.ipfs_client, key, priv_key)
+            return manifest_dict
+        except Exception as e:
+            raise e
+            LOG.warning(
+                "Reading the key {} with {} with IPFS failed because of: {}".
+                format(key, e))
 
     def intermediate_results(self, priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
