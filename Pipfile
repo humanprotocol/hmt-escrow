@@ -13,6 +13,7 @@ yapf = "*"
 py-evm = "==0.2.0a37"
 mypy = "*"
 hmt-basemodels = "*"
+timeout-decorator = "*"
 
 [requires]
 python_version = "3.6"

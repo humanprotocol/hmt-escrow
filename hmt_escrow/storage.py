@@ -1,12 +1,12 @@
+import os
 import logging
 import codecs
 import hashlib
 import json
-from typing import Dict, Tuple
-
 import ipfsapi
-import os
+import timeout_decorator
 
+from typing import Dict, Tuple
 from eth_keys import keys
 from p2p import ecies
 
@@ -26,6 +26,7 @@ if not os.getenv("IPFS_DISABLE"):
         LOG.error("Connection with IPFS failed because of: {}".format(e))
 
 
+@timeout_decorator.timeout(20)
 def download(key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
@@ -61,6 +62,7 @@ def download(key: str, private_key: bytes) -> Dict:
     return json.loads(msg)
 
 
+@timeout_decorator.timeout(20)
 def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
