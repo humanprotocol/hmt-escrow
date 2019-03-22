@@ -25,6 +25,100 @@ LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 
+def status(escrow_contract: Contract, gas_payer: str,
+           gas: int = GAS_LIMIT) -> Enum:
+    """Returns the status of the Job.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials, manifest)
+    
+    After deployment status is "Launched".
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> status(job.job_contract, job.gas_payer)
+    <Status.Launched: 1>
+
+    Returns:
+        Enum: returns the status as an enumeration.
+
+    """
+    status_ = escrow_contract.functions.getStatus().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+    return Status(status_ + 1)
+
+
+def manifest_url(escrow_contract: Contract,
+                 gas_payer: str,
+                 gas: int = GAS_LIMIT) -> str:
+    """Retrieves the deployd manifest url uploaded on Job initialization.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials, manifest)
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> job.setup()
+    True
+    >>> manifest_url(job.job_contract, job.gas_payer) == job.manifest_url
+    True
+
+    Args:
+        escrow_contract (Contract): the contract to be read.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        str: returns the manifest url of Job's escrow contract.
+
+    """
+    return escrow_contract.functions.getManifestUrl().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
+def manifest_hash(escrow_contract: Contract,
+                  gas_payer: str,
+                  gas: int = GAS_LIMIT) -> str:
+    """Retrieves the deployd manifest hash uploaded on Job initialization.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials, manifest)
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> job.setup()
+    True
+    >>> manifest_hash(job.job_contract, job.gas_payer) == job.manifest_hash
+    True
+
+    Args:
+        escrow_contract (Contract): the contract to be read.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+    
+    Returns:
+        str: returns the manifest hash of Job's escrow contract.
+
+    """
+    return escrow_contract.functions.getManifestHash().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
     A Job  can be created from a manifest or by accessing an existing escrow contract 
@@ -93,7 +187,7 @@ class Job:
         ... }
         >>> escrow_addr = job.job_contract.address
         >>> factory_addr = job.factory_contract.address
-        >>> manifest_url = _manifest_url(job.job_contract, job.gas_payer)
+        >>> manifest_url = manifest_url(job.job_contract, job.gas_payer)
         >>> new_job = Job(credentials=credentials, factory_addr=factory_addr, escrow_addr=escrow_addr)
         >>> new_job.manifest_url == manifest_url
         True
@@ -162,8 +256,8 @@ class Job:
         self.manifest_hash = None
 
         while not self.manifest_url or not self.manifest_hash:
-            self.manifest_hash = _manifest_hash(self.job_contract, gas_payer)
-            self.manifest_url = _manifest_url(self.job_contract, gas_payer)
+            self.manifest_hash = manifest_hash(self.job_contract, gas_payer)
+            self.manifest_url = manifest_url(self.job_contract, gas_payer)
 
         manifest_dict = download(self.manifest_url, rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
@@ -198,7 +292,7 @@ class Job:
         Deploying a new Job to the ethereum network succeeds.
         >>> job.launch(rep_oracle_pub_key)
         True
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Launched: 1>
 
         Args:
@@ -220,7 +314,9 @@ class Job:
         (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
-        return self.status() == Status.Launched and _balance(self) == 0
+        return status(
+            self.job_contract,
+            self.gas_payer) == Status.Launched and _balance(self) == 0
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
@@ -284,7 +380,9 @@ class Job:
             "gas": gas
         }
         handle_transaction(txn_func, *func_args, **txn_info)
-        return self.status() == Status.Pending and _balance(self) == hmt_amount
+        return status(
+            self.job_contract,
+            self.gas_payer) == Status.Pending and _balance(self) == hmt_amount
 
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
@@ -312,7 +410,7 @@ class Job:
         The escrow contract is still in Partial state as there's still balance left.
         >>> _balance(job)
         30000000000000000000
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Partial: 3>
 
         Trying to pay more than the contract balance results in failure.
@@ -326,7 +424,7 @@ class Job:
         True
         >>> _balance(job)
         0
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Paid: 4>
 
         Args:
@@ -383,7 +481,7 @@ class Job:
         True
         >>> job.abort()
         False
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Partial: 3>
 
         The escrow contract is in Paid state after the second payout and it can't be aborted.
@@ -392,7 +490,7 @@ class Job:
         True
         >>> job.abort()
         False
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Paid: 4>
             
         Returns:
@@ -434,7 +532,7 @@ class Job:
         Contract balance is zero and status is "Cancelled".
         >>> _balance(job)
         0
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
@@ -448,7 +546,7 @@ class Job:
         True
         >>> job.cancel()
         False
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Partial: 3>
 
         The escrow contract is in Paid state after the second payout and it can't be cancelled.
@@ -457,7 +555,7 @@ class Job:
         True
         >>> job.cancel()
         False
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Paid: 4>
 
         Returns:
@@ -472,7 +570,7 @@ class Job:
         }
 
         handle_transaction(txn_func, *[], **txn_info)
-        return self.status(gas) == Status.Cancelled
+        return status(self.job_contract, self.gas_payer) == Status.Cancelled
 
     def store_intermediate_results(self,
                                    results: Dict,
@@ -520,34 +618,6 @@ class Job:
         handle_transaction(txn_func, *func_args, **txn_info)
         return True
 
-    def status(self, gas: int = GAS_LIMIT) -> Enum:
-        """Returns the status of the Job.
-
-        >>> credentials = {
-        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        ... }
-        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
-        
-        After deployment status is "Launched".
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job.status()
-        <Status.Launched: 1>
-
-        Returns:
-            Enum: returns the status as an enumeration.
-
-        """
-        status_ = self.job_contract.functions.getStatus().call({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas
-        })
-        return Status(status_ + 1)
-
     def complete(self, gas: int = GAS_LIMIT) -> bool:
         """Completes the Job if it has been paid.
 
@@ -566,7 +636,7 @@ class Job:
         True
 
         A Job can't be completed when it is still in partially paid state.
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Partial: 3>
         >>> job.complete()
         False
@@ -577,7 +647,7 @@ class Job:
         True
         >>> job.complete()
         True
-        >>> job.status()
+        >>> status(job.job_contract, job.gas_payer)
         <Status.Complete: 5>
         
         Returns:
@@ -592,7 +662,7 @@ class Job:
         }
 
         handle_transaction(txn_func, *[], **txn_info)
-        return self.status() == Status.Complete
+        return status(self.job_contract, self.gas_payer) == Status.Complete
 
     def manifest(self, priv_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup a Job.
@@ -621,7 +691,7 @@ class Job:
 
         """
         return download(
-            _manifest_url(self.job_contract, self.gas_payer), priv_key)
+            manifest_url(self.job_contract, self.gas_payer), priv_key)
 
     def intermediate_results(self, priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
@@ -955,72 +1025,6 @@ def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
 
     handle_transaction(txn_func, *[], **txn_info)
     return True
-
-
-def _manifest_url(escrow_contract: Contract,
-                  gas_payer: str,
-                  gas: int = GAS_LIMIT) -> str:
-    """Retrieves the deployd manifest url uploaded on Job initialization.
-
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> job.launch(rep_oracle_pub_key)
-    True
-    >>> job.setup()
-    True
-    >>> _manifest_url(job.job_contract, job.gas_payer) == job.manifest_url
-    True
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the manifest url of Job's escrow contract.
-
-    """
-    return escrow_contract.functions.getManifestUrl().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
-def _manifest_hash(escrow_contract: Contract,
-                   gas_payer: str,
-                   gas: int = GAS_LIMIT) -> str:
-    """Retrieves the deployd manifest hash uploaded on Job initialization.
-
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> job.launch(rep_oracle_pub_key)
-    True
-    >>> job.setup()
-    True
-    >>> _manifest_hash(job.job_contract, job.gas_payer) == job.manifest_hash
-    True
-
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns the manifest hash of Job's escrow contract.
-
-    """
-    return escrow_contract.functions.getManifestHash().call({
-        'from': gas_payer,
-        'gas': gas
-    })
 
 
 if __name__ == "__main__":
