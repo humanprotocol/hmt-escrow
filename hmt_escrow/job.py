@@ -101,7 +101,7 @@ class Job:
         >>> factory_addr = job.factory_contract.address
         >>> manifest_url = job._manifest_url()
 
-        >>> new_job = Job(credentials=credentials, factory_addr=factory_addr, escrow_addr=escrow_addr)
+        >>> new_job = Job(credentials=credentials, factory_addr=factory_addr, escrow_addr=escrow_addr, ipfs_client=ipfs_client)
         >>> new_job.manifest_url == manifest_url
         True
         >>> new_job.job_contract.address == escrow_addr
@@ -250,7 +250,8 @@ class Job:
         self.job_contract = get_escrow(escrow_addr)
         self.manifest_hash = self._manifest_hash()
         self.manifest_url = self._manifest_url()
-        manifest_dict = self.manifest(rep_oracle_priv_key)
+        manifest_dict = download(self.ipfs_client, self.manifest_url,
+                                 rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
         self._init_job(escrow_manifest)
 
