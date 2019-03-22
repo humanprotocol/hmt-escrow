@@ -131,16 +131,17 @@ class Job:
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
 
-        if escrow_addr and factory_addr:
+        if escrow_manifest:
+            self.factory_contract = _init_factory(factory_addr, credentials)
+            self._init_job(escrow_manifest)
+
+        if escrow_addr and factory_addr and not escrow_manifest:
             if not _factory_contains_escrow(factory_addr, escrow_addr,
                                             self.gas_payer):
                 raise ValueError(
                     "Given factory address doesn't contain the given escrow address."
                 )
             self._access_job(factory_addr, escrow_addr, **credentials)
-        else:
-            self.factory_contract = _init_factory(factory_addr, credentials)
-            self._init_job(escrow_manifest)
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
@@ -421,7 +422,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(credentials, manifest)
-        
+
         The escrow contract is in Pending state after setup so it can be cancelled.
         >>> job.launch(rep_oracle_pub_key)
         True
