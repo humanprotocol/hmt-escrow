@@ -148,6 +148,10 @@ class Job:
                 raise ValueError(
                     "Given factory address doesn't contain the given escrow address."
                 )
+            self.factory_contract = get_factory(factory_addr)
+            self.job_contract = get_escrow(escrow_addr)
+            self.manifest_hash = self._manifest_hash()
+            self.manifest_url = self._manifest_url()
             self._access_job(factory_addr, escrow_addr, **credentials)
         else:
             self.factory_contract = _init_factory(factory_addr, credentials)
@@ -245,11 +249,6 @@ class Job:
 
         """
         rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
-
-        self.factory_contract = get_factory(factory_addr)
-        self.job_contract = get_escrow(escrow_addr)
-        self.manifest_hash = self._manifest_hash()
-        self.manifest_url = self._manifest_url()
         manifest_dict = download(self.ipfs_client, self.manifest_url,
                                  rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
