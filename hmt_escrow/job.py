@@ -148,18 +148,7 @@ class Job:
                 raise ValueError(
                     "Given factory address doesn't contain the given escrow address."
                 )
-            self.factory_contract = get_factory(factory_addr)
-            self.job_contract = get_escrow(escrow_addr)
-            self.manifest_hash = self._manifest_hash()
-            self.manifest_url = self._manifest_url()
-            while not self.manifest_url or not self.manifest_hash:
-                self.manifest_hash = self._manifest_hash()
-                self.manifest_url = self._manifest_url()
-
             self._access_job(factory_addr, escrow_addr, **credentials)
-        else:
-            self.factory_contract = _init_factory(factory_addr, credentials)
-            self._init_job(escrow_manifest)
 
     def _manifest_url(self, gas: int = GAS_LIMIT) -> str:
         """Retrieves the deployd manifest url uploaded on Job initialization.
@@ -253,6 +242,17 @@ class Job:
 
         """
         rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
+s
+        self.factory_contract = get_factory(factory_addr)
+        self.job_contract = get_escrow(escrow_addr)
+
+        self.manifest_hash = self._manifest_hash()
+        self.manifest_url = self._manifest_url()
+        
+        while not self.manifest_url or not self.manifest_hash:
+            self.manifest_hash = self._manifest_hash()
+            self.manifest_url = self._manifest_url()
+            
         manifest_dict = download(self.ipfs_client, self.manifest_url,
                                  rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
@@ -298,6 +298,9 @@ class Job:
         """
         if hasattr(self, "job_contract"):
             raise AttributeError("The escrow has been already deployed.")
+        
+        self.factory_contract = _init_factory(factory_addr, credentials)
+        self._init_job(escrow_manifest)
 
         # Use factory to deploy a new escrow contract.
         _create_escrow(self)
