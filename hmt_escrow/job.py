@@ -139,8 +139,13 @@ class Job:
         if not ipfs_client:
             self.ipfs_client = connect(IPFS_HOST, IPFS_PORT)
 
+        if escrow_manifest:
+            self.escrow_manifest = escrow_manifest
+
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
+        self.factory_addr = factory_addr
+        self.credentials = credentials
 
         if escrow_addr and factory_addr:
             if not _factory_contains_escrow(factory_addr, escrow_addr,
@@ -242,21 +247,21 @@ class Job:
 
         """
         rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
-s
+
         self.factory_contract = get_factory(factory_addr)
         self.job_contract = get_escrow(escrow_addr)
 
         self.manifest_hash = self._manifest_hash()
         self.manifest_url = self._manifest_url()
-        
+
         while not self.manifest_url or not self.manifest_hash:
             self.manifest_hash = self._manifest_hash()
             self.manifest_url = self._manifest_url()
-            
+
         manifest_dict = download(self.ipfs_client, self.manifest_url,
                                  rep_oracle_priv_key)
-        escrow_manifest = Manifest(manifest_dict)
-        self._init_job(escrow_manifest)
+        self.escrow_manifest = Manifest(manifest_dict)
+        self._init_job(self.escrow_manifest)
 
     def _init_job(self, manifest: Manifest):
         """Initialize a Job's class attributes with a given manifest.
@@ -298,9 +303,10 @@ s
         """
         if hasattr(self, "job_contract"):
             raise AttributeError("The escrow has been already deployed.")
-        
-        self.factory_contract = _init_factory(factory_addr, credentials)
-        self._init_job(escrow_manifest)
+
+        self.factory_contract = _init_factory(self.factory_addr,
+                                              self.credentials)
+        self._init_job(self.escrow_manifest)
 
         # Use factory to deploy a new escrow contract.
         _create_escrow(self)
