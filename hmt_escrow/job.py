@@ -152,6 +152,10 @@ class Job:
             self.job_contract = get_escrow(escrow_addr)
             self.manifest_hash = self._manifest_hash()
             self.manifest_url = self._manifest_url()
+            while not self.manifest_url or not self.manifest_hash:
+                self.manifest_hash = self._manifest_hash()
+                self.manifest_url = self._manifest_url()
+
             self._access_job(factory_addr, escrow_addr, **credentials)
         else:
             self.factory_contract = _init_factory(factory_addr, credentials)
