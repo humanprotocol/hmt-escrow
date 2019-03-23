@@ -228,8 +228,7 @@ class Job:
         if escrow_manifest:
             self.factory_contract = _init_factory(factory_addr, credentials)
             self._init_job(escrow_manifest)
-
-        if escrow_addr and factory_addr and not escrow_manifest:
+        elif escrow_addr and factory_addr and not escrow_manifest:
             if not _factory_contains_escrow(factory_addr, escrow_addr,
                                             self.gas_payer):
                 raise ValueError(
