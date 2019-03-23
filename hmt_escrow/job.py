@@ -235,6 +235,8 @@ class Job:
                     "Given factory address doesn't contain the given escrow address."
                 )
             self._access_job(factory_addr, escrow_addr, **credentials)
+        else:
+            raise ValueError("An existing Job has to be accessed with escrow and factory address.")
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
