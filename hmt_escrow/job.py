@@ -225,7 +225,8 @@ class Job:
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
 
-        if escrow_manifest:
+        # If
+        if not escrow_addr and escrow_manifest:
             self.factory_contract = _init_factory(factory_addr, credentials)
             self._init_job(escrow_manifest)
         elif escrow_addr and factory_addr and not escrow_manifest:
