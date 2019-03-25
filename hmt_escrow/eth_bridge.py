@@ -6,6 +6,7 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
+from kvstore_abi import abi as kvstore_abi
 from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
@@ -26,6 +27,9 @@ CONTRACTS = compile_files([
     "{}/SafeMath.sol".format(CONTRACT_FOLDER)
 ])
 
+# See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
+KVSTORE_CONTRACT = os.getenv("KVSTORE_CONTRACT", "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
+
 
 def get_w3() -> Web3:
     """Set up the web3 provider for serving transactions to the ethereum network.
@@ -33,7 +37,7 @@ def get_w3() -> Web3:
     >>> w3 = get_w3()
     >>> type(w3)
     <class 'web3.main.Web3'>
-    
+
     Returns:
         Web3: returns the web3 provider.
 
@@ -79,10 +83,10 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
         txn_func: the transaction function to be handled.
         *args: all the arguments the function takes.
         **kwargs: the transaction data used to complete the transaction.
-    
+
     Returns:
         AttributeDict: returns the transaction receipt.
-    
+
     Raises:
         TimeoutError: if waiting for the transaction receipt times out.
     """
@@ -115,7 +119,7 @@ def get_contract_interface(contract_entrypoint):
 
     Args:
         contract_entrypoint: the entrypoint of the compiled source.
-    
+
     Returns:
         returns the contract interface containing the contract abi.
 
@@ -164,7 +168,7 @@ def get_escrow(escrow_addr: str) -> Contract:
 
     Returns:
         Contract: returns the Escrow solidity contract.
-        
+
     """
 
     w3 = get_w3()
@@ -191,7 +195,7 @@ def get_factory(factory_addr: Optional[str]) -> Contract:
 
     Returns:
         Contract: returns the EscrowFactory solidity contract.
-        
+
     """
     w3 = get_w3()
     contract_interface = get_contract_interface(
@@ -231,6 +235,30 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     contract_addr = txn_receipt['contractAddress']
     return contract_addr
 
+
+def get_pk_from_address(wallet_addr: str) -> bytes:
+    """
+    Given a wallet address, uses the kvstore to pull down the public key for a user
+    in the hmt universe.  Requires that the `GAS_PAYER` environment variable be set to the
+    address that will be paying for the transaction on the ethereum network
+
+    Args:
+        wallet_addr (string): address to get the public key of
+
+    Returns:
+        bytes: the public key in bytes form
+    """
+    GAS_PAYER = os.getenv('GAS_PAYER')
+
+    if not GAS_PAYER:
+        raise ValueError('environment variable GAS_PAYER required')
+
+    w3 = get_w3()
+
+    kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
+    address_pk = kvstore.functions.get(GAS_PAYER, wallet_addr).call({'from': GAS_PAYER})
+    bytes_address = bytes(address_pk, encoding='utf-8')
+    return bytes_address
 
 if __name__ == "__main__":
     import doctest
