@@ -6,7 +6,7 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
-from kvstore_abi import abi as kvstore_abi
+from .kvstore_abi import abi as kvstore_abi
 from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
@@ -28,8 +28,8 @@ CONTRACTS = compile_files([
 ])
 
 # See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
-KVSTORE_CONTRACT = os.getenv("KVSTORE_CONTRACT",
-                             "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
+KVSTORE_CONTRACT = Web3.toChecksumAddress(
+    os.getenv("KVSTORE_CONTRACT", "0xBd3EB00BA4962490BF9B8880b829ADb01311aA8B")) # "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"
 
 
 def get_w3() -> Web3:
@@ -248,7 +248,19 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
 
     Returns:
         bytes: the public key in bytes form
+
+    >>> import os
+    >>> from web3 import Web3
+    >>> get_pk_from_address('blah')
+    Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    File "/work/hmt_escrow/eth_bridge.py", line 255, in get_pk_from_address
+        raise ValueError('environment variable GAS_PAYER required')
+    ValueError: environment variable GAS_PAYER required
+    >>> os.environ['GAS_PAYER'] = Web3.toChecksumAddress('0x3895d913a9a231d2b215f402c528511b569c676d')
+    >>> get_pk_from_address(Web3.toChecksumAddress('0xc23546d9c10e85322cb63112ec034090b407a019'))
     """
+    # TODO: Should we try to get the checksum address here instead of assuming user will do that?
     GAS_PAYER = os.getenv('GAS_PAYER')
 
     if not GAS_PAYER:
@@ -258,7 +270,8 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
     address_pk = kvstore.functions.get(GAS_PAYER, wallet_addr).call({
-        'from': GAS_PAYER
+        'from':
+        GAS_PAYER
     })
     bytes_address = bytes(address_pk, encoding='utf-8')
     return bytes_address
