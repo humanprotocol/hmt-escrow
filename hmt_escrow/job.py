@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+import timeout_decorator
 
 # For accessing hmt_escrow files locally.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -149,45 +150,6 @@ class Job:
         else:
             raise ValueError(
                 "Job instantiation wrong, double-check arguments.")
-
-    def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
-        """Given a factory and escrow address and credentials, access an already
-        launched manifest of an already deployed escrow contract.
-
-        Args:
-            factory_addr (str): an ethereum address of the escrow factory contract.
-            escrow_addr (str): an ethereum address of the escrow contract.
-            **credentials: an unpacked dict of an ethereum address and its private key.
-
-        """
-        gas_payer = credentials["gas_payer"]
-        rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
-
-        self.factory_contract = get_factory(factory_addr)
-        self.job_contract = get_escrow(escrow_addr)
-        self.manifest_url = None
-        self.manifest_hash = None
-
-        while not self.manifest_url or not self.manifest_hash:
-            self.manifest_hash = self._manifest_hash()
-            self.manifest_url = self._manifest_url()
-
-        manifest_dict = self.manifest(rep_oracle_priv_key)
-        escrow_manifest = Manifest(manifest_dict)
-        self._init_job(escrow_manifest)
-
-    def _init_job(self, manifest: Manifest):
-        """Initialize a Job's class attributes with a given manifest.
-
-        Args:
-            manifest (Manifest): a dict representation of the Manifest model.
-        
-        """
-        serialized_manifest = dict(manifest.serialize())
-        per_job_cost = Decimal(serialized_manifest['task_bid_price'])
-        number_of_answers = int(serialized_manifest['job_total_tasks'])
-        self.serialized_manifest = serialized_manifest
-        self.amount = Decimal(per_job_cost * number_of_answers)
 
     def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
@@ -733,6 +695,49 @@ class Job:
             'gas': gas
         })
         return download(final_results_url, priv_key)
+
+    @timeout_decorator.timeout(30)
+    def _wait_for_manifests(self):
+        self.manifest_url = None
+        self.manifest_hash = None
+
+        while not self.manifest_url or not self.manifest_hash:
+            self.manifest_hash = self._manifest_hash()
+            self.manifest_url = self._manifest_url()
+
+    def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
+        """Given a factory and escrow address and credentials, access an already
+        launched manifest of an already deployed escrow contract.
+
+        Args:
+            factory_addr (str): an ethereum address of the escrow factory contract.
+            escrow_addr (str): an ethereum address of the escrow contract.
+            **credentials: an unpacked dict of an ethereum address and its private key.
+
+        """
+        gas_payer = credentials["gas_payer"]
+        rep_oracle_priv_key = credentials["rep_oracle_priv_key"]
+
+        self.factory_contract = get_factory(factory_addr)
+        self.job_contract = get_escrow(escrow_addr)
+        self._wait_for_manifests()
+
+        manifest_dict = self.manifest(rep_oracle_priv_key)
+        escrow_manifest = Manifest(manifest_dict)
+        self._init_job(escrow_manifest)
+
+    def _init_job(self, manifest: Manifest):
+        """Initialize a Job's class attributes with a given manifest.
+
+        Args:
+            manifest (Manifest): a dict representation of the Manifest model.
+        
+        """
+        serialized_manifest = dict(manifest.serialize())
+        per_job_cost = Decimal(serialized_manifest['task_bid_price'])
+        number_of_answers = int(serialized_manifest['job_total_tasks'])
+        self.serialized_manifest = serialized_manifest
+        self.amount = Decimal(per_job_cost * number_of_answers)
 
     def _manifest_url(self, gas: int = GAS_LIMIT) -> str:
         """Retrieves the deployd manifest url uploaded on Job initialization.
