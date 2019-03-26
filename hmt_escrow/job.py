@@ -123,7 +123,7 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
-        credentials_valid = _validate_credentials(**credentials)
+        credentials_valid = self._validate_credentials(**credentials)
         if not credentials_valid:
             raise ValueError(
                 "Given private key doesn't match the ethereum address.")
@@ -133,13 +133,13 @@ class Job:
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
-            self.factory_contract = _init_factory(factory_addr, credentials)
+            self.factory_contract = self._init_factory(factory_addr,
+                                                       credentials)
             self._init_job(escrow_manifest)
 
         # Access an existing Job.
         elif escrow_addr and factory_addr and not escrow_manifest:
-            if not _factory_contains_escrow(factory_addr, escrow_addr,
-                                            self.gas_payer):
+            if not self._factory_contains_escrow(escrow_addr, factory_addr):
                 raise ValueError(
                     "Given factory address doesn't contain the given escrow address."
                 )
@@ -217,8 +217,8 @@ class Job:
             raise AttributeError("The escrow has been already deployed.")
 
         # Use factory to deploy a new escrow contract.
-        _create_escrow(self)
-        job_addr = _last_escrow_addr(self)
+        self._create_escrow()
+        job_addr = self._last_escrow_addr()
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
         self.job_contract = get_escrow(job_addr)
 
@@ -226,7 +226,7 @@ class Job:
         (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
-        return self.status() == Status.Launched and _balance(self) == 0
+        return self.status() == Status.Launched and self.balance() == 0
 
     def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
@@ -290,7 +290,7 @@ class Job:
             "gas": gas
         }
         handle_transaction(txn_func, *func_args, **txn_info)
-        return self.status() == Status.Pending and _balance(self) == hmt_amount
+        return self.status() == Status.Pending and self.balance() == hmt_amount
 
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
@@ -316,7 +316,7 @@ class Job:
         True
 
         The escrow contract is still in Partial state as there's still balance left.
-        >>> _balance(job)
+        >>> job.balance()
         30000000000000000000
         >>> job.status()
         <Status.Partial: 3>
@@ -330,7 +330,7 @@ class Job:
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
-        >>> _balance(job)
+        >>> job.balance()
         0
         >>> job.status()
         <Status.Paid: 4>
@@ -357,7 +357,7 @@ class Job:
         }
 
         handle_transaction(txn_func, *func_args, **txn_info)
-        return _bulk_paid(self) == True
+        return self._bulk_paid() == True
 
     def abort(self, gas: int = GAS_LIMIT) -> bool:
         """Kills the contract and returns the HMT back to the gas payer.
@@ -438,7 +438,7 @@ class Job:
         True
 
         Contract balance is zero and status is "Cancelled".
-        >>> _balance(job)
+        >>> job.balance()
         0
         >>> job.status()
         <Status.Cancelled: 6>
@@ -599,6 +599,38 @@ class Job:
             gas
         })
         return Status(status_ + 1)
+
+    def balance(self, gas: int = GAS_LIMIT) -> int:
+        """Retrieve the balance of a Job in HMT.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(credentials, manifest)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
+        >>> job.balance()
+        100000000000000000000
+
+        Args:
+            escrow_contract (Contract): the contract to be read.
+            gas_payer (str): an ethereum address calling the contract.
+            gas (int): maximum amount of gas the caller is ready to pay.
+        
+        Returns:
+            int: returns the balance of the contract in HMT.
+
+        """
+        return self.job_contract.functions.getBalance().call({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas
+        })
 
     def manifest(self, priv_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup a Job.
@@ -762,264 +794,225 @@ class Job:
             gas
         })
 
+    def _validate_credentials(self, **credentials) -> bool:
+        """Validates whether the given ethereum private key maps to the address
+        by calculating the checksum address from the private key and comparing that
+        to the given address.
 
-def _validate_credentials(**credentials) -> bool:
-    """Validates whether the given ethereum private key maps to the address
-    by calculating the checksum address from the private key and comparing that
-    to the given address.
+        Validating right credentials succeeds.
+        >>> credentials = {
+        ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> job = Job(credentials, manifest)
 
-    Validating right credentials succeeds.
-    >>> credentials = {
-    ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> _validate_credentials(**credentials)
-    True
+        Validating falsy credentials fails.
+        >>> credentials = {
+        ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
+        ... }
+        >>> job = Job(credentials, manifest)
+        Traceback (most recent call last):
+        ValueError: Given private key doesn't match the ethereum address.
 
-    Validating falsy credentials fails.
-    >>> credentials = {
-    ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
-    ... }
-    >>> _validate_credentials(**credentials)
-    False
-
-    Args:
-        **credentials: an unpacked dict of an ethereum address and its private key.
-    
-    Returns:
-        bool: returns True if the calculated and the given address match.
-
-    """
-    addr = credentials["gas_payer"]
-    priv_key = credentials["gas_payer_priv"]
-
-    priv_key_bytes = decode_hex(priv_key)
-    pub_key = keys.PrivateKey(priv_key_bytes).public_key
-    calculated_addr = pub_key.to_checksum_address()
-    return Web3.toChecksumAddress(addr) == calculated_addr
-
-
-def _factory_contains_escrow(factory_addr: str,
-                             escrow_addr: str,
-                             gas_payer: str,
-                             gas: int = GAS_LIMIT) -> bool:
-    """Checks whether a given factory address contains a given escrow address.
-
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> job.launch(rep_oracle_pub_key)
-    True
-    >>> job.setup()
-    True
-
-    Factory contains the escrow address.
-    >>> factory_addr = job.factory_contract.address
-    >>> escrow_addr = job.job_contract.address
-    >>> _factory_contains_escrow(factory_addr, escrow_addr, job.gas_payer)
-    True
-    
-    Args:
-        factory_addr (str): an ethereum address of the escrow factory contract.
-        escrow_addr (str): an ethereum address of the escrow contract.
-        gas_payer (str): an ethereum address calling the contract.
-        gas (int): maximum amount of gas the caller is ready to pay.
-
-    Returns:
-        bool: returns True escrow belongs to the factory.
+        Args:
+            **credentials: an unpacked dict of an ethereum address and its private key.
         
-    """
-    factory_contract = get_factory(factory_addr)
-    return factory_contract.functions.hasEscrow(escrow_addr).call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
+        Returns:
+            bool: returns True if the calculated and the given address match.
 
+        """
+        addr = credentials["gas_payer"]
+        priv_key = credentials["gas_payer_priv"]
 
-def _init_factory(factory_addr: Optional[str],
-                  credentials: Dict[str, str],
-                  gas: int = GAS_LIMIT) -> Contract:
-    """Takes an optional factory address and returns its contract representation. Alternatively
-    a new factory is created.
+        priv_key_bytes = decode_hex(priv_key)
+        pub_key = keys.PrivateKey(priv_key_bytes).public_key
+        calculated_addr = pub_key.to_checksum_address()
+        return Web3.toChecksumAddress(addr) == calculated_addr
 
-    Initializing a new Job instance without a factory address succeeds.
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> job = Job(credentials, manifest)
-    >>> type(job.factory_contract)
-    <class 'web3.utils.datatypes.Contract'>
+    def _factory_contains_escrow(self,
+                                 escrow_addr: str,
+                                 factory_addr: str,
+                                 gas: int = GAS_LIMIT) -> bool:
+        """Checks whether a given factory address contains a given escrow address.
 
-    Initializing a new Job instance with a factory address succeeds.
-    >>> factory_addr = deploy_factory(**credentials)
-    >>> job = Job(credentials, manifest, factory_addr)
-    >>> job.factory_contract.address == factory_addr
-    True
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(credentials, manifest)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
 
-    Args:
-        credentials (Dict[str, str]): a dict of an ethereum address and its private key.
-        factory_addr (Optional[str]): an ethereum address of the escrow factory contract.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns a factory contract.
+        Factory contains the escrow address.
+        >>> factory_addr = job.factory_contract.address
+        >>> escrow_addr = job.job_contract.address
+        >>> job._factory_contains_escrow(escrow_addr, factory_addr)
+        True
+        
+        Args:
+            factory_addr (str): an ethereum address of the escrow factory contract.
+            escrow_addr (str): an ethereum address of the escrow contract.
+            gas_payer (str): an ethereum address calling the contract.
+            gas (int): maximum amount of gas the caller is ready to pay.
 
-    """
-    factory_addr_valid = Web3.isChecksumAddress(factory_addr)
-    factory = None
+        Returns:
+            bool: returns True escrow belongs to the factory.
+            
+        """
+        factory_contract = get_factory(factory_addr)
+        return factory_contract.functions.hasEscrow(escrow_addr).call({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas
+        })
 
-    if not factory_addr_valid:
-        factory_addr = deploy_factory(GAS_LIMIT, **credentials)
-        factory = get_factory(factory_addr)
-        if not factory_addr:
-            raise Exception("Unable to get address from factory")
+    def _init_factory(self,
+                      factory_addr: Optional[str],
+                      credentials: Dict[str, str],
+                      gas: int = GAS_LIMIT) -> Contract:
+        """Takes an optional factory address and returns its contract representation. Alternatively
+        a new factory is created.
 
-    if not factory:
-        factory = get_factory(factory_addr)
-    return factory
+        Initializing a new Job instance without a factory address succeeds.
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> job = Job(credentials, manifest)
+        >>> type(job.factory_contract)
+        <class 'web3.utils.datatypes.Contract'>
 
+        Initializing a new Job instance with a factory address succeeds.
+        >>> factory_addr = deploy_factory(**credentials)
+        >>> job = Job(credentials, manifest, factory_addr)
+        >>> job.factory_contract.address == factory_addr
+        True
 
-def _balance(job: Job, gas: int = GAS_LIMIT) -> int:
-    """Retrieve the balance of a Job in HMT.
+        Args:
+            credentials (Dict[str, str]): a dict of an ethereum address and its private key.
+            factory_addr (Optional[str]): an ethereum address of the escrow factory contract.
+            gas (int): maximum amount of gas the caller is ready to pay.
+        
+        Returns:
+            bool: returns a factory contract.
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> job.launch(rep_oracle_pub_key)
-    True
-    >>> job.setup()
-    True
-    >>> _balance(job)
-    100000000000000000000
+        """
+        factory_addr_valid = Web3.isChecksumAddress(factory_addr)
+        factory = None
 
-    Args:
-        escrow_contract (Contract): the contract to be read.
-        gas_payer (str): an ethereum address calling the contract.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        int: returns the balance of the contract in HMT.
+        if not factory_addr_valid:
+            factory_addr = deploy_factory(GAS_LIMIT, **credentials)
+            factory = get_factory(factory_addr)
+            if not factory_addr:
+                raise Exception("Unable to get address from factory")
 
-    """
-    return job.job_contract.functions.getBalance().call({
-        'from': job.gas_payer,
-        'gas': gas
-    })
+        if not factory:
+            factory = get_factory(factory_addr)
+        return factory
 
+    def _bulk_paid(self, gas: int = GAS_LIMIT) -> int:
+        """Checks if the last bulk payment has succeeded.
 
-def _bulk_paid(job: Job, gas: int = GAS_LIMIT) -> int:
-    """Checks if the last bulk payment has succeeded.
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(credentials, manifest)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
-    >>> job.launch(rep_oracle_pub_key)
-    True
-    >>> job.setup()
-    True
+        No payout has been performed yet.
+        >>> job._bulk_paid()
+        False
 
-    No payout has been performed yet.
-    >>> _bulk_paid(job)
-    False
+        Bulk has been paid upon successful bulk payout.
+        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
+        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
+        True
+        >>> job._bulk_paid()
+        True
 
-    Bulk has been paid upon successful bulk payout.
-    >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
-    >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
-    True
-    >>> _bulk_paid(job)
-    True
+        Args:
+            gas (int): maximum amount of gas the caller is ready to pay.
+        
+        Returns:
+            returns True if the last bulk payout has succeeded.
 
-    Args:
-        job (Job): class instance of the Job class.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        returns True if the last bulk payout has succeeded.
+        """
+        return self.job_contract.functions.getBulkPaid().call({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas
+        })
 
-    """
-    escrow_contract = job.job_contract
-    gas_payer = job.gas_payer
-    return escrow_contract.functions.getBulkPaid().call({
-        'from': gas_payer,
-        'gas': gas
-    })
+    def _last_escrow_addr(self, gas: int = GAS_LIMIT) -> str:
+        """Gets the last deployed escrow contract address of the initialized factory contract.
 
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> factory_addr = deploy_factory(**credentials)
+        >>> job = Job(credentials, manifest, factory_addr)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job._last_escrow_addr() == job.job_contract.address
+        True
 
-def _last_escrow_addr(job: Job, gas: int = GAS_LIMIT) -> str:
-    """Gets the last deployed escrow contract address of the initialized factory contract.
+        Args:
+            gas (int): maximum amount of gas the caller is ready to pay.
+        
+        Returns:
+            str: returns an escrow contract address.
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> factory_addr = deploy_factory(**credentials)
-    >>> job = Job(credentials, manifest, factory_addr)
-    >>> job.launch(rep_oracle_pub_key)
-    True
-    >>> _last_escrow_addr(job) == job.job_contract.address
-    True
+        """
+        return self.factory_contract.functions.getLastEscrow().call({
+            'from':
+            self.gas_payer,
+            'gas':
+            gas
+        })
 
-    Args:
-        job (Job): class instance of the Job class.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        str: returns an escrow contract address.
+    def _create_escrow(self, gas: int = GAS_LIMIT) -> bool:
+        """Launches a new escrow contract to the ethereum network.
 
-    """
-    return job.factory_contract.functions.getLastEscrow().call({
-        'from':
-        job.gas_payer,
-        'gas':
-        gas
-    })
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> job = Job(credentials, manifest)
+        >>> job._create_escrow()
+        True
 
+        Args:
+            gas (int): maximum amount of gas the caller is ready to pay.
+        
+        Returns:
+            bool: returns True if a new job was successfully launched to the network.
+        
+        Raises:
+            TimeoutError: if wait_on_transaction times out.
 
-def _create_escrow(job: Job, gas: int = GAS_LIMIT) -> bool:
-    """Launches a new escrow contract to the ethereum network.
+        """
+        txn_func = self.factory_contract.functions.createEscrow
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> job = Job(credentials, manifest)
-    >>> _create_escrow(job)
-    True
-
-    Args:
-        job (Job): class instance of the Job class.
-        gas (int): maximum amount of gas the caller is ready to pay.
-    
-    Returns:
-        bool: returns True if a new job was successfully launched to the network.
-    
-    Raises:
-        TimeoutError: if wait_on_transaction times out.
-
-    """
-    txn_func = job.factory_contract.functions.createEscrow
-    txn_info = {
-        "gas_payer": job.gas_payer,
-        "gas_payer_priv": job.gas_payer_priv,
-        "gas": gas
-    }
-
-    handle_transaction(txn_func, *[], **txn_info)
-    return True
+        handle_transaction(txn_func, *[], **txn_info)
+        return True
 
 
 if __name__ == "__main__":
