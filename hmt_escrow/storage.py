@@ -26,8 +26,8 @@ def _connect(host: str, port: int) -> Client:
         IPFS_CLIENT = ipfsapi.connect(host, port)
         return IPFS_CLIENT
     except Exception as e:
-        raise e
         LOG.error("Connection with IPFS failed because of: {}".format(e))
+        raise e
 
 
 IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
