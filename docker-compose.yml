@@ -8,7 +8,8 @@ services:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
       - GAS_LIMIT=6700000
-      - IPFS_HOSTNAME=ipfs
+      - IPFS_HOST=ipfs
+      - IPFS_PORT=5001
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
