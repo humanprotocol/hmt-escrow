@@ -28,7 +28,8 @@ CONTRACTS = compile_files([
 ])
 
 # See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
-KVSTORE_CONTRACT = os.getenv("KVSTORE_CONTRACT", "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
+KVSTORE_CONTRACT = os.getenv("KVSTORE_CONTRACT",
+                             "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
 
 
 def get_w3() -> Web3:
@@ -256,9 +257,12 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
     w3 = get_w3()
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
-    address_pk = kvstore.functions.get(GAS_PAYER, wallet_addr).call({'from': GAS_PAYER})
+    address_pk = kvstore.functions.get(GAS_PAYER, wallet_addr).call({
+        'from': GAS_PAYER
+    })
     bytes_address = bytes(address_pk, encoding='utf-8')
     return bytes_address
+
 
 if __name__ == "__main__":
     import doctest
