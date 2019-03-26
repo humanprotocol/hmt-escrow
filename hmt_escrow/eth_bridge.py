@@ -32,6 +32,7 @@ KVSTORE_CONTRACT = Web3.toChecksumAddress(
     os.getenv("KVSTORE_CONTRACT",
               "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
 
+
 def get_w3() -> Web3:
     """Set up the web3 provider for serving transactions to the ethereum network.
 
