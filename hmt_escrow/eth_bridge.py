@@ -29,7 +29,7 @@ CONTRACTS = compile_files([
 
 # See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
 KVSTORE_CONTRACT = Web3.toChecksumAddress(
-    os.getenv("KVSTORE_CONTRACT", "0xBd3EB00BA4962490BF9B8880b829ADb01311aA8B")) # "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"
+    os.getenv("KVSTORE_CONTRACT", "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
 
 
 def get_w3() -> Web3:
