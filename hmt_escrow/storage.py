@@ -1,31 +1,39 @@
+import os
 import logging
 import codecs
 import hashlib
 import json
-from typing import Dict, Tuple
-
 import ipfsapi
-import os
+import timeout_decorator
 
+from typing import Dict, Tuple
 from eth_keys import keys
 from p2p import ecies
+from ipfsapi import Client
 
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC",
     b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
 
 LOG = logging.getLogger("hmt_escrow.storage")
+IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
+IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
 
-if not os.getenv("IPFS_DISABLE"):
-    _host = os.getenv("IPFS_HOSTNAME", 'localhost')
-    _port = int(os.getenv("IPFS_TCP_PORT", '5001'))
+
+@timeout_decorator.timeout(20)
+def _connect(host: str, port: int) -> Client:
     try:
-        API = ipfsapi.connect(_host, _port)
+        IPFS_CLIENT = ipfsapi.connect(host, port)
+        return IPFS_CLIENT
     except Exception as e:
-        raise e
         LOG.error("Connection with IPFS failed because of: {}".format(e))
+        raise e
 
 
+IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+
+
+@timeout_decorator.timeout(20)
 def download(key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
@@ -34,7 +42,7 @@ def download(key: str, private_key: bytes) -> Dict:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
     >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
     >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
@@ -53,15 +61,17 @@ def download(key: str, private_key: bytes) -> Dict:
     """
     try:
         LOG.debug("Downloading key: {}".format(key))
-        ciphertext = API.cat(key)
+        ciphertext = IPFS_CLIENT.cat(key)
     except Exception as e:
         LOG.warning(
-            "Reading the key with IPFS failed because of: {}".format(e))
+            "Reading the key {} with private key {} with IPFS failed because of: {}"
+            .format(key, private_key, e))
         raise e
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
 
+@timeout_decorator.timeout(20)
 def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
@@ -72,7 +82,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials, manifest)
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
     >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
     >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
@@ -97,7 +107,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
-        key = API.add_bytes(_encrypt(public_key, manifest_))
+        key = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
@@ -156,6 +166,6 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
 if __name__ == "__main__":
     import doctest
-    from job import Job
     from test_manifest import manifest
+    from job import Job
     doctest.testmod()
