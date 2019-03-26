@@ -225,10 +225,12 @@ class Job:
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
 
-        # If
+        # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
             self.factory_contract = _init_factory(factory_addr, credentials)
             self._init_job(escrow_manifest)
+        
+        # Access an existing Job.
         elif escrow_addr and factory_addr and not escrow_manifest:
             if not _factory_contains_escrow(factory_addr, escrow_addr,
                                             self.gas_payer):
@@ -236,8 +238,10 @@ class Job:
                     "Given factory address doesn't contain the given escrow address."
                 )
             self._access_job(factory_addr, escrow_addr, **credentials)
+        
+        # Handle incorrect usage
         else:
-            raise ValueError("An existing Job has to be accessed with escrow and factory address.")
+            raise ValueError("Job instantiation wrong, double-check arguments.")
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
