@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-import timeout_decorator
 
 # For accessing hmt_escrow files locally.
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -696,7 +695,6 @@ class Job:
         })
         return download(final_results_url, priv_key)
 
-    @timeout_decorator.timeout(30)
     def _wait_for_manifests(self):
         self.manifest_url = None
         self.manifest_hash = None
