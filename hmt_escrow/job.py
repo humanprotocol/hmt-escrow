@@ -695,14 +695,6 @@ class Job:
         })
         return download(final_results_url, priv_key)
 
-    def _wait_for_manifests(self):
-        self.manifest_url = None
-        self.manifest_hash = None
-
-        while not self.manifest_url or not self.manifest_hash:
-            self.manifest_hash = self._manifest_hash()
-            self.manifest_url = self._manifest_url()
-
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
         launched manifest of an already deployed escrow contract.
@@ -718,7 +710,8 @@ class Job:
 
         self.factory_contract = get_factory(factory_addr)
         self.job_contract = get_escrow(escrow_addr)
-        self._wait_for_manifests()
+        self.manifest_url = self._manifest_hash()
+        self.manifest_hash = self._manifest_url()
 
         manifest_dict = self.manifest(rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
