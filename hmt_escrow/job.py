@@ -710,8 +710,8 @@ class Job:
 
         self.factory_contract = get_factory(factory_addr)
         self.job_contract = get_escrow(escrow_addr)
-        self.manifest_url = self._manifest_hash()
-        self.manifest_hash = self._manifest_url()
+        self.manifest_url = self._manifest_url()
+        self.manifest_hash = self._manifest_hash()
 
         manifest_dict = self.manifest(rep_oracle_priv_key)
         escrow_manifest = Manifest(manifest_dict)
