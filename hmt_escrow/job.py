@@ -308,10 +308,6 @@ class Job:
 
         # Access an existing Job.
         elif escrow_addr and factory_addr and not escrow_manifest:
-            if not self._factory_contains_escrow(escrow_addr, factory_addr):
-                raise ValueError(
-                    "Given factory address doesn't contain the given escrow address."
-                )
             self._access_job(factory_addr, escrow_addr, **credentials)
 
         # Handle incorrect usage
@@ -949,7 +945,8 @@ class Job:
         Factory contains the escrow address.
         >>> factory_addr = job.factory_contract.address
         >>> escrow_addr = job.job_contract.address
-        >>> job._factory_contains_escrow(escrow_addr, factory_addr)
+        >>> new_job = Job(credentials=credentials, factory_addr=factory_addr, escrow_addr=escrow_addr)
+        >>> new_job._factory_contains_escrow(escrow_addr, factory_addr)
         True
         
         Args:
