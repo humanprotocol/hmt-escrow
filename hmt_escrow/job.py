@@ -815,11 +815,8 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        intermediate_results_url = self.job_contract.functions.getIntermediateResultsUrl(
-        ).call({
-            'from': self.gas_payer,
-            'gas': gas
-        })
+        intermediate_results_url = intermediate_url(self.job_contract,
+                                                    self.gas_payer)
         return download(intermediate_results_url, priv_key)
 
     def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
@@ -937,7 +934,8 @@ class Job:
 
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+        ...     "rep_oracle_priv_key": b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(credentials, manifest)
