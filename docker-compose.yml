@@ -12,13 +12,15 @@ services:
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
-    links: 
+    links:
       - ganache
       - ipfs
       - hmt
     volumes:
-      - hmt_token_address:/deployed
-  
+      - hmt_token_address:/deployed-hmttoken
+      - eth_kvstore_address:/deployed-kvstore
+      - .:/work
+
   contracts:
     environment:
       - ETH_HOST=ganache
@@ -33,7 +35,7 @@ services:
     command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
     ports:
       - 8545:8545
-  
+
   hmt:
     image: hcaptcha/hmt-token
     links:
@@ -45,6 +47,17 @@ services:
     volumes:
       - hmt_token_address:/deployed
 
+  kvstore:
+    image: hcaptcha/eth-kvstore
+    links:
+      - ganache
+    environment:
+      - ETH_HOST=ganache
+      - ETH_PORT=8545
+      - ADDRESS_OUTPUT_FILENAME=/deployed/ethkvstore.address.json
+    volumes:
+      - eth_kvstore_address:/deployed
+
   ipfs:
     image: ipfs/go-ipfs
     ports:
@@ -52,3 +65,4 @@ services:
 
 volumes:
   hmt_token_address:
+  eth_kvstore_address:

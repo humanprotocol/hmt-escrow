@@ -6,7 +6,7 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
-from .kvstore_abi import abi as kvstore_abi
+from hmt_escrow.kvstore_abi import abi as kvstore_abi
 from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]

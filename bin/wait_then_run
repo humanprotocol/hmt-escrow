@@ -5,14 +5,24 @@ JOB=${1-'python3 hmt_escrow/job.py -v'}
 STORAGE=${1-'python3 hmt_escrow/storage.py -v'}
 ETH_BRIDGE=${1-'python3 hmt_escrow/eth_bridge.py -v'}
 
-until test -f /deployed/hmt.address.json; do
-  echo "waiting for hmt.address.json .."
+KVSTORE_ADDRESS_FILE=/deployed-kvstore/ethkvstore.address.json
+HMTTOKEN_ADDRESS_FILE=/deployed-hmttoken/hmt.address.json
+
+until test -f $HMTTOKEN_ADDRESS_FILE; do
+  echo "waiting for hmt token file at $HMTTOKEN_ADDRESS_FILE .."
   sleep 2
 done
 
-export HMTOKEN_ADDR=$(cat /deployed/hmt.address.json | jq --raw-output '.address')
+export HMTOKEN_ADDR=$(cat $HMTTOKEN_ADDRESS_FILE | jq --raw-output '.address')
 
-until curl --silent ipfs:5001; do 
+until test -f $KVSTORE_ADDRESS_FILE; do
+  echo "waiting for $KVSTORE_ADDRESS_FILE .."
+  sleep 2
+done
+
+export KVSTORE_CONTRACT=$(cat $KVSTORE_ADDRESS_FILE | jq --raw-output '.address')
+
+until curl --silent ipfs:5001; do
   echo "sleeping"
   sleep 1
 done
