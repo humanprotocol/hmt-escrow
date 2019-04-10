@@ -241,7 +241,10 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
 def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     """
     Given a wallet address, uses the kvstore to pull down the public key for a user
-    in the hmt universe.  Requires that the `GAS_PAYER` environment variable be set to the
+    in the hmt universe, defined by the kvstore key `hmt_pub_key`.  Works with the
+    `set_pub_key_at_address` function.
+
+    Requires that the `GAS_PAYER` environment variable be set to the
     address that will be paying for the transaction on the ethereum network
 
     Args:
@@ -263,7 +266,7 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     ValueError: environment variable GAS_PAYER required
     >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
     >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    >>> set_pub_key_at_address('blah')  #doctest: +ELLIPSIS
+    >>> set_pub_key_at_addr('blah')  #doctest: +ELLIPSIS
     AttributeDict({'transactionHash': ...})
     >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
     b'blah'
@@ -277,7 +280,7 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     w3 = get_w3()
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
-    addr_pub_key = kvstore.functions.get(GAS_PAYER, wallet_addr).call({
+    addr_pub_key = kvstore.functions.get(GAS_PAYER, 'hmt_pub_key').call({
         'from':
         GAS_PAYER
     })
@@ -285,14 +288,27 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     return bytes(addr_pub_key, encoding='utf-8')
 
 
-def set_pub_key_at_address(pub_key: str) -> Dict[str, Any]:
+def set_pub_key_at_addr(pub_key: str) -> Dict[str, Any]:
     """
+    Given a public key, this function will use the eth-kvstore to reach out to the blockchain
+    and set the key `hmt_pub_key` on the callers kvstore collection of values, equivalent to the
+    argument passed in here.  This will be used by HMT to encrypt data for the receiver
+
+    See more about kvstore here: https://github.com/hCaptcha/eth-kvstore
+
+    Args:
+        pub_key (string): RSA Public key for this user
+
+    Returns:
+        AttributeDict: receipt of the set transaction on the blockchain
+
+
     >>> from web3 import Web3
     >>> import os
     >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
     >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     >>> pub_key_to_set = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> set_pub_key_at_address(pub_key_to_set)  #doctest: +ELLIPSIS
+    >>> set_pub_key_at_addr(pub_key_to_set)  #doctest: +ELLIPSIS
     AttributeDict({'transactionHash': ...})
     """
     GAS_PAYER = os.getenv('GAS_PAYER')
@@ -306,7 +322,7 @@ def set_pub_key_at_address(pub_key: str) -> Dict[str, Any]:
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
 
     txn_func = kvstore.functions.set
-    func_args = [GAS_PAYER, pub_key]
+    func_args = ['hmt_pub_key', pub_key]
     txn_info = {
         "gas_payer": GAS_PAYER,
         "gas_payer_priv": GAS_PAYER_PRIV,
