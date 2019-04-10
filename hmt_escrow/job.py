@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 
-from decimal import *
+from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Tuple, Optional
 
