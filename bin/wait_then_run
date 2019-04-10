@@ -1,12 +1,9 @@
 #!/bin/bash
 set -exu
-DONE=false
-JOB=${1-'python3 hmt_escrow/job.py -v'}
-STORAGE=${1-'python3 hmt_escrow/storage.py -v'}
-ETH_BRIDGE=${1-'python3 hmt_escrow/eth_bridge.py -v'}
 
 KVSTORE_ADDRESS_FILE=/deployed-kvstore/ethkvstore.address.json
 HMTTOKEN_ADDRESS_FILE=/deployed-hmttoken/hmt.address.json
+
 
 until test -f $HMTTOKEN_ADDRESS_FILE; do
   echo "waiting for hmt token file at $HMTTOKEN_ADDRESS_FILE .."
@@ -27,6 +24,12 @@ until curl --silent ipfs:5001; do
   sleep 1
 done
 
-$JOB
-$STORAGE
-$ETH_BRIDGE
+
+export PYTHONPATH=$(pwd)
+if [ ! -z $* ]; then
+  $*
+else
+  python3 hmt_escrow/job.py -v
+  python3 hmt_escrow/storage.py -v
+  python3 hmt_escrow/eth_bridge.py
+fi

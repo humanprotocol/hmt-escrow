@@ -252,14 +252,21 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
 
     >>> import os
     >>> from web3 import Web3
-    >>> get_pk_from_address('blah')
+    >>> get_pk_from_address('badaddress')
     Traceback (most recent call last):
-    File "<stdin>", line 1, in <module>
-    File "/work/hmt_escrow/eth_bridge.py", line 255, in get_pk_from_address
+      File "/usr/lib/python3.6/doctest.py", line 1330, in __run
+        compileflags, 1), test.globs)
+      File "<doctest __main__.get_pk_from_address[2]>", line 1, in <module>
+        get_pk_from_address('blah')
+      File "hmt_escrow/eth_bridge.py", line 268, in get_pk_from_address
         raise ValueError('environment variable GAS_PAYER required')
     ValueError: environment variable GAS_PAYER required
-    >>> os.environ['GAS_PAYER'] = Web3.toChecksumAddress('0x3895d913a9a231d2b215f402c528511b569c676d')
-    >>> get_pk_from_address(Web3.toChecksumAddress('0xc23546d9c10e85322cb63112ec034090b407a019'))
+    >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> set_pub_key_at_address('blah')  #doctest: +ELLIPSIS
+    AttributeDict({'transactionHash': ...})
+    >>> get_pk_from_address(os.environ['GAS_PAYER'])
+    b'blah'
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?
     GAS_PAYER = os.getenv('GAS_PAYER')
@@ -276,6 +283,37 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
     })
     bytes_address = bytes(address_pk, encoding='utf-8')
     return bytes_address
+
+
+def set_pub_key_at_address(pub_key: str) -> Dict[str, Any]:
+    """
+    >>> from web3 import Web3
+    >>> import os
+    >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key_to_set = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> set_pub_key_at_address(pub_key_to_set)  #doctest: +ELLIPSIS
+    AttributeDict({'transactionHash': ...})
+    """
+    GAS_PAYER = os.getenv('GAS_PAYER')
+    GAS_PAYER_PRIV = os.getenv('GAS_PAYER_PRIV')
+
+    if not (GAS_PAYER or GAS_PAYER_PRIV):
+        raise ValueError(
+            'environment variable GAS_PAYER AND GAS_PAYER_PRIV required')
+
+    w3 = get_w3()
+    kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
+
+    txn_func = kvstore.functions.set
+    func_args = [GAS_PAYER, pub_key]
+    txn_info = {
+        "gas_payer": GAS_PAYER,
+        "gas_payer_priv": GAS_PAYER_PRIV,
+        "gas": GAS_LIMIT
+    }
+
+    return handle_transaction(txn_func, *func_args, **txn_info)
 
 
 if __name__ == "__main__":

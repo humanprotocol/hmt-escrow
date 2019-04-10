@@ -17,6 +17,7 @@ services:
       - ganache
       - ipfs
       - hmt
+      - kvstore
     volumes:
       - hmt_token_address:/deployed-hmttoken
       - eth_kvstore_address:/deployed-kvstore
