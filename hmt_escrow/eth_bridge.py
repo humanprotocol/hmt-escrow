@@ -238,7 +238,7 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     return contract_addr
 
 
-def get_pk_from_address(wallet_addr: str) -> bytes:
+def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     """
     Given a wallet address, uses the kvstore to pull down the public key for a user
     in the hmt universe.  Requires that the `GAS_PAYER` environment variable be set to the
@@ -252,20 +252,20 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
 
     >>> import os
     >>> from web3 import Web3
-    >>> get_pk_from_address('badaddress')
+    >>> get_pub_key_from_addr('badaddress')
     Traceback (most recent call last):
       File "/usr/lib/python3.6/doctest.py", line 1330, in __run
         compileflags, 1), test.globs)
-      File "<doctest __main__.get_pk_from_address[2]>", line 1, in <module>
-        get_pk_from_address('blah')
-      File "hmt_escrow/eth_bridge.py", line 268, in get_pk_from_address
+      File "<doctest __main__.get_pub_key_from_addr[2]>", line 1, in <module>
+        get_pub_key_from_addr('blah')
+      File "hmt_escrow/eth_bridge.py", line 268, in get_pub_key_from_addr
         raise ValueError('environment variable GAS_PAYER required')
     ValueError: environment variable GAS_PAYER required
     >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
     >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     >>> set_pub_key_at_address('blah')  #doctest: +ELLIPSIS
     AttributeDict({'transactionHash': ...})
-    >>> get_pk_from_address(os.environ['GAS_PAYER'])
+    >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
     b'blah'
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?
@@ -277,12 +277,12 @@ def get_pk_from_address(wallet_addr: str) -> bytes:
     w3 = get_w3()
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
-    address_pk = kvstore.functions.get(GAS_PAYER, wallet_addr).call({
+    addr_pub_key = kvstore.functions.get(GAS_PAYER, wallet_addr).call({
         'from':
         GAS_PAYER
     })
-    bytes_address = bytes(address_pk, encoding='utf-8')
-    return bytes_address
+
+    return bytes(addr_pub_key, encoding='utf-8')
 
 
 def set_pub_key_at_address(pub_key: str) -> Dict[str, Any]:

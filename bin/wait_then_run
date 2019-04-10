@@ -2,15 +2,15 @@
 set -exu
 
 KVSTORE_ADDRESS_FILE=/deployed-kvstore/ethkvstore.address.json
-HMTTOKEN_ADDRESS_FILE=/deployed-hmttoken/hmt.address.json
+HMTOKEN_ADDR_FILE=/deployed-hmtoken/hmt.address.json
 
 
-until test -f $HMTTOKEN_ADDRESS_FILE; do
-  echo "waiting for hmt token file at $HMTTOKEN_ADDRESS_FILE .."
+until test -f $HMTOKEN_ADDR_FILE; do
+  echo "waiting for hmt token file at $HMTOKEN_ADDR_FILE .."
   sleep 2
 done
 
-export HMTOKEN_ADDR=$(cat $HMTTOKEN_ADDRESS_FILE | jq --raw-output '.address')
+export HMTOKEN_ADDR=$(cat $HMTOKEN_ADDR_FILE | jq --raw-output '.address')
 
 until test -f $KVSTORE_ADDRESS_FILE; do
   echo "waiting for $KVSTORE_ADDRESS_FILE .."

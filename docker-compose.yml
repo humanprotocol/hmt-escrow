@@ -19,7 +19,7 @@ services:
       - hmt
       - kvstore
     volumes:
-      - hmt_token_address:/deployed-hmttoken
+      - hmt_token_address:/deployed-hmtoken
       - eth_kvstore_address:/deployed-kvstore
       - .:/work
 
