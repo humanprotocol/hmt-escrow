@@ -271,6 +271,7 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     AttributeDict({'transactionHash': ...})
     >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
     b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?
     GAS_PAYER = os.getenv('GAS_PAYER')
@@ -311,6 +312,7 @@ def set_pub_key_at_addr(pub_key: str) -> Dict[str, Any]:
     >>> pub_key_to_set = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> set_pub_key_at_addr(pub_key_to_set)  #doctest: +ELLIPSIS
     AttributeDict({'transactionHash': ...})
+
     """
     GAS_PAYER = os.getenv('GAS_PAYER')
     GAS_PAYER_PRIV = os.getenv('GAS_PAYER_PRIV')
