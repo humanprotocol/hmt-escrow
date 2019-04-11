@@ -266,10 +266,11 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     ValueError: environment variable GAS_PAYER required
     >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
     >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    >>> set_pub_key_at_addr('blah')  #doctest: +ELLIPSIS
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> set_pub_key_at_addr(pub_key)  #doctest: +ELLIPSIS
     AttributeDict({'transactionHash': ...})
     >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
-    b'blah'
+    b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?
     GAS_PAYER = os.getenv('GAS_PAYER')
