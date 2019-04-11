@@ -3,10 +3,7 @@ import os
 import sys
 import logging
 
-# For accessing hmt_escrow files locally.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from decimal import *
+from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Tuple, Optional
 
@@ -35,7 +32,7 @@ def status(escrow_contract: Contract, gas_payer: str,
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials, manifest)
-    
+
     After deployment status is "Launched".
     >>> job.launch(rep_oracle_pub_key)
     True
@@ -46,7 +43,7 @@ def status(escrow_contract: Contract, gas_payer: str,
         escrow_contract (Contract): the escrow contract of the Job.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas (int): maximum amount of gas the caller is ready to pay.
-        
+
     Returns:
         Enum: returns the status as an enumeration.
 
@@ -80,7 +77,7 @@ def manifest_url(escrow_contract: Contract,
         escrow_contract (Contract): the escrow contract of the Job.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas (int): maximum amount of gas the caller is ready to pay.
-    
+
     Returns:
         str: returns the manifest url of Job's escrow contract.
 
@@ -113,7 +110,7 @@ def manifest_hash(escrow_contract: Contract,
         escrow_contract (Contract): the escrow contract of the Job.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas (int): maximum amount of gas the caller is ready to pay.
-    
+
     Returns:
         str: returns the manifest hash of Job's escrow contract.
 
@@ -133,7 +130,7 @@ def intermediate_url(escrow_contract: Contract,
         escrow_contract (Contract): the escrow contract of the Job.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas (int): maximum amount of gas the caller is ready to pay.
-    
+
     Returns:
         str: returns the intermediate results url of Job's escrow contract.
 
@@ -155,7 +152,7 @@ def intermediate_hash(escrow_contract: Contract,
         escrow_contract (Contract): the escrow contract of the Job.
         gas_payer (str): an ethereum address paying for the gas costs.
         gas (int): maximum amount of gas the caller is ready to pay.
-    
+
     Returns:
         str: returns the intermediate results hash of Job's escrow contract.
 
@@ -170,8 +167,8 @@ def intermediate_hash(escrow_contract: Contract,
 
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
-    A Job  can be created from a manifest or by accessing an existing escrow contract 
-    from the Ethereum network. The manifest has to follow the Manifest model 
+    A Job  can be created from a manifest or by accessing an existing escrow contract
+    from the Ethereum network. The manifest has to follow the Manifest model
     specification at https://github.com/hCaptcha/hmt-basemodels.
 
     A typical Job goes through the following stages:
@@ -196,7 +193,7 @@ class Job:
                  escrow_manifest: Manifest = None,
                  factory_addr: str = None,
                  escrow_addr: str = None):
-        """Initializes a Job instance with values from a Manifest class and 
+        """Initializes a Job instance with values from a Manifest class and
         checks that the provided credentials are valid. An optional factory
         address is used to initialize the factory of the Job. Alternatively
         a new factory is created if no factory address is provided.
@@ -221,7 +218,7 @@ class Job:
         >>> job = Job(credentials, manifest, factory_addr)
         >>> job.factory_contract.address == factory_addr
         True
-        
+
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job.launch(rep_oracle_pub_key)
         True
@@ -261,7 +258,7 @@ class Job:
             manifest (Manifest): an instance of the Manifest class.
             credentials (Dict[str, str]): an ethereum address and its private key.
             factory_addr (str): an ethereum address of the factory.
-        
+
         Raises:
             ValueError: if the credentials are not valid.
 
@@ -295,7 +292,7 @@ class Job:
 
     def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
-        to IPFS with the public key of the Reputation Oracle and stores 
+        to IPFS with the public key of the Reputation Oracle and stores
         the IPFS url to the escrow contract.
 
         >>> credentials = {
@@ -347,7 +344,7 @@ class Job:
         >>> job.setup()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
-        
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -355,7 +352,7 @@ class Job:
 
         Returns:
             bool: returns True if Job is in Pending state.
-        
+
         Raises:
             AttributeError: if trying to setup the job before deploying it.
 
@@ -504,7 +501,7 @@ class Job:
         False
         >>> job.status()
         <Status.Paid: 4>
-            
+
         Returns:
             bool: returns True if contract has been destroyed successfully.
 
@@ -609,11 +606,11 @@ class Job:
         >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
-        
+
         Args:
             results (Dict): intermediate results of the Recording Oracle.
             pub_key (bytes): public key of the Reputation Oracle.
-        
+
         Returns:
             returns True if contract's state is updated and IPFS upload succeeds.
 
@@ -661,10 +658,10 @@ class Job:
         True
         >>> job.status()
         <Status.Complete: 5>
-        
+
         Returns:
             bool: returns True if the contract has been completed.
-            
+
         """
         txn_func = self.job_contract.functions.complete
         txn_info = {
@@ -685,7 +682,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> job = Job(credentials, manifest)
-        
+
         After deployment status is "Launched".
         >>> job.launch(rep_oracle_pub_key)
         True
@@ -718,7 +715,7 @@ class Job:
             escrow_contract (Contract): the contract to be read.
             gas_payer (str): an ethereum address calling the contract.
             gas (int): maximum amount of gas the caller is ready to pay.
-        
+
         Returns:
             int: returns the balance of the contract in HMT.
 
@@ -820,7 +817,7 @@ class Job:
 
         Returns:
             bool: returns True if IPFS download with the private key succeeds.
-            
+
         """
         final_results_url = self.job_contract.functions.getFinalResultsUrl(
         ).call({
@@ -856,7 +853,7 @@ class Job:
 
         Args:
             manifest (Manifest): a dict representation of the Manifest model.
-        
+
         """
         serialized_manifest = dict(manifest.serialize())
         per_job_cost = Decimal(serialized_manifest['task_bid_price'])
@@ -887,7 +884,7 @@ class Job:
 
         Args:
             **credentials: an unpacked dict of an ethereum address and its private key.
-        
+
         Returns:
             bool: returns True if the calculated and the given address match.
 
@@ -924,7 +921,7 @@ class Job:
         >>> new_job = Job(credentials=credentials, factory_addr=factory_addr, escrow_addr=escrow_addr)
         >>> new_job._factory_contains_escrow(escrow_addr, factory_addr)
         True
-        
+
         Args:
             factory_addr (str): an ethereum address of the escrow factory contract.
             escrow_addr (str): an ethereum address of the escrow contract.
@@ -933,7 +930,7 @@ class Job:
 
         Returns:
             bool: returns True escrow belongs to the factory.
-            
+
         """
         factory_contract = get_factory(factory_addr)
         return factory_contract.functions.hasEscrow(escrow_addr).call({
@@ -969,7 +966,7 @@ class Job:
             credentials (Dict[str, str]): a dict of an ethereum address and its private key.
             factory_addr (Optional[str]): an ethereum address of the escrow factory contract.
             gas (int): maximum amount of gas the caller is ready to pay.
-        
+
         Returns:
             bool: returns a factory contract.
 
@@ -1014,7 +1011,7 @@ class Job:
 
         Args:
             gas (int): maximum amount of gas the caller is ready to pay.
-        
+
         Returns:
             returns True if the last bulk payout has succeeded.
 
@@ -1043,7 +1040,7 @@ class Job:
 
         Args:
             gas (int): maximum amount of gas the caller is ready to pay.
-        
+
         Returns:
             str: returns an escrow contract address.
 
@@ -1068,10 +1065,10 @@ class Job:
 
         Args:
             gas (int): maximum amount of gas the caller is ready to pay.
-        
+
         Returns:
             bool: returns True if a new job was successfully launched to the network.
-        
+
         Raises:
             TimeoutError: if wait_on_transaction times out.
 
