@@ -1,7 +1,7 @@
 #!/bin/bash
 set -exu
 
-KVSTORE_ADDRESS_FILE=/deployed-kvstore/ethkvstore.address.json
+KVSTORE_ADDR_FILE=/deployed-kvstore/ethkvstore.address.json
 HMTOKEN_ADDR_FILE=/deployed-hmtoken/hmt.address.json
 
 
@@ -12,12 +12,12 @@ done
 
 export HMTOKEN_ADDR=$(cat $HMTOKEN_ADDR_FILE | jq --raw-output '.address')
 
-until test -f $KVSTORE_ADDRESS_FILE; do
-  echo "waiting for $KVSTORE_ADDRESS_FILE .."
+until test -f $KVSTORE_ADDR_FILE; do
+  echo "waiting for $KVSTORE_ADDR_FILE .."
   sleep 2
 done
 
-export KVSTORE_CONTRACT=$(cat $KVSTORE_ADDRESS_FILE | jq --raw-output '.address')
+export KVSTORE_CONTRACT=$(cat $KVSTORE_ADDR_FILE | jq --raw-output '.address')
 
 until curl --silent ipfs:5001; do
   echo "sleeping"

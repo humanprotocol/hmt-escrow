@@ -19,8 +19,8 @@ services:
       - hmt
       - kvstore
     volumes:
-      - hmt_token_address:/deployed-hmtoken
-      - eth_kvstore_address:/deployed-kvstore
+      - hmt_token_addr:/deployed-hmtoken
+      - eth_kvstore_addr:/deployed-kvstore
       - .:/work
 
   contracts:
@@ -47,7 +47,7 @@ services:
       - ETH_PORT=8545
     command: sh -c "rm /deployed/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545 && npm run compile && python -m SimpleHTTPServer"
     volumes:
-      - hmt_token_address:/deployed
+      - hmt_token_addr:/deployed
 
   kvstore:
     image: hcaptcha/eth-kvstore
@@ -58,7 +58,7 @@ services:
       - ETH_PORT=8545
       - ADDRESS_OUTPUT_FILENAME=/deployed/ethkvstore.address.json
     volumes:
-      - eth_kvstore_address:/deployed
+      - eth_kvstore_addr:/deployed
 
   ipfs:
     image: ipfs/go-ipfs
@@ -66,5 +66,5 @@ services:
       - 5001:5001
 
 volumes:
-  hmt_token_address:
-  eth_kvstore_address:
+  hmt_token_addr:
+  eth_kvstore_addr:
