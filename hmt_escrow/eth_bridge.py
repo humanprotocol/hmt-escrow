@@ -6,6 +6,7 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
+from hmt_escrow.kvstore_abi import abi as kvstore_abi
 from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
@@ -26,6 +27,11 @@ CONTRACTS = compile_files([
     "{}/SafeMath.sol".format(CONTRACT_FOLDER)
 ])
 
+# See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
+KVSTORE_CONTRACT = Web3.toChecksumAddress(
+    os.getenv("KVSTORE_CONTRACT",
+              "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
+
 
 def get_w3() -> Web3:
     """Set up the web3 provider for serving transactions to the ethereum network.
@@ -33,7 +39,7 @@ def get_w3() -> Web3:
     >>> w3 = get_w3()
     >>> type(w3)
     <class 'web3.main.Web3'>
-    
+
     Returns:
         Web3: returns the web3 provider.
 
@@ -79,10 +85,10 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
         txn_func: the transaction function to be handled.
         *args: all the arguments the function takes.
         **kwargs: the transaction data used to complete the transaction.
-    
+
     Returns:
         AttributeDict: returns the transaction receipt.
-    
+
     Raises:
         TimeoutError: if waiting for the transaction receipt times out.
     """
@@ -115,7 +121,7 @@ def get_contract_interface(contract_entrypoint):
 
     Args:
         contract_entrypoint: the entrypoint of the compiled source.
-    
+
     Returns:
         returns the contract interface containing the contract abi.
 
@@ -164,7 +170,7 @@ def get_escrow(escrow_addr: str) -> Contract:
 
     Returns:
         Contract: returns the Escrow solidity contract.
-        
+
     """
 
     w3 = get_w3()
@@ -191,7 +197,7 @@ def get_factory(factory_addr: Optional[str]) -> Contract:
 
     Returns:
         Contract: returns the EscrowFactory solidity contract.
-        
+
     """
     w3 = get_w3()
     contract_interface = get_contract_interface(
@@ -230,6 +236,103 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
     contract_addr = txn_receipt['contractAddress']
     return contract_addr
+
+
+def get_pub_key_from_addr(wallet_addr: str) -> bytes:
+    """
+    Given a wallet address, uses the kvstore to pull down the public key for a user
+    in the hmt universe, defined by the kvstore key `hmt_pub_key`.  Works with the
+    `set_pub_key_at_address` function.
+
+    Requires that the `GAS_PAYER` environment variable be set to the
+    address that will be paying for the transaction on the ethereum network
+
+    Args:
+        wallet_addr (string): address to get the public key of
+
+    Returns:
+        bytes: the public key in bytes form
+
+    >>> import os
+    >>> from web3 import Web3
+    >>> get_pub_key_from_addr('badaddress')
+    Traceback (most recent call last):
+      File "/usr/lib/python3.6/doctest.py", line 1330, in __run
+        compileflags, 1), test.globs)
+      File "<doctest __main__.get_pub_key_from_addr[2]>", line 1, in <module>
+        get_pub_key_from_addr('blah')
+      File "hmt_escrow/eth_bridge.py", line 268, in get_pub_key_from_addr
+        raise ValueError('environment variable GAS_PAYER required')
+    ValueError: environment variable GAS_PAYER required
+    >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> set_pub_key_at_addr(pub_key)  #doctest: +ELLIPSIS
+    AttributeDict({'transactionHash': ...})
+    >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
+    b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+
+    """
+    # TODO: Should we try to get the checksum address here instead of assuming user will do that?
+    GAS_PAYER = os.getenv('GAS_PAYER')
+
+    if not GAS_PAYER:
+        raise ValueError('environment variable GAS_PAYER required')
+
+    w3 = get_w3()
+
+    kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
+    addr_pub_key = kvstore.functions.get(GAS_PAYER, 'hmt_pub_key').call({
+        'from':
+        GAS_PAYER
+    })
+
+    return bytes(addr_pub_key, encoding='utf-8')
+
+
+def set_pub_key_at_addr(pub_key: str) -> Dict[str, Any]:
+    """
+    Given a public key, this function will use the eth-kvstore to reach out to the blockchain
+    and set the key `hmt_pub_key` on the callers kvstore collection of values, equivalent to the
+    argument passed in here.  This will be used by HMT to encrypt data for the receiver
+
+    See more about kvstore here: https://github.com/hCaptcha/eth-kvstore
+
+    Args:
+        pub_key (string): RSA Public key for this user
+
+    Returns:
+        AttributeDict: receipt of the set transaction on the blockchain
+
+
+    >>> from web3 import Web3
+    >>> import os
+    >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key_to_set = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> set_pub_key_at_addr(pub_key_to_set)  #doctest: +ELLIPSIS
+    AttributeDict({'transactionHash': ...})
+
+    """
+    GAS_PAYER = os.getenv('GAS_PAYER')
+    GAS_PAYER_PRIV = os.getenv('GAS_PAYER_PRIV')
+
+    if not (GAS_PAYER or GAS_PAYER_PRIV):
+        raise ValueError(
+            'environment variable GAS_PAYER AND GAS_PAYER_PRIV required')
+
+    w3 = get_w3()
+    kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
+
+    txn_func = kvstore.functions.set
+    func_args = ['hmt_pub_key', pub_key]
+    txn_info = {
+        "gas_payer": GAS_PAYER,
+        "gas_payer_priv": GAS_PAYER_PRIV,
+        "gas": GAS_LIMIT
+    }
+
+    return handle_transaction(txn_func, *func_args, **txn_info)
 
 
 if __name__ == "__main__":
