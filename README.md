@@ -63,7 +63,7 @@ Credentials must follow the following format:
 Using only the Manifest and Credentials deploys a new factory to the Ethereum network
 with the public key of a known Reputation Oracle.
 ```
->>> job = Job(manifest, credentials)
+>>> job = Job(credentials, manifest)
 >>> job.launch(rep_oracle_pub_key)
 True
 ```
@@ -71,7 +71,7 @@ True
 Providing an existing factory address is done via the Job's class attributes.
 ```
 >>> factory_addr = deploy_factory(**credentials)
->>> job = Job(manifest, credentials, factory_addr)
+>>> job = Job(credentials, manifest, factory_addr)
 >>> job.launch(rep_oracle_pub_key)
 True
 ```
