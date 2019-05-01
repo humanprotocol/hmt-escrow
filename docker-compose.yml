@@ -61,7 +61,8 @@ services:
       - eth_kvstore_addr:/deployed
 
   ipfs:
-    image: ipfs/go-ipfs
+    image: ipfs/go-ipfs:v0.4.20
+    command: daemon --offline
     ports:
       - 5001:5001
 
