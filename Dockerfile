@@ -1,4 +1,4 @@
-FROM ubuntu:artful
+FROM ubuntu:bionic
 
 WORKDIR /work
 RUN apt-get update -y && \
