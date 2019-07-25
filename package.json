@@ -28,8 +28,7 @@
   "license": "MIT",
   "homepage": "https://github.com/hCaptcha/hmt-escrow#readme",
   "dependencies": {
-    "openzeppelin-solidity": "^1.12.0",
-    "truffle": "4.1.13",
+    "truffle": "5.0.28",
     "truffle-hdwallet-provider": "0.0.5"
   },
   "devDependencies": {
@@ -41,7 +40,6 @@
     "eslint-plugin-mocha": "4.11.0",
     "eslint-plugin-node": "5.1.0",
     "eslint-plugin-react": "7.5.1",
-    "solhint": "^1.2.1",
-    "solidity-coverage": "^0.5.11"
+    "solidity-coverage": "^0.6.3"
   }
 }
