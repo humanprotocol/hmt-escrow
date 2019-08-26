@@ -145,7 +145,7 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
     contract = w3.eth.contract(
-        address=hmtoken_addr or HMTOKEN_ADDR, abi=contract_interface['abi'])
+        address=hmtoken_addr, abi=contract_interface['abi'])
     return contract
 
 
