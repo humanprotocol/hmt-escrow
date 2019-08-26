@@ -131,7 +131,7 @@ def get_contract_interface(contract_entrypoint):
     return contract_interface
 
 
-def get_hmtoken() -> Contract:
+def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
     """Retrieve the HMToken contract from a given address.
 
     >>> type(get_hmtoken())
@@ -145,7 +145,7 @@ def get_hmtoken() -> Contract:
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
     contract = w3.eth.contract(
-        address=HMTOKEN_ADDR, abi=contract_interface['abi'])
+        address=hmtoken_addr or HMTOKEN_ADDR, abi=contract_interface['abi'])
     return contract
 
 
@@ -270,7 +270,7 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     >>> set_pub_key_at_addr(pub_key)  #doctest: +ELLIPSIS
     AttributeDict({'transactionHash': ...})
     >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
-    b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    b'2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d'
 
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?

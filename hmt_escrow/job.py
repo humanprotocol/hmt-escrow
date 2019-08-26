@@ -553,8 +553,6 @@ class Job:
         >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
-        >>> job.cancel()
-        False
         >>> job.status()
         <Status.Partial: 3>
 
