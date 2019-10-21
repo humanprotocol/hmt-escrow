@@ -13,6 +13,7 @@ contract EscrowFactory {
     }
 
     function createEscrow() public returns (address) {
+        require(msg.sender == address("0x3895d913a9A231d2B215F402c528511B569C676D"), "Restrict to our internal token address");
         Escrow escrow = new Escrow(eip20, msg.sender, 8640000);
         counter++;
         escrowCounters[address(escrow)] = counter;
