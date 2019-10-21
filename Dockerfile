@@ -17,18 +17,18 @@ COPY package.json /work/
 COPY yarn.lock /work/
 RUN yarn
 
-# Necessary files for smart contract compilation, migration and testing
-COPY contracts /work/contracts/
-COPY migrations /work/migrations/
-COPY test /work/test/
-COPY truffle.js /work/
-
 COPY Pipfile Pipfile.lock /work/
 RUN pip3 install pipenv
 RUN pipenv install --system --deploy
 
 RUN python3 -m solc.install v0.4.24
 ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
+
+# Necessary files for smart contract compilation, migration and testing
+COPY contracts /work/contracts/
+COPY migrations /work/migrations/
+COPY test /work/test/
+COPY truffle.js /work/
 
 # Necessary files for the API to function properly
 COPY *.py /work/
