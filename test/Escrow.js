@@ -47,6 +47,12 @@ contract('Escrow', (accounts) => {
       }
     });
 
+    it('launcher is 0', async () => {
+        const launcher = await Escrow.getLauncher.call();
+        assert.equal(launcher, '0x1413862C2B7054CDbfdc181B83962CB0FC11fD92');
+    });
+
+
     it('transfering money to escrow increases balance', async () => {
       try {
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
