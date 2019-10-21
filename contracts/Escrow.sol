@@ -10,6 +10,7 @@ contract Escrow {
 
     address private reputationOracle;
     address private recordingOracle;
+    address private launcher;
 
     uint256 private reputationOracleStake;
     uint256 private recordingOracleStake;
@@ -36,6 +37,11 @@ contract Escrow {
         canceler = _canceler;
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
+        launcher = msg.sender;
+    }
+
+    function getLauncher() public view returns (address) {
+        return launcher;
     }
 
     function getStatus() public view returns (EscrowStatuses) {

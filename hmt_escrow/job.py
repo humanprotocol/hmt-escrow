@@ -165,6 +165,25 @@ def intermediate_hash(escrow_contract: Contract,
     })
 
 
+def launcher(escrow_contract: Contract, gas_payer: str,
+             gas: int = GAS_LIMIT) -> str:
+    """Retrieves the details on what eth wallet launched the job
+
+    Args:
+        escrow_contract (Contract): the escrow contract of the Job.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+
+    Returns:
+        str: returns the address of who launched the job.
+
+    """
+    return escrow_contract.functions.getLauncher().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
+
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
     A Job  can be created from a manifest or by accessing an existing escrow contract
@@ -224,6 +243,8 @@ class Job:
         True
         >>> job.setup()
         True
+        >>> job.launcher()
+        "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
 
         Initializing an existing Job instance with a factory and escrow address succeeds.
         >>> credentials = {
