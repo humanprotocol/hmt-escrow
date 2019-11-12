@@ -7,7 +7,7 @@ module.exports = {
   networks: {
     development: {
       host: ETH_HOST || '127.0.0.1',
-      port: ETH_PORT || 9545,
+      port: ETH_PORT || 8545,
       network_id: '*',
     },
     live: {
