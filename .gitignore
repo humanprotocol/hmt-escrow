@@ -103,6 +103,10 @@ ENV/
 # vim
 *.swp
 
+# emacs
+*~
+*[#]*
+
 .idea
 venv*
 het/secrets.json
@@ -119,3 +123,4 @@ build/
 node_modules/
 coverage/
 coverage.json
+
