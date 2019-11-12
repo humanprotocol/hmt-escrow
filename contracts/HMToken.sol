@@ -92,7 +92,7 @@ contract HMToken is HMTokenInterface {
 
     function transferBulk(address[] _tos, uint256[] _values, uint256 _txId) public returns (uint256 _bulkCount) {
         require(_tos.length == _values.length, "Amount of recipients and values don't match");
-        require(_tos.length < BULK_MAX_COUNT, "Too many recipients");
+        require(_tos.length <= BULK_MAX_COUNT, "Too many recipients");
 
         uint256 _bulkValue = 0;
         for (uint j = 0; j < _tos.length; ++j) {
