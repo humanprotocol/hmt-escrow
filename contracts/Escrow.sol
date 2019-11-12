@@ -29,7 +29,6 @@ contract Escrow {
 
     uint private expiration;
 
-    uint256[] private finalAmounts;
     bool private bulkPaid;
 
     constructor(address _eip20, address _canceler, uint _expiration) public {
@@ -107,7 +106,7 @@ contract Escrow {
         uint256 _recordingOracleStake,
         string _url,
         string _hash
-    ) public
+    ) external
     {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == canceler, "Address calling not the canceler");
@@ -132,7 +131,7 @@ contract Escrow {
         emit Pending(manifestUrl, manifestHash);
     }
 
-    function abort()  public {
+    function abort() external {
         require(msg.sender == canceler, "Address calling not the canceler");
         require(status != EscrowStatuses.Partial, "Escrow in Partial status state");
         require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
@@ -140,7 +139,7 @@ contract Escrow {
         selfdestruct(canceler);
     }
 
-    function cancel() public returns (bool) {
+    function cancel() external returns (bool) {
         require(msg.sender == canceler, "Address calling not the canceler");
         require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
@@ -154,7 +153,7 @@ contract Escrow {
         return success;
     }
 
-    function complete() public {
+    function complete() external {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
 
@@ -163,7 +162,7 @@ contract Escrow {
         }
     }
 
-    function storeResults(string _url, string _hash) public {
+    function storeResults(string _url, string _hash) external {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == recordingOracle, "Address calling not the recording oracle");
         require(
@@ -191,6 +190,8 @@ contract Escrow {
         require(status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
+        uint256[] memory finalAmounts = new uint[](_amounts.length);
+
         bulkPaid = false;
 
         uint256 aggregatedBulkAmount = 0;
@@ -205,10 +206,9 @@ contract Escrow {
         finalResultsUrl = _url;
         finalResultsHash = _hash;
 
-        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
+        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts, finalAmounts);
         HMTokenInterface token = HMTokenInterface(eip20);
         if (token.transferBulk(_recipients, finalAmounts, _txId) == _recipients.length) {
-            delete finalAmounts;
             bulkPaid = token.transfer(reputationOracle, reputationOracleFee);
             bulkPaid = token.transfer(recordingOracle, recordingOracleFee);
         }
@@ -225,7 +225,7 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] _amounts) public returns (uint256, uint256) {
+    function finalizePayouts(uint256[] memory _amounts, uint256[] memory _finalAmounts) public returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {
@@ -234,7 +234,7 @@ contract Escrow {
             uint256 amount = _amounts[j].sub(singleReputationOracleFee).sub(singleRecordingOracleFee);
             reputationOracleFee = reputationOracleFee.add(singleReputationOracleFee);
             recordingOracleFee = recordingOracleFee.add(singleRecordingOracleFee);
-            finalAmounts.push(amount);
+            _finalAmounts[j] = amount;
         }
         return (reputationOracleFee, recordingOracleFee);
     }
