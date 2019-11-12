@@ -9,6 +9,7 @@ const url = 'http://google.com/fake';
 const hash = 'fakehash';
 
 const gasReport = [];
+let tx;
 
 contract('Escrow', (accounts) => {
   beforeEach(async () => {
@@ -22,10 +23,11 @@ contract('Escrow', (accounts) => {
   describe('calling bulkPayOut', () => {
     it('pays each recipient their corresponding amount', async () => {
       await HMT.transfer(Escrow.address, 1000, { from: accounts[0] });
-      await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: accounts[0] });
+      tx = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: accounts[0] });
+      gasReport.push(['Setup:', tx.receipt.gasUsed]);
       const recipients = Array(100).fill(accounts[3]);
       const amounts = Array(100).fill(1);
-      const tx = await Escrow.bulkPayOut(recipients, amounts, url, hash, '000', { from: reputationOracle });
+      tx = await Escrow.bulkPayOut(recipients, amounts, url, hash, '000', { from: reputationOracle });
       gasReport.push(['BulkPayout 100 recipients:', tx.receipt.gasUsed]);
     });
   });
