@@ -92,13 +92,13 @@ contract HMToken is HMTokenInterface {
 
     function transferBulk(address[] _tos, uint256[] _values, uint256 _txId) public returns (uint256 _bulkCount) {
         require(_tos.length == _values.length, "Amount of recipients and values don't match");
-        require(_tos.length < BULK_MAX_COUNT, "Too many recipients");
+        require(_tos.length <= BULK_MAX_COUNT, "Too many recipients");
 
         uint256 _bulkValue = 0;
         for (uint j = 0; j < _tos.length; ++j) {
             _bulkValue = _bulkValue.add(_values[j]);
         }
-        require(_bulkValue < BULK_MAX_VALUE, "Bulk value too high");
+        require(_bulkValue <= BULK_MAX_VALUE, "Bulk value too high");
 
         _bulkCount = 0;
         bool _success;
@@ -114,13 +114,13 @@ contract HMToken is HMTokenInterface {
 
     function approveBulk(address[] _spenders, uint256[] _values, uint256 _txId) public returns (uint256 _bulkCount) {
         require(_spenders.length == _values.length, "Amount of spenders and values don't match");
-        require(_spenders.length < BULK_MAX_COUNT, "Too many spenders");
+        require(_spenders.length <= BULK_MAX_COUNT, "Too many spenders");
 
         uint256 _bulkValue = 0;
         for (uint j = 0; j < _spenders.length; ++j) {
             _bulkValue = _bulkValue.add(_values[j]);
         }
-        require(_bulkValue < BULK_MAX_VALUE, "Bulk value too high");
+        require(_bulkValue <= BULK_MAX_VALUE, "Bulk value too high");
 
         _bulkCount = 0;
         bool _success;
