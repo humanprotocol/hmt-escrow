@@ -346,6 +346,8 @@ class Job:
 
         # Upload the manifest to IPFS.
         (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
+        ipns_url = ipns_publish(hash_)
+
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
         return self.status() == Status.Launched and self.balance() == 0

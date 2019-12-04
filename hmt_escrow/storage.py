@@ -113,6 +113,43 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
         raise e
     return hash_, key
 
+@timeout_decorator.timeout(20)
+def ipns_publish(hash_: str) -> str:
+    """Publishes IPFS hash to IPNS (aka binds a IPFS hash to a IPFS node's ID)
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> ipns_publish(hash_)
+    True
+
+    Args:
+        hash_ (str): The ipfs hash to bind to the ipfs node. (ipfs node id is the ipns link)
+
+    Returns:
+        str: IPNS url
+    
+    Raises:
+        Exception: if IPNS operation fails.
+
+    """
+    ipnsLink = ''
+    try:
+        # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
+        IPFS_CLIENT.name.publish('https://ipfs.io/ipfs/' + hash_)
+
+        # get ipns link ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.id
+        ipnsLink = 'https://ipfs.io/ipns/' + IPFS_CLIENT.id()['ID']
+        LOG.debug("IPNS Link: {}".format(ipnsLink))
+    except Exception as e:
+        LOG.warning("IPNS failed because of: {}".format(e))
+        raise e
+
+    return ipnsLink
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
