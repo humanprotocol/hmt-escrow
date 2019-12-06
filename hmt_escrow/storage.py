@@ -70,9 +70,28 @@ def download(key: str, private_key: bytes) -> Dict:
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
+def createNewIpnsLink(name: str) -> str:
+    """Creates a new IPFS Id. Pass in the escrow address, returns the IPNS url
 
+    >>> createIpnsUrl().split('/')[-1] == IPFS_CLIENT.id()['ID']
+    True
+
+    Returns:
+        str: Returns the IPNS url
+    """
+    key = IPFS_CLIENT.key.gen(name.lower(), 'ed25519')
+    return key['Id']
+
+def getIpnsUrl(name: str) -> str:
+    keys = IPFS_CLIENT.key.list()
+    try:
+        return 'https://ipfs.io/ipns/' + list(filter(lambda x: x['Name'] == name.lower(), keys))[0]['Id']
+    except Exception as e:
+        return ''
+    return ''
+    
 @timeout_decorator.timeout(20)
-def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -89,67 +108,41 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     True
 
     Args:
+        oracle (str): Either pass in 'repO' or 'recO' depending on which oracle you are. 
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
 
     Returns:
-        Tuple[str, str]: returns the contents of the filename which was previously uploaded.
+        Tuple[str, str]:  returns the contents of the filename which was previously uploaded.
     
     Raises:
         Exception: if adding bytes with IPFS fails.
 
     """
+
     try:
         manifest_ = json.dumps(msg, sort_keys=True)
     except Exception as e:
         LOG.error("Can't extract the json from the dict")
         raise e
-
+    
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
-        key = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
+        ipfsFileHash = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
-    return hash_, key
 
-@timeout_decorator.timeout(20)
-def ipns_publish(hash_: str) -> str:
-    """Publishes IPFS hash to IPNS (aka binds a IPFS hash to a IPFS node's ID)
+    if ipnsKeypairName !== '':
+        try:
+            # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
+            # TODO: is it faster if 
+            IPFS_CLIENT.name.publish('/ipfs/' + ipfsFileHash, key=ipnsKeypairName.lower())
+        except Exception as e:
+            LOG.warning("IPNS failed because of: {}".format(e))
+            raise e
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> ipns_publish(hash_)
-    True
-
-    Args:
-        hash_ (str): The ipfs hash to bind to the ipfs node. (ipfs node id is the ipns link)
-
-    Returns:
-        str: IPNS url
-    
-    Raises:
-        Exception: if IPNS operation fails.
-
-    """
-    ipnsLink = ''
-    try:
-        # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
-        IPFS_CLIENT.name.publish('https://ipfs.io/ipfs/' + hash_)
-
-        # get ipns link ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.id
-        ipnsLink = 'https://ipfs.io/ipns/' + IPFS_CLIENT.id()['ID']
-        LOG.debug("IPNS Link: {}".format(ipnsLink))
-    except Exception as e:
-        LOG.warning("IPNS failed because of: {}".format(e))
-        raise e
-
-    return ipnsLink
+    return hash_, ipfsFileHash
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
