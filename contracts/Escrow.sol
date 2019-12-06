@@ -26,11 +26,14 @@ contract Escrow {
 
     string private finalResultsUrl;
     string private finalResultsHash;
-
+ 
     uint private expiration;
 
     uint256[] private finalAmounts;
     bool private bulkPaid;
+
+    string private recordingOracleIpnsHash;
+    string private reputationOracleIpnsHash;
 
     constructor(address _eip20, address _canceler, uint _expiration) public {
         eip20 = _eip20;
@@ -97,6 +100,14 @@ contract Escrow {
         return bulkPaid;
     }
 
+    function getRecordingOracleIpnsHash() public view returns (string) {
+        return recordingOracleIpnsHash;
+    }
+
+    function getReputationOracleIpnsHash() public view returns (string) {
+        return reputationOracleIpnsHash;
+    }
+
     // The escrower puts the Token in the contract without an agentless
     // and assigsn a reputation oracle to payout the bounty of size of the
     // amount specified
@@ -105,6 +116,8 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
+        string _recordingOracleIpnsHash,
+        string _reputationOracleIpnsHash,
         string _url,
         string _hash
     ) public
@@ -126,6 +139,8 @@ contract Escrow {
         recordingOracleStake = _recordingOracleStake;
         bulkPaid = false;
 
+        recordingOracleIpnsHash  = _recordingOracleIpnsHash;
+        reputationOracleIpnsHash = _reputationOracleIpnsHash;
         manifestUrl = _url;
         manifestHash = _hash;
         status = EscrowStatuses.Pending;
@@ -163,6 +178,7 @@ contract Escrow {
         }
     }
 
+    // recording oracle is the intenral hash/url
     function storeResults(string _url, string _hash) public {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == recordingOracle, "Address calling not the recording oracle");
@@ -202,8 +218,12 @@ contract Escrow {
             return bulkPaid;
         }
 
-        finalResultsUrl = _url;
-        finalResultsHash = _hash;
+        bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
+        if (writeOnchain) {
+          // Be sure they are both zero if one of them is
+          finalResultsUrl = _url;
+          finalResultsHash = _hash;
+        }
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
