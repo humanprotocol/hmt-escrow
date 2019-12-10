@@ -35,7 +35,7 @@ IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
 
 @timeout_decorator.timeout(20)
 def download(key: str, private_key: bytes) -> Dict:
-    """Download a key, decrypt it, and output it as a binary string.
+    """Download a ipfs key/hash-location, decrypt it, and output it as a binary string.
 
     >>> credentials = {
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
@@ -71,12 +71,17 @@ def download(key: str, private_key: bytes) -> Dict:
     return json.loads(msg)
 
 def createNewIpnsLink(name: str) -> str:
-    """Creates a new IPFS Id. Pass in the escrow address, returns the IPNS url
+    """Creates a new IPFS Id. The IPNS links are managed by key value system.
+       Pass in the key (e.g. 'intermediate-results-' + self.job_contract.address), 
+       then creats the ipns link
 
     >>> import random 
     >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
     >>> createNewIpnsLink(keyName) != ''
     True
+
+    Args:
+        name (str): Name to call the ipns link. Retrieve the link w/ same name
 
     Returns:
         str: Returns the IPNS url
@@ -86,6 +91,19 @@ def createNewIpnsLink(name: str) -> str:
     return getIpnsLink(name)
 
 def getIpnsLink(name: str) -> str:
+    """Get the ipns link with the name of it which we remember it by
+
+    >>> import random 
+    >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> createNewIpnsLink(keyName) != ''
+    True
+
+    Args:
+        name (str): Name we call ipns link
+
+    Returns:
+        str: Returns the IPNS url
+    """
     keys = IPFS_CLIENT.key.list()
     try:
         return 'https://ipfs.io/ipns/' + list(filter(lambda x: x['Name'] == name.lower(), keys['Keys']))[0]['Id']
@@ -111,9 +129,9 @@ def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, 
     True
 
     Args:
-        oracle (str): Either pass in 'repO' or 'recO' depending on which oracle you are. 
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
+        ipnsKeypairName (str): The name of the ipns link. 
 
     Returns:
         Tuple[str, str]:  returns the contents of the filename which was previously uploaded.

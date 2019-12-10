@@ -449,6 +449,8 @@ class Job:
             payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts.
             results (Dict): the final answer results stored by the Reputation Oracle.
             pub_key (bytes): the public key of the Reputation Oracle.
+            gas (int): Optional, gas limit
+            storeOnchain (bool): Store data onchain. Saves 10k gas
 
         Returns:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
@@ -621,6 +623,8 @@ class Job:
         Args:
             results (Dict): intermediate results of the Recording Oracle.
             pub_key (bytes): public key of the Reputation Oracle.
+            gas (int): gas limit
+            storeOnchain (bool): false is don't run the blockchain fn.
 
         Returns:
             returns True if contract's state is updated and IPFS upload succeeds.
