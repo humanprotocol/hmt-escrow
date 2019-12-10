@@ -73,19 +73,22 @@ def download(key: str, private_key: bytes) -> Dict:
 def createNewIpnsLink(name: str) -> str:
     """Creates a new IPFS Id. Pass in the escrow address, returns the IPNS url
 
-    >>> createIpnsUrl().split('/')[-1] == IPFS_CLIENT.id()['ID']
+    >>> import random 
+    >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> createNewIpnsLink(keyName) != ''
     True
 
     Returns:
         str: Returns the IPNS url
     """
-    key = IPFS_CLIENT.key.gen(name.lower(), 'ed25519')
-    return key['Id']
+    name = name.lower()
+    key = IPFS_CLIENT.key.gen(name, 'ed25519')
+    return getIpnsLink(name)
 
-def getIpnsUrl(name: str) -> str:
+def getIpnsLink(name: str) -> str:
     keys = IPFS_CLIENT.key.list()
     try:
-        return 'https://ipfs.io/ipns/' + list(filter(lambda x: x['Name'] == name.lower(), keys))[0]['Id']
+        return 'https://ipfs.io/ipns/' + list(filter(lambda x: x['Name'] == name.lower(), keys['Keys']))[0]['Id']
     except Exception as e:
         return ''
     return ''
@@ -133,11 +136,11 @@ def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, 
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
 
-    if ipnsKeypairName !== '':
+    if ipnsKeypairName != '':
         try:
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
             # TODO: is it faster if 
-            IPFS_CLIENT.name.publish('/ipfs/' + ipfsFileHash, key=ipnsKeypairName.lower())
+            IPFS_CLIENT.name.publish('/ipfs/' + ipfsFileHash, key=ipnsKeypairName.lower(), allow_offline=True)
         except Exception as e:
             LOG.warning("IPNS failed because of: {}".format(e))
             raise e

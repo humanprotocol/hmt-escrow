@@ -13,7 +13,7 @@ from eth_keys import keys
 from eth_utils import decode_hex
 
 from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
-from hmt_escrow.storage import download, upload, getIpnsUrl, createNewIpnsLink
+from hmt_escrow.storage import download, upload, getIpnsLink, createNewIpnsLink
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
@@ -164,26 +164,6 @@ def intermediate_hash(escrow_contract: Contract,
         gas
     })
 
-
-def launcher(escrow_contract: Contract, gas_payer: str,
-             gas: int = GAS_LIMIT) -> str:
-    """Retrieves the details on what eth wallet launched the job
-
-    Args:
-        escrow_contract (Contract): the escrow contract of the Job.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-
-    Returns:
-        str: returns the address of who launched the job.
-
-    """
-    return escrow_contract.functions.getLauncher().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
     A Job  can be created from a manifest or by accessing an existing escrow contract
@@ -243,8 +223,8 @@ class Job:
         True
         >>> job.setup()
         True
-        >>> job.launcher()
-        "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> len(job.launcher(job, credentials['gas_payer'])) == 42  # is valid address
+        True
 
         Initializing an existing Job instance with a factory and escrow address succeeds.
         >>> credentials = {
@@ -474,7 +454,7 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, key='final-results-' + self.job_contract.address)
+        (hash_, url) = upload(results, pub_key, ipnsKeypairName='final-results-' + self.job_contract.address)
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
@@ -646,7 +626,7 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, key='intermediate-results-' + self.job_contract.address)
+        (hash_, url) = upload(results, pub_key, ipnsKeypairName='intermediate-results-' + self.job_contract.address)
 
         if storeOnchain:
             txn_func = self.job_contract.functions.storeResults
@@ -858,6 +838,27 @@ class Job:
             'gas': gas
         })
         return download(final_results_url, priv_key)
+
+    def getIpnsUrl(self, keyName: str) -> str:
+        return getIpnsLink(keyName)
+
+    def launcher(self, escrow_contract: Contract, gas_payer: str,
+                 gas: int = GAS_LIMIT) -> str:
+        """Retrieves the details on what eth wallet launched the job
+        
+        Args:
+            escrow_contract (Contract): the escrow contract of the Job.
+            gas_payer (str): an ethereum address paying for the gas costs.
+            gas (int): maximum amount of gas the caller is ready to pay.
+
+        Returns:
+            str: returns the address of who launched the job.
+        """
+        return escrow_contract.job_contract.functions.getLauncher().call({
+            'from': gas_payer,
+            'gas': gas
+        })
+
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
@@ -1094,7 +1095,7 @@ class Job:
         ... }
         >>> job = Job(credentials, manifest)
         >>> addr = job._create_escrow()
-        >>> getIpnsUrl(addr) != ''
+        >>> getIpnsLink(addr) == ''
         True
 
         Args:
@@ -1117,7 +1118,6 @@ class Job:
         }
         handle_transaction(txn_func, *func_args, **txn_info)
         job_addr = self._last_escrow_addr()
-        client.key.rename(tmpName, job_addr)
         return job_addr
 
 
