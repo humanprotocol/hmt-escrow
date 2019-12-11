@@ -4,8 +4,11 @@ import "./SafeMath.sol";
 
 contract Escrow {
     using SafeMath for uint256;
-    event IntermediateStorage(string _url, string _hash);
+
+    event RecordingOracleResults(string url, string hash);
+
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
+
     EscrowStatuses private status;
 
     address private reputationOracle;
@@ -21,19 +24,21 @@ contract Escrow {
     string private manifestUrl;
     string private manifestHash;
 
-    string private intermediateResultsUrl;
-    string private intermediateResultsHash;
+    // aka internal, not customer results
+    string private recordingOracleResultsUrl;
+    string private recordingOracleResultsHash;
 
-    string private finalResultsUrl;
-    string private finalResultsHash;
- 
+    // aka customer results
+    string private reputationOracleResultsUrl;
+    string private reputationOracleResultsHash;
+
     uint private expiration;
 
-    uint256[] private finalAmounts;
+    uint256[] private reputationOraclePayouts;
     bool private bulkPaid;
 
-    string private recordingOracleIpnsHash;
-    string private reputationOracleIpnsHash;
+    string private recordingOracleIpnsId;
+    string private reputationOracleIpnsId;
 
     constructor(address _eip20, address _canceler, uint _expiration) public {
         eip20 = _eip20;
@@ -80,32 +85,32 @@ contract Escrow {
         return manifestUrl;
     }
 
-    function getIntermediateResultsUrl() public view returns (string) {
-        return intermediateResultsUrl;
+    function getRecordingOracleResultsUrl() public view returns (string) {
+        return recordingOracleResultsUrl;
     }
 
-    function getIntermediateResultsHash() public view returns (string) {
-        return intermediateResultsHash;
+    function getRecordingOracleResultsHash() public view returns (string) {
+        return recordingOracleResultsHash;
     }
 
-    function getFinalResultsUrl() public view returns (string) {
-        return finalResultsUrl;
+    function getReputationOracleResultsUrl() public view returns (string) {
+        return reputationOracleResultsUrl;
     }
 
-    function getFinalResultsHash() public view returns (string) {
-        return finalResultsHash;
+    function getReputationOracleResultsHash() public view returns (string) {
+        return reputationOracleResultsHash;
     }
 
     function getBulkPaid() public view returns (bool) {
         return bulkPaid;
     }
 
-    function getRecordingOracleIpnsHash() public view returns (string) {
-        return recordingOracleIpnsHash;
+    function getRecordingOracleIpnsId() public view returns (string) {
+        return recordingOracleIpnsId;
     }
 
-    function getReputationOracleIpnsHash() public view returns (string) {
-        return reputationOracleIpnsHash;
+    function getReputationOracleIpnsId() public view returns (string) {
+        return reputationOracleIpnsId;
     }
 
     // The escrower puts the Token in the contract without an agentless
@@ -116,8 +121,8 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
-        string _recordingOracleIpnsHash,
-        string _reputationOracleIpnsHash,
+        string _recordingOracleIpnsId,
+        string _reputationOracleIpnsId,
         string _url,
         string _hash
     ) public
@@ -139,8 +144,8 @@ contract Escrow {
         recordingOracleStake = _recordingOracleStake;
         bulkPaid = false;
 
-        recordingOracleIpnsHash  = _recordingOracleIpnsHash;
-        reputationOracleIpnsHash = _reputationOracleIpnsHash;
+        recordingOracleIpnsId  = _recordingOracleIpnsId;
+        reputationOracleIpnsId = _reputationOracleIpnsId;
         manifestUrl = _url;
         manifestHash = _hash;
         status = EscrowStatuses.Pending;
@@ -187,14 +192,14 @@ contract Escrow {
             status == EscrowStatuses.Partial,
             "Escrow not in Pending or Partial status state"
         );
-        intermediateResultsUrl = _url;
-        intermediateResultsHash = _hash;
-        emit IntermediateStorage(_url, _hash);
+        recordingOracleResultsUrl = _url;
+        recordingOracleResultsHash = _hash;
+        emit RecordingOracleResults(_url, _hash);
     }
 
     function bulkPayOut(
         address[] _recipients,
-        uint256[] _amounts,
+        uint256[] _payouts,
         string _url,
         string _hash,
         uint256 _txId
@@ -209,26 +214,26 @@ contract Escrow {
 
         bulkPaid = false;
 
-        uint256 aggregatedBulkAmount = 0;
-        for (uint256 i; i < _amounts.length; i++) {
-            aggregatedBulkAmount += _amounts[i];
+        uint256 aggregatedBulkPayout = 0;
+        for (uint256 i; i < _payouts.length; i++) {
+            aggregatedBulkPayout += _payouts[i];
         }
 
-        if (balance < aggregatedBulkAmount) {
+        if (balance < aggregatedBulkPayout) {
             return bulkPaid;
         }
 
         bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
         if (writeOnchain) {
           // Be sure they are both zero if one of them is
-          finalResultsUrl = _url;
-          finalResultsHash = _hash;
+          reputationOracleResultsUrl = _url;
+          reputationOracleResultsHash = _hash;
         }
 
-        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
+        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_payouts);
         HMTokenInterface token = HMTokenInterface(eip20);
-        if (token.transferBulk(_recipients, finalAmounts, _txId) == _recipients.length) {
-            delete finalAmounts;
+        if (token.transferBulk(_recipients, reputationOraclePayouts, _txId) == _recipients.length) {
+            delete reputationOraclePayouts;
             bulkPaid = token.transfer(reputationOracle, reputationOracleFee);
             bulkPaid = token.transfer(recordingOracle, recordingOracleFee);
         }
@@ -245,16 +250,16 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] _amounts) public returns (uint256, uint256) {
+    function finalizePayouts(uint256[] _payouts) public returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
-        for (uint256 j; j < _amounts.length; j++) {
-            uint256 singleReputationOracleFee = reputationOracleStake.mul(_amounts[j]).div(100);
-            uint256 singleRecordingOracleFee = recordingOracleStake.mul(_amounts[j]).div(100);
-            uint256 amount = _amounts[j].sub(singleReputationOracleFee).sub(singleRecordingOracleFee);
+        for (uint256 j; j < _payouts.length; j++) {
+            uint256 singleReputationOracleFee = reputationOracleStake.mul(_payouts[j]).div(100);
+            uint256 singleRecordingOracleFee = recordingOracleStake.mul(_payouts[j]).div(100);
+            uint256 _payout = _payouts[j].sub(singleReputationOracleFee).sub(singleRecordingOracleFee);
             reputationOracleFee = reputationOracleFee.add(singleReputationOracleFee);
             recordingOracleFee = recordingOracleFee.add(singleRecordingOracleFee);
-            finalAmounts.push(amount);
+            reputationOraclePayouts.push(_payout);
         }
         return (reputationOracleFee, recordingOracleFee);
     }
