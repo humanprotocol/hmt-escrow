@@ -121,10 +121,10 @@ def manifest_hash(escrow_contract: Contract,
     })
 
 
-def recording_oracle_url(escrow_contract: Contract,
+def intermediate_url(escrow_contract: Contract,
                      gas_payer: str,
                      gas: int = GAS_LIMIT) -> str:
-    """Retrieves the deployed recording oracle results url uploaded on Job initialization.
+    """Retrieves the deployed intermediate results url uploaded on Job initialization.
 
     Args:
         escrow_contract (Contract): the escrow contract of the Job.
@@ -132,10 +132,10 @@ def recording_oracle_url(escrow_contract: Contract,
         gas (int): maximum amount of gas the caller is ready to pay.
 
     Returns:
-        str: returns the recording oracle results url of Job's escrow contract.
+        str: returns the intermediate results url of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getRecordingOracleResultsUrl().call({
+    return escrow_contract.functions.getIntermediateResultsUrl().call({
         'from':
         gas_payer,
         'gas':
@@ -143,10 +143,10 @@ def recording_oracle_url(escrow_contract: Contract,
     })
 
 
-def recording_oracle_hash(escrow_contract: Contract,
+def intermediate_hash(escrow_contract: Contract,
                       gas_payer: str,
                       gas: int = GAS_LIMIT) -> str:
-    """Retrieves the deployed recording oracle results hash uploaded on Job initialization.
+    """Retrieves the deployed intermediate results hash uploaded on Job initialization.
 
     Args:
         escrow_contract (Contract): the escrow contract of the Job.
@@ -154,10 +154,10 @@ def recording_oracle_hash(escrow_contract: Contract,
         gas (int): maximum amount of gas the caller is ready to pay.
 
     Returns:
-        str: returns the recording oracle results hash of Job's escrow contract.
+        str: returns the intermediate results hash of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getRecordingOracleResultsHash().call({
+    return escrow_contract.functions.getIntermediateResultsHash().call({
         'from':
         gas_payer,
         'gas':
@@ -381,8 +381,8 @@ class Job:
         }
         handle_transaction(txn_func, *func_args, **txn_info)
 
-        recOKeyName = 'recording-oracle-results-' + self.job_contract.address
-        repOKeyName = 'reputation-oracle-results-' + self.job_contract.address
+        recOKeyName = 'intermediate-results-' + self.job_contract.address
+        repOKeyName = 'final-results-' + self.job_contract.address
         recOIpnsHash = createNewIpnsLink(recOKeyName)
         repOIpnsHash = createNewIpnsLink(repOKeyName)
 
@@ -408,7 +408,7 @@ class Job:
                     gas: int = GAS_LIMIT,
                     storeOnchain: bool = True) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
-        repO results are uploaded to IPFS and contract's state is updated to Partial or Paid
+        final results are uploaded to IPFS and contract's state is updated to Partial or Paid
         depending on contract's balance.
 
         >>> credentials = {
@@ -447,7 +447,7 @@ class Job:
 
         Args:
             payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts.
-            results (Dict): the repO answer results stored by the Reputation Oracle.
+            results (Dict): the final answer results stored by the Reputation Oracle.
             pub_key (bytes): the public key of the Reputation Oracle.
             gas (int): Optional, gas limit
             storeOnchain (bool): Store data onchain. Saves 10k gas
@@ -456,7 +456,7 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, ipnsKeypairName='reputation-oracle-results-' + self.job_contract.address)
+        (hash_, url) = upload(results, pub_key, ipnsKeypairName='final-results-' + self.job_contract.address)
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
@@ -593,12 +593,12 @@ class Job:
         handle_transaction(txn_func, *[], **txn_info)
         return self.status() == Status.Cancelled
 
-    def store_recording_oracle_results(self,
+    def store_intermediate_results(self,
                                    results: Dict,
                                    pub_key: bytes,
                                    gas: int = GAS_LIMIT,
                                    storeOnchain: bool = True) -> bool:
-        """Recording Oracle stores recording oracle results with Reputation Oracle's public key to IPFS
+        """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
         and updates the contract's state.
 
         >>> credentials = {
@@ -612,16 +612,16 @@ class Job:
         >>> job.setup()
         True
 
-        Storing recording oracle results uploads and updates results url correctly.
+        Storing intermediate results uploads and updates results url correctly.
         >>> results = {"results": True}
-        >>> job.store_recording_oracle_results(results, rep_oracle_pub_key)
+        >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
         >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        >>> job.recording_oracle_results(rep_oracle_priv_key)
+        >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
 
         Args:
-            results (Dict): recording oracle results of the Recording Oracle.
+            results (Dict): intermediate results of the Recording Oracle.
             pub_key (bytes): public key of the Reputation Oracle.
             gas (int): gas limit
             storeOnchain (bool): false is don't run the blockchain fn.
@@ -630,7 +630,7 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, ipnsKeypairName='recording-oracle-results-' + self.job_contract.address)
+        (hash_, url) = upload(results, pub_key, ipnsKeypairName='intermediate-results-' + self.job_contract.address)
 
         if storeOnchain:
             txn_func = self.job_contract.functions.storeResults
@@ -772,9 +772,9 @@ class Job:
         """
         return download(self.manifest_url, priv_key)
 
-    def recording_oracle_results(self, priv_key: bytes,
+    def intermediate_results(self, priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
-        """Reputation Oracle retrieves the recording oracle results stored by the Recording Oracle.
+        """Reputation Oracle retrieves the intermediate results stored by the Recording Oracle.
 
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
@@ -789,10 +789,10 @@ class Job:
 
         Trying to download the results with the wrong key fails.
         >>> results = {"results": True}
-        >>> job.store_recording_oracle_results(results, rep_oracle_pub_key)
+        >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
         >>> rep_oracle_false_priv_key = b"486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
-        >>> job.recording_oracle_results(rep_oracle_false_priv_key)
+        >>> job.intermediate_results(rep_oracle_false_priv_key)
         Traceback (most recent call last):
         p2p.exceptions.DecryptionError: Failed to verify tag
 
@@ -803,12 +803,12 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        recording_oracle_results_url = recording_oracle_url(self.job_contract,
+        intermediate_results_url = intermediate_url(self.job_contract,
                                                     self.gas_payer)
-        return download(recording_oracle_results_url, priv_key)
+        return download(intermediate_results_url, priv_key)
 
-    def reputation_oracle_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
-        """Retrieves the reputation oracle results stored by the Reputation Oracle.
+    def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
+        """Retrieves the final results stored by the Reputation Oracle.
 
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
@@ -821,12 +821,12 @@ class Job:
         >>> job.setup()
         True
 
-        Getting repO results succeeds after payout.
+        Getting final results succeeds after payout.
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
         >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
         True
         >>> rep_oracle_priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        >>> job.reputation_oracle_results(rep_oracle_priv_key)
+        >>> job.final_results(rep_oracle_priv_key)
         {'results': 0}
 
         Args:
@@ -836,12 +836,12 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        reputation_oracle_results_url = self.job_contract.functions.getReputationOracleResultsUrl(
+        final_results_url = self.job_contract.functions.getFinalResultsUrl(
         ).call({
             'from': self.gas_payer,
             'gas': gas
         })
-        return download(reputation_oracle_results_url, priv_key)
+        return download(final_results_url, priv_key)
 
     def getIpnsUrl(self, keyName: str) -> str:
         return getIpnsLink(keyName)

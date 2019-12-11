@@ -7,8 +7,8 @@ let reputationOracle;
 let recordingOracle;
 const url = 'http://google.com/fake';
 const hash = 'fakehash';
-const recOIpns = '38293298329829';
-const repOIpns = '01103103882222';
+const recOIpns = 'https://recO.io';
+const repOIpns = 'https://repO.com';
 
 contract('Escrow', (accounts) => {
   beforeEach(async () => {
@@ -130,8 +130,8 @@ contract('Escrow', (accounts) => {
       const contractRecordingOracle = await Escrow.getRecordingOracle.call();
       const contractManifestUrl = await Escrow.getManifestUrl.call();
       const contractManifestHash = await Escrow.getManifestHash.call();
-      const _recOIpns = await Escrow.getRecordingOracleIpnsId.call();
-      const _repOIpns = await Escrow.getReputationOracleIpnsId.call();
+      const _recOIpns = await Escrow.getRecordingOracleIpnsHash.call();
+      const _repOIpns = await Escrow.getReputationOracleIpnsHash.call();
 
       assert.equal(contractReputationOracle, reputationOracle);
       assert.equal(contractRecordingOracle, recordingOracle);
@@ -193,8 +193,10 @@ contract('Escrow', (accounts) => {
       try {
         await Escrow.setup(reputationOracle, recordingOracle, 1, 1, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         await Escrow.storeResults(url, hash, { from: accounts[2] });
-        assert.equal(await Escrow.getRecordingOracleResultsUrl.call(), url);
-        assert.equal(await Escrow.getRecordingOracleResultsHash.call(), hash);
+        const IntermediateResultsUrl = await Escrow.getIntermediateResultsUrl.call();
+        const IntermediateResultsHash = await Escrow.getIntermediateResultsHash.call();
+        assert.equal(IntermediateResultsUrl, url);
+        assert.equal(IntermediateResultsHash, hash);
       } catch (ex) {
         assert(false);
       }
@@ -329,13 +331,13 @@ contract('Escrow', (accounts) => {
         assert.equal(setupStatus, 1);
 
         const amountToPay = [4];
-        assert(await Escrow.getReputationOracleResultsUrl.call() === '' && await Escrow.getReputationOracleResultsHash.call() === '',
+        assert(await Escrow.getFinalResultsUrl.call() === '' && await Escrow.getFinalResultsHash.call() === '',
               'hash and url should be empty');
         await Escrow.bulkPayOut(toAddress, amountToPay, url, hash, '000', { from: reputationOracle });
-        assert(await Escrow.getReputationOracleResultsUrl.call() === url && await Escrow.getReputationOracleResultsHash.call() === hash,
+        assert(await Escrow.getFinalResultsUrl.call() === url && await Escrow.getFinalResultsHash.call() === hash,
               'either hash or url not set');
         await Escrow.bulkPayOut(toAddress, amountToPay, '', '', '000', { from: reputationOracle });
-        assert(await Escrow.getReputationOracleResultsUrl.call() === url && await Escrow.getReputationOracleResultsHash.call() === hash,
+        assert(await Escrow.getFinalResultsUrl.call() === url && await Escrow.getFinalResultsHash.call() === hash,
                     'hash or url changed when it should not have');
       } catch (ex) {
         assert(false);
