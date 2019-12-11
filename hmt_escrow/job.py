@@ -381,8 +381,9 @@ class Job:
         }
         handle_transaction(txn_func, *func_args, **txn_info)
 
-        recOKeyName = 'intermediate-results-' + self.job_contract.address
-        repOKeyName = 'final-results-' + self.job_contract.address
+
+        recOKeyName = f'intermediate-results-{self.job_contract.address}'
+        repOKeyName = f'final-results-{self.job_contract.address}'
         recOIpnsHash = createNewIpnsLink(recOKeyName)
         repOIpnsHash = createNewIpnsLink(repOKeyName)
 
@@ -456,7 +457,7 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, ipnsKeypairName='final-results-' + self.job_contract.address)
+        (hash_, url) = upload(results, pub_key, ipnsKeypairName=f'final-results-{self.job_contract.address}')
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
@@ -630,7 +631,7 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, ipnsKeypairName='intermediate-results-' + self.job_contract.address)
+        (hash_, url) = upload(results, pub_key, ipnsKeypairName=f'intermediate-results-{self.job_contract.address}')
 
         if storeOnchain:
             txn_func = self.job_contract.functions.storeResults
