@@ -381,7 +381,6 @@ class Job:
         }
         handle_transaction(txn_func, *func_args, **txn_info)
 
-
         recOKeyName = f'intermediate-results-{self.job_contract.address}'
         repOKeyName = f'final-results-{self.job_contract.address}'
         recOIpnsHash = createNewIpnsLink(recOKeyName)
@@ -613,13 +612,21 @@ class Job:
         >>> job.setup()
         True
 
-        Storing intermediate results uploads and updates results url correctly.
+        >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+
+        Upload 1
         >>> results = {"results": True}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
-        >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
+
+        Update test
+        >>> results = {"results": False}
+        >>> job.store_intermediate_results(results, rep_oracle_pub_key)
+        True
+        >>> job.intermediate_results(rep_oracle_priv_key)
+        {'results': False}
 
         Args:
             results (Dict): intermediate results of the Recording Oracle.
