@@ -72,7 +72,7 @@ def download(key: str, private_key: bytes) -> Dict:
 
 def createNewIpnsLink(name: str) -> str:
     """Creates a new IPFS Id. The IPNS links are managed by key value system.
-       Pass in the key (e.g. 'intermediate-results-' + self.job_contract.address), 
+       Pass in the key (e.g. f'intermediate-results-{self.job_contract.address}'), 
        then creats the ipns link
 
     >>> import random 
@@ -106,7 +106,8 @@ def getIpnsLink(name: str) -> str:
     """
     keys = IPFS_CLIENT.key.list()
     try:
-        return 'https://ipfs.io/ipns/' + list(filter(lambda x: x['Name'] == name.lower(), keys['Keys']))[0]['Id']
+        _id = list(filter(lambda x: x['Name'] == name.lower(), keys['Keys']))[0]['Id']
+        return f'https://ipfs.io/ipns/{_id}'
     except Exception as e:
         return ''
     return ''
@@ -158,7 +159,7 @@ def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, 
         try:
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
             # TODO: is it faster if 
-            IPFS_CLIENT.name.publish('/ipfs/' + ipfsFileHash, key=ipnsKeypairName.lower(), allow_offline=True)
+            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}', key=ipnsKeypairName.lower(), allow_offline=True)
         except Exception as e:
             LOG.warning("IPNS failed because of: {}".format(e))
             raise e
