@@ -32,9 +32,9 @@ def _connect(host: str, port: int) -> Client:
 
 
 IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+import pdb; 
 
-@timeout_decorator.timeout(20)
-def download(key: str, private_key: bytes, ipns_keypair_name: str='') -> Dict:
+def download(key: str, private_key: bytes) -> Dict:
     """Download a ipfs key/hash-location, decrypt it, and output it as a binary string.
 
     >>> credentials = {
@@ -59,20 +59,19 @@ def download(key: str, private_key: bytes, ipns_keypair_name: str='') -> Dict:
         Exception: if reading from IPFS fails.
 
     """
-    # recursion trick. download only recursive calls once
-    if ipns_keypair_name != '':
-        key = IPFS_CLIENT.name.resolve(ipns_url)['Path'].split('/')[-1]  # https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name.resolve
-        return download(key, private_key, '')
-   
+    if key[0] != 'Q':
+        key = f'/ipns/{key}'
     try:
         LOG.debug("Downloading key: {}".format(key))
-        ciphertext = IPFS_CLIENT.cat(key)
+        path = IPFS_CLIENT.resolve(key)['Path']
+        ciphertext = IPFS_CLIENT.cat(path)
     except Exception as e:
         LOG.warning(
             "Reading the key {} with private key {} with IPFS failed because of: {}"
             .format(key, private_key, e))
         raise e
 
+    pdb.set_trace(); 
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
