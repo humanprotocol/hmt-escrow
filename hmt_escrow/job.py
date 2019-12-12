@@ -17,7 +17,6 @@ from hmt_escrow.storage import download, upload, get_ipns_link, create_new_ipns_
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
-IPNS_PATH = os.getenv("IPNS_PATH", "localhost")
 
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
@@ -120,7 +119,7 @@ def manifest_hash(escrow_contract: Contract,
         'gas': gas
     })
 
-def intermediate_ipns_url(escrow_contract: Contract, gas_payer: str) -> str:
+def intermediate_ipns_id(escrow_contract: Contract, gas_payer: str) -> str:
     """Retrieves the deployed intermediate results url uploaded on Job initialization.
 
     Args:
@@ -132,13 +131,12 @@ def intermediate_ipns_url(escrow_contract: Contract, gas_payer: str) -> str:
         str: returns the intermediate results url of Job's escrow contract.
 
     """
-    ipns_id = escrow_contract.functions.getRecordingOracleIpnsHash().call({
+    return escrow_contract.functions.getRecordingOracleIpnsHash().call({
         'from': gas_payer,
         'gas': GAS_LIMIT
     })
-    return f'{IPNS_PATH}{ipns_id}'
 
-def final_ipns_url(escrow_contract: Contract, gas_payer: str) -> str:
+def final_ipns_id(escrow_contract: Contract, gas_payer: str) -> str:
     """Retrieves the deployed intermediate results url uploaded on Job initialization.
 
     Args:
@@ -150,12 +148,10 @@ def final_ipns_url(escrow_contract: Contract, gas_payer: str) -> str:
 
 
     """
-    ipns_id = escrow_contract.functions.getReputationOracleIpnsHash().call({
+    return escrow_contract.functions.getReputationOracleIpnsHash().call({
         'from': gas_payer,
         'gas': GAS_LIMIT
     })
-    print(ipns_id)
-    return ipns_id
 
 def intermediate_hash(escrow_contract: Contract,
                       gas_payer: str,
@@ -825,7 +821,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        intermediate_results_url = intermediate_ipns_url(self.job_contract, self.gas_payer)
+        intermediate_results_url = intermediate_ipns_id(self.job_contract, self.gas_payer)
         return download(intermediate_results_url, priv_key)
 
     def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
@@ -857,10 +853,10 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        final_results_url = final_ipns_url(self.job_contract, self.gas_payer).split('/')[-1]
+        final_results_url = final_ipns_id(self.job_contract, self.gas_payer).split('/')[-1]
         return download(final_results_url, priv_key)
 
-    def get_ipns_url(self, key_name: str) -> str:
+    def get_ipns_url_with_name(self, key_name: str) -> str:
         return get_ipns_link(key_name)
 
     def launcher(self, escrow_contract: Contract, gas_payer: str,
