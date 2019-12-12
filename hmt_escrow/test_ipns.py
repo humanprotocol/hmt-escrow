@@ -1,18 +1,54 @@
 import unittest
 import mock
-# from mock import patch
+import random 
+
+class MockIpns:
+    def __init__():
+        # Hidden state
+        self._id   = None
+        self._name = None
+        self._data = None
+        self._hash = None
+
+    def key_gen(name, key_type):
+        self._name = name
+        self._id = str(random.getrandbits(32 * 8))
+
+    def key_list(): 
+        return {'Id': self._id, 'Keys': [{'Name': self._name}]}
+
+    def add_bytes(data): 
+        self._data = data
+        self._hash = f'Q{str(random.getrandbits(32 * 8))}'
+        return f'hash{self._hash}'
+
+    def publish(path, name, _): 
+        _hash = path.split('/')[-1]
+        assert(_hash == self._hash)
+        self._name = name 
+
+    def resolve(ipns_path):
+        assert(ipns_path.split('/')[-1] == self._id)
+        return [{'Path': f'_/{self._path}'}]
+
+    def cat():
+        return _data
+
 
 class IpnsTest(unittest.TestCase):
     '''
     Tests storage functions by mocking ipfs/ipns
     '''
-
-    @mock.patch('IPFS_CLIENT.key.gen')
-    @mock.patch('IPFS_CLIENT.cat')
-    @mock.patch('IPFS_CLIENT.name.resolve')
-    @mock.patch('IPFS_CLIENT.name.publish')
-    @mock.patch('IPFS_CLIENT.add_bytes')
-    def test_ipns(self, mock_ipfs_add_bytes, mock_ipfs_publish, mock_ipns_resolve, mock_ipfs_cat, mock_ipfs_cat):
+    def __init__(): 
+        self.mi = MockIpns()
+    
+    @mock.patch('IPFS_CLIENT.key.gen'     , side_effect=self.mi.key_gen)
+    @mock.patch('IPFS_CLIENT.cat'         , side_effect=self.mi.cat)
+    @mock.patch('IPFS_CLIENT.resolve'     , side_effect=self.mi.resolve)
+    @mock.patch('IPFS_CLIENT.name.publish', side_effect=self.mi.publish)
+    @mock.patch('IPFS_CLIENT.add_bytes'   , side_effect=self.mi.add_bytes)
+    @mock.patch('IPFS_CLIENT.key.list'    , side_effect=self.mi.key_list)
+    def test_ipns(self, mock_ipfs_key_list, mock_ipfs_add_bytes, mock_ipfs_publish, mock_ipns_resolve, mock_ipfs_cat, mock_ipfs_key_gen):
         """
         Test storage: upload, download, create_new_ipns_link, etc
         """
