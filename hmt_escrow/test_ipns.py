@@ -24,11 +24,15 @@ class IpnsTest(unittest.TestCase):
         job = Job(credentials=credentials, escrow_manifest=manifest)
         name = 'abc'
 
+        # Test
         ipns_url = create_new_ipns_link('name')
-
         (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, name)
-        manifest_dict         = download(None, job.gas_payer_priv, name)
+        manifest_dict = download(None, job.gas_payer_priv, name)
+        dl_equals_up = manifest_dict == job.serialized_manifest
+        link_exist = ipns_link_exists(name)
+        ipns_urls_match = ipns_url == get_ipns_link(name)
 
-        self.assertTrue(manifest_dict == job.serialized_manifest)
-        self.assertTrue(ipns_link_exists(name))
-        self.assertTrue(ipns_url == get_ipns_link(name))
+        # Asserts
+        self.assertTrue(dl_equals_up)
+        self.assertTrue(link_exist)
+        self.assertTrue(ipns_urls_match)
