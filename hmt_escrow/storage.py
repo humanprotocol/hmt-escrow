@@ -33,9 +33,8 @@ def _connect(host: str, port: int) -> Client:
 
 IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
 
-
 @timeout_decorator.timeout(20)
-def download(key: str, private_key: bytes) -> Dict:
+def download(key: str, private_key: bytes, ipns_keypair_name: str='') -> Dict:
     """Download a ipfs key/hash-location, decrypt it, and output it as a binary string.
 
     >>> credentials = {
@@ -60,6 +59,11 @@ def download(key: str, private_key: bytes) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
+    # recursion trick. download only recursive calls once
+    if ipns_keypair_name != '':
+        key = IPFS_CLIENT.name.resolve(ipns_url)['Path'].split('/')[-1]  # https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name.resolve
+        return download(key, private_key, '')
+   
     try:
         LOG.debug("Downloading key: {}".format(key))
         ciphertext = IPFS_CLIENT.cat(key)
@@ -68,6 +72,7 @@ def download(key: str, private_key: bytes) -> Dict:
             "Reading the key {} with private key {} with IPFS failed because of: {}"
             .format(key, private_key, e))
         raise e
+
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
@@ -94,7 +99,7 @@ def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str
         ipns_keypair_name (str): If left blank, then don't put on ipfs.
 
     Returns:
-        Tuple[str, str]:  returns the contents of the filename which was previously uploaded.
+        Tuple[str, str]: returns [sha1 hash, ipfs hash]
     
     Raises:
         Exception: if adding bytes with IPFS fails.
