@@ -18,6 +18,7 @@ SHARED_MAC_DATA = os.getenv(
 LOG = logging.getLogger("hmt_escrow.storage")
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
+IPNS_PATH = os.getenv("IPNS_PATH", "localhost")
 
 
 @timeout_decorator.timeout(20)
@@ -70,14 +71,14 @@ def download(key: str, private_key: bytes) -> Dict:
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
-def createNewIpnsLink(name: str) -> str:
+def create_new_ipns_link(name: str) -> str:
     """Creates a new IPFS Id. The IPNS links are managed by key value system.
        Pass in the key (e.g. f'intermediate-results-{self.job_contract.address}'), 
        then creats the ipns link
 
     >>> import random 
     >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
-    >>> createNewIpnsLink(keyName) != ''
+    >>> create_new_ipns_link(keyName) != ''
     True
 
     Args:
@@ -88,14 +89,40 @@ def createNewIpnsLink(name: str) -> str:
     """
     name = name.lower()
     key = IPFS_CLIENT.key.gen(name, 'ed25519')
-    return getIpnsLink(name)
+    return get_ipns_link(name)
 
-def getIpnsLink(name: str) -> str:
+def ipns_link_exists(name: str) -> bool:
+    """See if an IPNS link exists
+
+    >>> import random 
+    >>> key_name = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> _ = create_new_ipns_link(key_name)
+    >>> ipns_link_exists(key_name)
+    True
+    >>> key_name = str(random.getrandbits(32 * 8))
+    >>> ipns_link_exists(key_name)
+    False
+
+    Args:
+        name (str): Name we call ipns link
+
+    Returns:
+        bool: Returns True if link exists
+    """
+    try:
+        get_ipns_link(name)
+        return True
+    except Exception as e:
+        return False
+    return False
+        
+
+def get_ipns_link(name: str) -> str:
     """Get the ipns link with the name of it which we remember it by
 
     >>> import random 
-    >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
-    >>> createNewIpnsLink(keyName) != ''
+    >>> key_name = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> create_new_ipns_link(key_name) != ''
     True
 
     Args:
@@ -103,17 +130,20 @@ def getIpnsLink(name: str) -> str:
 
     Returns:
         str: Returns the IPNS url
+
+    Raises:
+        ValueError: if link not found
     """
     keys = IPFS_CLIENT.key.list()
-    try:
-        _id = list(filter(lambda x: x['Name'] == name.lower(), keys['Keys']))[0]['Id']
-        return f'https://ipfs.io/ipns/{_id}'
-    except Exception as e:
-        return ''
-    return ''
+    does_match = lambda x: x['Name'] == name.lower()
+    matches = list(filter(does_match, keys['Keys']))
+    if len(matches) == 0: 
+        raise ValueError(f'IPNS link not found with name: "{name}"!')
+    ipns_id = matches[0]['Id']  # get first match
+    return f'{IPNS_PATH}{ipns_id}'
     
 @timeout_decorator.timeout(20)
-def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -132,7 +162,7 @@ def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, 
     Args:
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
-        ipnsKeypairName (str): The name of the ipns link. 
+        ipns_keypair_name (str): If left blank, then don't put on ipfs.
 
     Returns:
         Tuple[str, str]:  returns the contents of the filename which was previously uploaded.
@@ -155,11 +185,11 @@ def upload(msg: Dict, public_key: bytes, ipnsKeypairName: str='') -> Tuple[str, 
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
 
-    if ipnsKeypairName != '':
+    if ipns_keypair_name != '':
         try:
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
             # TODO: is it faster if 
-            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}', key=ipnsKeypairName.lower(), allow_offline=True)
+            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}', key=ipns_keypair_name.lower(), allow_offline=True)
         except Exception as e:
             LOG.warning("IPNS failed because of: {}".format(e))
             raise e
