@@ -13,7 +13,7 @@ from eth_keys import keys
 from eth_utils import decode_hex
 
 from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
-from hmt_escrow.storage import download, upload, getIpnsLink, createNewIpnsLink
+from hmt_escrow.storage import download, upload, get_ipns_link, create_new_ipns_link
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
@@ -381,16 +381,16 @@ class Job:
         }
         handle_transaction(txn_func, *func_args, **txn_info)
 
-        recOKeyName = f'intermediate-results-{self.job_contract.address}'
-        repOKeyName = f'final-results-{self.job_contract.address}'
-        recOIpnsHash = createNewIpnsLink(recOKeyName)
-        repOIpnsHash = createNewIpnsLink(repOKeyName)
+        rec_o_key_name = f'intermediate-results-{self.job_contract.address}'
+        rep_o_key_name = f'final-results-{self.job_contract.address}'
+        rec_o_ipns_hash = create_new_ipns_link(rec_o_key_name)
+        rep_o_ipns_hash = create_new_ipns_link(rep_o_key_name)
 
         # Setup the escrow contract with manifest and IPFS data.
         txn_func = self.job_contract.functions.setup
         func_args = [
             reputation_oracle, recording_oracle, reputation_oracle_stake,
-            recording_oracle_stake, recOIpnsHash, repOIpnsHash, 
+            recording_oracle_stake, rec_o_ipns_hash, rep_o_ipns_hash, 
             self.manifest_url, self.manifest_hash
         ]
         txn_info = {
@@ -406,7 +406,7 @@ class Job:
                     results: Dict,
                     pub_key: bytes,
                     gas: int = GAS_LIMIT,
-                    storeOnchain: bool = True) -> bool:
+                    store_onchain: bool = True) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
         depending on contract's balance.
@@ -450,20 +450,20 @@ class Job:
             results (Dict): the final answer results stored by the Reputation Oracle.
             pub_key (bytes): the public key of the Reputation Oracle.
             gas (int): Optional, gas limit
-            storeOnchain (bool): Store data onchain. Saves 10k gas
+            store_onchain (bool): Store data onchain. Saves 10k gas
 
         Returns:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, ipnsKeypairName=f'final-results-{self.job_contract.address}')
+        (hash_, url) = upload(results, pub_key, ipns_keypair_name=f'final-results-{self.job_contract.address}')
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
         txn_func = self.job_contract.functions.bulkPayOut
 
-        chainUrl  = url   if storeOnchain else ''
-        chainHash = hash_ if storeOnchain else ''
+        chainUrl  = url   if store_onchain else ''
+        chainHash = hash_ if store_onchain else ''
         func_args = [eth_addrs, hmt_amounts, chainUrl, chainHash, 1]
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -597,7 +597,7 @@ class Job:
                                    results: Dict,
                                    pub_key: bytes,
                                    gas: int = GAS_LIMIT,
-                                   storeOnchain: bool = True) -> bool:
+                                   store_onchain: bool = True) -> bool:
         """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
         and updates the contract's state.
 
@@ -632,15 +632,15 @@ class Job:
             results (Dict): intermediate results of the Recording Oracle.
             pub_key (bytes): public key of the Reputation Oracle.
             gas (int): gas limit
-            storeOnchain (bool): false is don't run the blockchain fn.
+            store_onchain (bool): false is don't run the blockchain fn.
 
         Returns:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key, ipnsKeypairName=f'intermediate-results-{self.job_contract.address}')
+        (hash_, url) = upload(results, pub_key, ipns_keypair_name=f'intermediate-results-{self.job_contract.address}')
 
-        if storeOnchain:
+        if store_onchain:
             txn_func = self.job_contract.functions.storeResults
             func_args = [url, hash_]
             txn_info = {
@@ -851,8 +851,8 @@ class Job:
         })
         return download(final_results_url, priv_key)
 
-    def getIpnsUrl(self, keyName: str) -> str:
-        return getIpnsLink(keyName)
+    def get_ipns_url(self, key_name: str) -> str:
+        return get_ipns_link(key_name)
 
     def launcher(self, escrow_contract: Contract, gas_payer: str,
                  gas: int = GAS_LIMIT) -> str:
@@ -1098,6 +1098,11 @@ class Job:
             gas
         })
 
+# goes at end of _create_escrow test
+#        >>> get_ipns_link(addr)
+#        Traceback (most recent call last):
+#        ValueError: Given private key doesn't match the ethereum address.
+
     def _create_escrow(self, gas: int = GAS_LIMIT) -> bool:
         """Launches a new escrow contract to the ethereum network.
 
@@ -1107,8 +1112,6 @@ class Job:
         ... }
         >>> job = Job(credentials, manifest)
         >>> addr = job._create_escrow()
-        >>> getIpnsLink(addr) == ''
-        True
 
         Args:
             gas (int): maximum amount of gas the caller is ready to pay.
