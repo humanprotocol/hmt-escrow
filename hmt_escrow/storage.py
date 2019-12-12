@@ -71,6 +71,60 @@ def download(key: str, private_key: bytes) -> Dict:
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
+@timeout_decorator.timeout(20)
+def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str, str]:
+    """Upload and encrypt a string for later retrieval.
+    This can be manifest files, results, or anything that's been already
+    encrypted.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> manifest_dict == job.serialized_manifest
+    True
+
+    Args:
+        msg (Dict): The message to upload and encrypt.
+        public_key (bytes): The public_key to encrypt the file for.
+        ipns_keypair_name (str): If left blank, then don't put on ipfs.
+
+    Returns:
+        Tuple[str, str]:  returns the contents of the filename which was previously uploaded.
+    
+    Raises:
+        Exception: if adding bytes with IPFS fails.
+
+    """
+
+    try:
+        manifest_ = json.dumps(msg, sort_keys=True)
+    except Exception as e:
+        LOG.error("Can't extract the json from the dict")
+        raise e
+    
+    hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
+    try:
+        ipfsFileHash = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
+    except Exception as e:
+        LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
+        raise e
+
+    if ipns_keypair_name != '':
+        try:
+            # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
+            # TODO: is it faster if 
+            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}', key=ipns_keypair_name.lower(), allow_offline=True)
+        except Exception as e:
+            LOG.warning("IPNS failed because of: {}".format(e))
+            raise e
+
+    return hash_, ipfsFileHash
+
 def create_new_ipns_link(name: str) -> str:
     """Creates a new IPFS Id. The IPNS links are managed by key value system.
        Pass in the key (e.g. f'intermediate-results-{self.job_contract.address}'), 
@@ -141,60 +195,6 @@ def get_ipns_link(name: str) -> str:
         raise ValueError(f'IPNS link not found with name: "{name}"!')
     ipns_id = matches[0]['Id']  # get first match
     return f'{IPNS_PATH}{ipns_id}'
-    
-@timeout_decorator.timeout(20)
-def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str, str]:
-    """Upload and encrypt a string for later retrieval.
-    This can be manifest files, results, or anything that's been already
-    encrypted.
-
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
-
-    Args:
-        msg (Dict): The message to upload and encrypt.
-        public_key (bytes): The public_key to encrypt the file for.
-        ipns_keypair_name (str): If left blank, then don't put on ipfs.
-
-    Returns:
-        Tuple[str, str]:  returns the contents of the filename which was previously uploaded.
-    
-    Raises:
-        Exception: if adding bytes with IPFS fails.
-
-    """
-
-    try:
-        manifest_ = json.dumps(msg, sort_keys=True)
-    except Exception as e:
-        LOG.error("Can't extract the json from the dict")
-        raise e
-    
-    hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
-    try:
-        ipfsFileHash = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
-    except Exception as e:
-        LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
-        raise e
-
-    if ipns_keypair_name != '':
-        try:
-            # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
-            # TODO: is it faster if 
-            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}', key=ipns_keypair_name.lower(), allow_offline=True)
-        except Exception as e:
-            LOG.warning("IPNS failed because of: {}".format(e))
-            raise e
-
-    return hash_, ipfsFileHash
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
