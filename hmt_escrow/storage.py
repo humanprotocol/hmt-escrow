@@ -1,4 +1,4 @@
-import os
+import sys, os
 import logging
 import codecs
 import hashlib
@@ -59,19 +59,20 @@ def download(key: str, private_key: bytes) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
+
+    # Q prefix is ipfs. else assume ipns
     if key[0] != 'Q':
-        key = f'/ipns/{key}'
+        res = IPFS_CLIENT.resolve(f'/ipns/{key}')
+        ipfs_path = res['Path']
+        key = ipfs_path.split('/')[-1]
     try:
         LOG.debug("Downloading key: {}".format(key))
-        path = IPFS_CLIENT.resolve(key)['Path']
-        ciphertext = IPFS_CLIENT.cat(path)
+        ciphertext = IPFS_CLIENT.cat(key)
     except Exception as e:
         LOG.warning(
             "Reading the key {} with private key {} with IPFS failed because of: {}"
             .format(key, private_key, e))
         raise e
-
-    pdb.set_trace(); 
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
@@ -143,11 +144,11 @@ def create_new_ipns_link(name: str) -> str:
         name (str): Name to call the ipns link. Retrieve the link w/ same name
 
     Returns:
-        str: Returns the IPNS url
+        str: Returns the IPNS ID
     """
     name = name.lower()
     key = IPFS_CLIENT.key.gen(name, 'ed25519')
-    return get_ipns_link(name)
+    return get_ipns_link(name).split('/')[-1]
 
 def ipns_link_exists(name: str) -> bool:
     """See if an IPNS link exists
