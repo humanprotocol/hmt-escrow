@@ -178,7 +178,6 @@ contract Escrow {
         }
     }
 
-    // recording oracle is the intenral hash/url
     function storeResults(string _url, string _hash) public {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == recordingOracle, "Address calling not the recording oracle");
