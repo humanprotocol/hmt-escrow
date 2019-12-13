@@ -250,7 +250,7 @@ class Job:
         True
         >>> job.setup()
         True
-        >>> len(launcher(job, credentials['gas_payer'])) == 42  # is valid address
+        >>> launcher(job, credentials['gas_payer']).lower() == job.factory_contract.address.lower()
         True
 
         Initializing an existing Job instance with a factory and escrow address succeeds.
