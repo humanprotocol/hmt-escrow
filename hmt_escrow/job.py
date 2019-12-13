@@ -174,6 +174,23 @@ def intermediate_hash(escrow_contract: Contract,
         gas
     })
 
+def launcher(escrow_contract: Contract, gas_payer: str,
+             gas: int = GAS_LIMIT) -> str:
+    """Retrieves the details on what eth wallet launched the job
+        
+    Args:
+        escrow_contract (Contract): the escrow contract of the Job.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+
+    Returns:
+        str: returns the address of who launched the job.
+    """
+    return escrow_contract.job_contract.functions.getLauncher().call({
+        'from': gas_payer,
+        'gas': gas
+    })
+
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
     A Job  can be created from a manifest or by accessing an existing escrow contract
@@ -233,7 +250,7 @@ class Job:
         True
         >>> job.setup()
         True
-        >>> len(job.launcher(job, credentials['gas_payer'])) == 42  # is valid address
+        >>> len(launcher(job, credentials['gas_payer'])) == 42  # is valid address
         True
 
         Initializing an existing Job instance with a factory and escrow address succeeds.
@@ -858,24 +875,6 @@ class Job:
 
     def get_ipns_url_with_name(self, key_name: str) -> str:
         return get_ipns_link(key_name)
-
-    def launcher(self, escrow_contract: Contract, gas_payer: str,
-                 gas: int = GAS_LIMIT) -> str:
-        """Retrieves the details on what eth wallet launched the job
-        
-        Args:
-            escrow_contract (Contract): the escrow contract of the Job.
-            gas_payer (str): an ethereum address paying for the gas costs.
-            gas (int): maximum amount of gas the caller is ready to pay.
-
-        Returns:
-            str: returns the address of who launched the job.
-        """
-        return escrow_contract.job_contract.functions.getLauncher().call({
-            'from': gas_payer,
-            'gas': gas
-        })
-
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
