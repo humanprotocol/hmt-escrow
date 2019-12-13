@@ -478,9 +478,9 @@ class Job:
 
         txn_func = self.job_contract.functions.bulkPayOut
 
-        chainUrl  = url   if store_onchain else ''
-        chainHash = hash_ if store_onchain else ''
-        func_args = [eth_addrs, hmt_amounts, chainUrl, chainHash, 1]
+        chain_url  = url   if store_onchain else ''
+        chain_hash = hash_ if store_onchain else ''
+        func_args = [eth_addrs, hmt_amounts, chain_url, chain_hash, 1]
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
