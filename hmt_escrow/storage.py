@@ -36,17 +36,6 @@ IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
 def download(key: str, private_key: bytes) -> Dict:
     """Download a ipfs key/hash-location, decrypt it, and output it as a binary string.
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
-
     Args:
         key (str): This is the hash code returned when uploading.
         private_key (str): The private_key to decrypt this string with.
@@ -57,6 +46,16 @@ def download(key: str, private_key: bytes) -> Dict:
     Raises:
         Exception: if reading from IPFS fails.
 
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> manifest_dict == job.serialized_manifest
+    True
     """
 
     # Q prefix is ipfs. else assume ipns
@@ -81,17 +80,6 @@ def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str
     This can be manifest files, results, or anything that's been already
     encrypted.
 
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
-
     Args:
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
@@ -103,6 +91,16 @@ def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str
     Raises:
         Exception: if adding bytes with IPFS fails.
 
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> manifest_dict == job.serialized_manifest
+    True
     """
 
     try:
@@ -133,16 +131,16 @@ def create_new_ipns_link(name: str) -> str:
     """Create new ipns link, return the ID.
        The IPNS links are managed by key value system.
 
-    >>> import random 
-    >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
-    >>> create_new_ipns_link(keyName) != ''
-    True
-
     Args:
         name (str): Name to call the ipns link. Retrieve the link w/ same name
 
     Returns:
         str: Returns the IPNS ID
+
+    >>> import random 
+    >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> create_new_ipns_link(keyName) != ''
+    True
     """
     name = name.lower()
     IPFS_CLIENT.key.gen(name, 'ed25519')
@@ -150,6 +148,12 @@ def create_new_ipns_link(name: str) -> str:
 
 def ipns_link_exists(name: str) -> bool:
     """See if an IPNS link exists
+
+    Args:
+        name (str): Name we call ipns link
+
+    Returns:
+        bool: Returns True if link exists
 
     >>> import random 
     >>> key_name = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
@@ -159,12 +163,6 @@ def ipns_link_exists(name: str) -> bool:
     >>> key_name = str(random.getrandbits(32 * 8))
     >>> ipns_link_exists(key_name)
     False
-
-    Args:
-        name (str): Name we call ipns link
-
-    Returns:
-        bool: Returns True if link exists
     """
     try:
         get_ipns_link(name)
@@ -177,11 +175,6 @@ def ipns_link_exists(name: str) -> bool:
 def get_ipns_link(name: str) -> str:
     """Get the ipns link with the name of it which we remember it by
 
-    >>> import random 
-    >>> key_name = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
-    >>> create_new_ipns_link(key_name) != ''
-    True
-
     Args:
         name (str): Name we call ipns link
 
@@ -190,6 +183,11 @@ def get_ipns_link(name: str) -> str:
 
     Raises:
         ValueError: if link not found
+
+    >>> import random 
+    >>> key_name = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> create_new_ipns_link(key_name) != ''
+    True
     """
     keys = IPFS_CLIENT.key.list()
     does_match = lambda x: x['Name'] == name.lower()
@@ -202,6 +200,13 @@ def get_ipns_link(name: str) -> str:
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
 
+    Args:
+        private_key (bytes): The private_key to decrypt the message with.
+        msg (bytes): The message to be decrypted.
+    
+    Returns:
+        str: returns the plaintext equivalent to the originally encrypted one.
+
     >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> msg = "test"
@@ -213,14 +218,6 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
     >>> _decrypt(priv_key, _encrypt(false_pub_key, msg)) == msg
     Traceback (most recent call last):
     p2p.exceptions.DecryptionError: Failed to verify tag
-
-    Args:
-        private_key (bytes): The private_key to decrypt the message with.
-        msg (bytes): The message to be decrypted.
-    
-    Returns:
-        str: returns the plaintext equivalent to the originally encrypted one.
-
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
@@ -230,12 +227,6 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
 def _encrypt(public_key: bytes, msg: str) -> bytes:
     """Use ECIES to encrypt a message with a given public key and optional MAC.
 
-    >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> msg = "test"
-    >>> _decrypt(priv_key, _encrypt(pub_key, msg)) == msg
-    True
-
     Args:
         public_key (bytes): The public_key to encrypt the message with.
         msg (str): The message to be encrypted.
@@ -243,6 +234,11 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
     Returns:
         bytes: returns the cryptotext encrypted with the public key.
 
+    >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> msg = "test"
+    >>> _decrypt(priv_key, _encrypt(pub_key, msg)) == msg
+    True
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
     msg_bytes = msg.encode(encoding='utf-8')
