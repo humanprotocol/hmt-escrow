@@ -637,14 +637,14 @@ class Job:
 
         >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
 
-        Upload 1
+        Store intermediate results in IPNS
         >>> results = {"results": True}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
 
-        Update test
+        Store intermediate results in IPNS. This time we see if IPNS link will update.
         >>> results = {"results": False}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
@@ -1110,8 +1110,8 @@ class Job:
             "gas": gas
         }
         handle_transaction(txn_func, *func_args, **txn_info)
-        job_addr = self._last_escrow_addr()
-        return job_addr
+        # job_addr = self._last_escrow_addr()
+        return True #job_addr
 
 
 if __name__ == "__main__":
