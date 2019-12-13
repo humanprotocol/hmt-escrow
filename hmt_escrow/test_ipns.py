@@ -14,44 +14,44 @@ logging = lambda *argv: None
 class MockIpns():
     def __init__(self):
         # Hidden state
-        self._id   = None
-        self._name = None
-        self._data = None
-        self._hash = None
+        self.ipns_id_to_hash   = {'id123': 'hash123'}
+        self.ipns_name_to_id = {'name123': 'id123'}
+        self.ipns_hash_to_data = {'hash123': 'data123'}
 
     def key_gen(self, name, key_type):
-        self._id = str(random.getrandbits(32))
-        self._name = name
-        logging('>>>> key_gen',self._id, name)
-
+        _id = str(random.getrandbits(32))
+        self.ipns_id_to_hash[_id] = None
+        self.ipns_name_to_id[name] = _id
+        logging('>>>> key_gen', _id, name)
 
     def key_list(self): 
-        ret = {'Keys': [{'Name': self._name, 'Id': self._id}]}
+        # ret = {'Keys': [{'Name': self._name, 'Id': self._id}]}
+        ret = {'Keys': [{'Name': name, 'Id': self.ipns_name_to_id[name]} for name in self.ipns_name_to_id if True]}
         logging('>>>> key_list', ret)
         return ret
 
     def add_bytes(self, data): 
         logging('>>>> add_bytes')
-        self._data = data
-        rnd = f'Q{str(random.getrandbits(32))}'
-        self._hash = f'Q{rnd}'
-        return self._hash
+        _hash = f'Q{100000000000000000000+hash(str(data))}' # get positive int
+        self.ipns_hash_to_data[_hash] = data
+        return _hash
     
+    # TODO: if key='', then should be on last ipns id setup, i.e. last time key_gen was called
     def publish(self, path, key='', allow_offline=False): 
-        logging('>>>> publish', self._hash, path.split('/')[-1])
         _hash = path.split('/')[-1]
-        assert(_hash == self._hash)
-        self._name = key
+        _id = self.ipns_name_to_id[key]
+        self.ipns_id_to_hash[_id] = _hash
+        logging('>>>> publish', path, key, _hash)
 
     def resolve(self, ipns_path):
-        logging('>>>> resolve', ipns_path)
-        assert(ipns_path.split('/')[-1] == self._id)
-        return {'Path': f'_/{self._hash}'}
+        ipns_id = ipns_path.split('/')[-1]
+        _hash = self.ipns_id_to_hash[ipns_id]
+        logging('>>>> resolve', ipns_id, _hash)
+        return {'Path': f'_/{_hash}'}
 
     def cat(self, _hash):
         logging('>>>> cat', _hash)
-        assert(_hash == self._hash)
-        return self._data
+        return self.ipns_hash_to_data[_hash]
 
 MI = MockIpns()
 
@@ -86,18 +86,29 @@ class IpnsTest(unittest.TestCase):
         mocked_ipfs_client.resolve.side_effect = MI.resolve
         mocked_ipfs_client.cat.side_effect = MI.cat
 
-        # Test
         ipns_id = create_new_ipns_link(name)
+
+        # Upload 1
         (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, name)
         manifest_dict = download(ipns_id, job.gas_payer_priv)
         dl_equals_up = manifest_dict == job.serialized_manifest
         link_exist = ipns_link_exists(name)
         ipns_urls_match = ipns_id == get_ipns_link(name).split('/')[-1]
-
-        # Asserts
         self.assertTrue(dl_equals_up)
         self.assertTrue(link_exist)
         self.assertTrue(ipns_urls_match)
+
+        # Upload 2
+        data2 = dict(Manifest({'task_bid_price': 999999, 'request_type': 'image_label_binary', 'job_total_tasks': 30010}).serialize())
+        (hash_, manifest_url) = upload(data2, pub_key, name)
+        manifest_dict = download(ipns_id, job.gas_payer_priv)
+        dl_equals_up = manifest_dict == data2
+        link_exist = ipns_link_exists(name)
+        ipns_urls_match = ipns_id == get_ipns_link(name).split('/')[-1]
+        self.assertTrue(dl_equals_up)
+        self.assertTrue(link_exist)
+        self.assertTrue(ipns_urls_match)
+
 
 if __name__ == '__main__':
     unittest.main()
