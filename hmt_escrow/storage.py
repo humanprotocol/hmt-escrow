@@ -138,8 +138,8 @@ def create_new_ipns_link(name: str) -> str:
         str: Returns the IPNS ID
 
     >>> import random 
-    >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
-    >>> create_new_ipns_link(keyName) != ''
+    >>> key_name = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
+    >>> create_new_ipns_link(key_name) != ''
     True
     """
     name = name.lower()
