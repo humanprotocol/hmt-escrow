@@ -32,7 +32,6 @@ def _connect(host: str, port: int) -> Client:
 
 
 IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
-import pdb; 
 
 def download(key: str, private_key: bytes) -> Dict:
     """Download a ipfs key/hash-location, decrypt it, and output it as a binary string.
@@ -131,9 +130,8 @@ def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str
     return hash_, ipfsFileHash
 
 def create_new_ipns_link(name: str) -> str:
-    """Creates a new IPFS Id. The IPNS links are managed by key value system.
-       Pass in the key (e.g. f'intermediate-results-{self.job_contract.address}'), 
-       then creats the ipns link
+    """Create new ipns link, return the ID.
+       The IPNS links are managed by key value system.
 
     >>> import random 
     >>> keyName = str(random.getrandbits(32 * 8)) # get random, or else throws duplicate key error
@@ -147,7 +145,7 @@ def create_new_ipns_link(name: str) -> str:
         str: Returns the IPNS ID
     """
     name = name.lower()
-    key = IPFS_CLIENT.key.gen(name, 'ed25519')
+    IPFS_CLIENT.key.gen(name, 'ed25519')
     return get_ipns_link(name).split('/')[-1]
 
 def ipns_link_exists(name: str) -> bool:
