@@ -33,6 +33,7 @@ def _connect(host: str, port: int) -> Client:
 
 IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
 
+
 def download(key: str, private_key: bytes) -> Dict:
     """Download a ipfs key/hash-location, decrypt it, and output it as a binary string.
 
@@ -68,14 +69,17 @@ def download(key: str, private_key: bytes) -> Dict:
         ciphertext = IPFS_CLIENT.cat(key)
     except Exception as e:
         LOG.warning(
-            "Reading the key {} with private key {} with IPFS failed because of: {}"
-            .format(key, private_key, e))
+            f'Reading the key {str(key)} with private key {str(private_key)} with IPFS failed because of: {str(e)}'
+        )
         raise e
     msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
+
 @timeout_decorator.timeout(20)
-def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str, str]:
+def upload(msg: Dict,
+           public_key: bytes,
+           ipns_keypair_name: str = '') -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -108,7 +112,7 @@ def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str
     except Exception as e:
         LOG.error("Can't extract the json from the dict")
         raise e
-    
+
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
         ipfsFileHash = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
@@ -119,13 +123,16 @@ def upload(msg: Dict, public_key: bytes, ipns_keypair_name: str='') -> Tuple[str
     if ipns_keypair_name != '':
         try:
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
-            # TODO: is it faster if 
-            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}', key=ipns_keypair_name.lower(), allow_offline=True)
+            # TODO: is it faster if
+            IPFS_CLIENT.name.publish(f'/ipfs/{ipfsFileHash}',
+                                     key=ipns_keypair_name.lower(),
+                                     allow_offline=True)
         except Exception as e:
             LOG.warning("IPNS failed because of: {}".format(e))
             raise e
 
     return hash_, ipfsFileHash
+
 
 def create_new_ipns_link(name: str) -> str:
     """Create new ipns link, return the ID.
@@ -145,6 +152,7 @@ def create_new_ipns_link(name: str) -> str:
     name = name.lower()
     IPFS_CLIENT.key.gen(name, 'ed25519')
     return get_ipns_link(name).split('/')[-1]
+
 
 def ipns_link_exists(name: str) -> bool:
     """See if an IPNS link exists
@@ -170,7 +178,7 @@ def ipns_link_exists(name: str) -> bool:
     except Exception as e:
         return False
     return False
-        
+
 
 def get_ipns_link(name: str) -> str:
     """Get the ipns link with the name of it which we remember it by
@@ -192,10 +200,11 @@ def get_ipns_link(name: str) -> str:
     keys = IPFS_CLIENT.key.list()
     does_match = lambda x: x['Name'] == name.lower()
     matches = list(filter(does_match, keys['Keys']))
-    if len(matches) == 0: 
+    if len(matches) == 0:
         raise ValueError(f'IPNS link not found with name: "{name}"!')
     ipns_id = matches[0]['Id']  # get first match
     return f'{IPNS_PATH}{ipns_id}'
+
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
