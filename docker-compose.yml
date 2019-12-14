@@ -10,7 +10,7 @@ services:
       - GAS_LIMIT=6700000
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
-      - IPNS_PATH=localhost:5001/ipns/
+      - IPNS_PATH=ipfs:IPFS_PORT/ipns/
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
