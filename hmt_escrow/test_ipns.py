@@ -85,12 +85,13 @@ class IpnsTest(unittest.TestCase):
             "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         }
         pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        job = Job(credentials=credentials,
-                  escrow_manifest=Manifest({
-                      'task_bid_price': 9,
-                      'request_type': 'image_label_binary',
-                      'job_total_tasks': 10
-                  }))
+        job = Job(
+            credentials=credentials,
+            escrow_manifest=Manifest({
+                'task_bid_price': 9,
+                'request_type': 'image_label_binary',
+                'job_total_tasks': 10
+            }))
         name = 'abc'
 
         mocked_ipfs_client.key.list.side_effect = MI.key_list
