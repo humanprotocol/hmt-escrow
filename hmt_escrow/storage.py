@@ -79,14 +79,15 @@ def download(key: str, private_key: bytes) -> Dict:
 @timeout_decorator.timeout(20)
 def upload(msg: Dict, public_key: bytes,
            ipns_keypair_name: str = '') -> Tuple[str, str]:
-    """Upload and encrypt a string for later retrieval.
-    This can be manifest files, results, or anything that's been already
-    encrypted.
+    """Upload encrypted string to IPFS.
+    This can be manifest files, results, or anything that's been already encrypted.
+    Optionally pins the file to IPNS. Pass in the IPNS key name 
+    To get IPNS key name, see create_new_ipns_link
 
     Args:
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
-        ipns_keypair_name (str): If left blank, then don't put on ipfs.
+        ipns_keypair_name (str): If left blank, then don't pin to IPNS
 
     Returns:
         Tuple[str, str]: returns [sha1 hash, ipfs hash]
@@ -114,7 +115,7 @@ def upload(msg: Dict, public_key: bytes,
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
-        ipfsFileHash = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
+        ipfs_file_hash = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
@@ -124,14 +125,14 @@ def upload(msg: Dict, public_key: bytes,
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
             # TODO: is it faster if
             IPFS_CLIENT.name.publish(
-                f'/ipfs/{ipfsFileHash}',
+                f'/ipfs/{ipfs_file_hash}',
                 key=ipns_keypair_name.lower(),
                 allow_offline=True)
         except Exception as e:
             LOG.warning("IPNS failed because of: {}".format(e))
             raise e
 
-    return hash_, ipfsFileHash
+    return hash_, ipfs_file_hash
 
 
 def create_new_ipns_link(name: str) -> str:
