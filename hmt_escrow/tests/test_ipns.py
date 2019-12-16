@@ -1,16 +1,15 @@
 import unittest
 from unittest.mock import patch
-import random
+
 from basemodels import Manifest
 
-from storage import download, upload, get_ipns_link, create_new_ipns_link, _connect, IPFS_CLIENT, ipns_link_exists
-from job import Job
+from hmt_escrow.job import Job
+from hmt_escrow import storage
+from hmt_escrow.storage import download, upload, get_ipns_link, create_new_ipns_link, _connect, IPFS_CLIENT, ipns_link_exists
 
-import pdb
-
-# logging = print
-logging = lambda *argv: None
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 
 class MockIpns():
     def __init__(self):
@@ -18,12 +17,14 @@ class MockIpns():
         self.ipns_id_to_hash = {'id123': 'hash123'}
         self.ipns_name_to_id = {'name123': 'id123'}
         self.ipns_hash_to_data = {'hash123': 'data123'}
+        self._id_counter = 0
 
     def key_gen(self, name, key_type):
-        _id = str(random.getrandbits(32))
+        self._id_counter += 1
+        _id = str(self._id_counter)
         self.ipns_id_to_hash[_id] = None
         self.ipns_name_to_id[name] = _id
-        logging('>>>> key_gen', _id, name)
+        log.debug('>>>> key_gen', _id, name)
 
     def key_list(self):
         # ret = {'Keys': [{'Name': self._name, 'Id': self._id}]}
@@ -33,11 +34,11 @@ class MockIpns():
                 'Id': self.ipns_name_to_id[name]
             } for name in self.ipns_name_to_id if True]
         }
-        logging('>>>> key_list', ret)
+        log.debug('>>>> key_list', ret)
         return ret
 
     def add_bytes(self, data):
-        logging('>>>> add_bytes')
+        log.debug('>>>> add_bytes')
         _hash = f'Q{100000000000000000000+hash(str(data))}'  # get positive int
         self.ipns_hash_to_data[_hash] = data
         return _hash
@@ -47,16 +48,19 @@ class MockIpns():
         _hash = path.split('/')[-1]
         _id = self.ipns_name_to_id[key]
         self.ipns_id_to_hash[_id] = _hash
-        logging('>>>> publish', path, key, _hash)
+        log.debug('...........',self.ipns_id_to_hash[_id])
+
+        log.debug('>>>> publish', path, key, _hash, _id)
 
     def resolve(self, ipns_path):
         ipns_id = ipns_path.split('/')[-1]
+        log.debug('>>>> resolve', self.ipns_id_to_hash)
         _hash = self.ipns_id_to_hash[ipns_id]
-        logging('>>>> resolve', ipns_id, _hash)
+        log.debug('>>>> resolve', ipns_id, _hash)
         return {'Path': f'_/{_hash}'}
 
     def cat(self, _hash):
-        logging('>>>> cat', _hash)
+        log.debug('>>>> cat', _hash)
         return self.ipns_hash_to_data[_hash]
 
 
@@ -71,8 +75,8 @@ class IpnsTest(unittest.TestCase):
     '''
 
     # @patch('storage.IPFS_CLIENT.key.gen')
-    @patch('storage._connect')
-    @patch('storage.IPFS_CLIENT')
+    @patch('hmt_escrow.storage._connect')
+    @patch('hmt_escrow.storage.IPFS_CLIENT')
     def test_ipns(self, mocked_ipfs_client, _):
         """
         Test storage: upload, download, create_new_ipns_link, etc
@@ -131,4 +135,5 @@ class IpnsTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+
     unittest.main()
