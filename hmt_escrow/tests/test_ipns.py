@@ -1,13 +1,14 @@
+import logging
 import unittest
 from unittest.mock import patch
 
 from basemodels import Manifest
-
-from hmt_escrow.job import Job
 from hmt_escrow import storage
-from hmt_escrow.storage import download, upload, get_ipns_link, create_new_ipns_link, _connect, IPFS_CLIENT, ipns_link_exists
+from hmt_escrow.job import Job
+from hmt_escrow.storage import (IPFS_CLIENT, _connect, create_new_ipns_link,
+                                download, get_ipns_link, ipns_link_exists,
+                                upload)
 
-import logging
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 

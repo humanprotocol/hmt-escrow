@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
+import logging
 import os
 import sys
-import logging
-
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
-from web3 import Web3
-from web3.contract import Contract
+from basemodels import Manifest
 from eth_keys import keys
 from eth_utils import decode_hex
-
-from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
-from hmt_escrow.storage import download, upload, get_ipns_link, create_new_ipns_link
-from basemodels import Manifest
+from hmt_escrow.eth_bridge import (deploy_factory, get_contract_interface,
+                                   get_escrow, get_factory, get_hmtoken,
+                                   get_w3, handle_transaction)
+from hmt_escrow.storage import (create_new_ipns_link, download, get_ipns_link,
+                                upload)
+from web3 import Web3
+from web3.contract import Contract
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
