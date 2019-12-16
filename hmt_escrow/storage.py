@@ -1,15 +1,16 @@
-import sys, os
-import logging
 import codecs
 import hashlib
 import json
+import logging
+import os
+import sys
+from typing import Dict, Tuple
+
 import ipfsapi
 import timeout_decorator
-
-from typing import Dict, Tuple
 from eth_keys import keys
-from p2p import ecies
 from ipfsapi import Client
+from p2p import ecies
 
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC",
