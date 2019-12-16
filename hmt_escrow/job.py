@@ -23,7 +23,8 @@ LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
 
-def status(escrow_contract: Contract, gas_payer: str,
+def status(escrow_contract: Contract,
+           gas_payer: str,
            gas: int = GAS_LIMIT) -> Enum:
     """Returns the status of the Job.
 
@@ -177,7 +178,8 @@ def intermediate_hash(escrow_contract: Contract,
     })
 
 
-def launcher(escrow_contract: Contract, gas_payer: str,
+def launcher(escrow_contract: Contract,
+             gas_payer: str,
              gas: int = GAS_LIMIT) -> str:
     """Retrieves the details on what eth wallet launched the job
         
@@ -190,10 +192,8 @@ def launcher(escrow_contract: Contract, gas_payer: str,
         str: returns the address of who launched the job.
     """
     return escrow_contract.job_contract.functions.getLauncher().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
+        'from': gas_payer,
+        'gas': gas
     })
 
 
@@ -218,7 +218,6 @@ class Job:
         manifest_url (str): the location of the serialized manifest in IPFS.
         manifest_hash (str): SHA-1 hashed version of the serialized manifest.
     """
-
     def __init__(self,
                  credentials: Dict[str, str],
                  escrow_manifest: Manifest = None,
@@ -668,11 +667,11 @@ class Job:
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': False}
         """
-        (hash_, url) = upload(
-            results,
-            pub_key,
-            ipns_keypair_name=
-            f'intermediate-results-{self.job_contract.address}')
+        (hash_,
+         url) = upload(results,
+                       pub_key,
+                       ipns_keypair_name=
+                       f'intermediate-results-{self.job_contract.address}')
 
         if store_onchain:
             txn_func = self.job_contract.functions.storeResults
@@ -777,10 +776,8 @@ class Job:
         100000000000000000000
         """
         return self.job_contract.functions.getBalance().call({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas
+            'from': self.gas_payer,
+            'gas': gas
         })
 
     def manifest(self, priv_key: bytes) -> Dict:
@@ -810,7 +807,8 @@ class Job:
         """
         return download(self.manifest_url, priv_key)
 
-    def intermediate_results(self, priv_key: bytes,
+    def intermediate_results(self,
+                             priv_key: bytes,
                              gas: int = GAS_LIMIT) -> Dict:
         """Reputation Oracle retrieves the intermediate results stored by the Recording Oracle.
 
@@ -1066,10 +1064,8 @@ class Job:
         True
         """
         return self.job_contract.functions.getBulkPaid().call({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas
+            'from': self.gas_payer,
+            'gas': gas
         })
 
     def _last_escrow_addr(self, gas: int = GAS_LIMIT) -> str:
