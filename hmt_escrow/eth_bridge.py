@@ -17,8 +17,8 @@ LOG = logging.getLogger("hmt_escrow.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
     os.getenv("HMTOKEN_ADDR", '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
 
-CONTRACT_FOLDER = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), 'contracts')
+CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                               'contracts')
 CONTRACTS = compile_files([
     "{}/Escrow.sol".format(CONTRACT_FOLDER),
     "{}/EscrowFactory.sol".format(CONTRACT_FOLDER),
@@ -105,8 +105,8 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
         'nonce': nonce
     })
 
-    signed_txn = w3.eth.account.signTransaction(
-        txn_dict, private_key=gas_payer_priv)
+    signed_txn = w3.eth.account.signTransaction(txn_dict,
+                                                private_key=gas_payer_priv)
     txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     try:
@@ -144,8 +144,8 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
-    contract = w3.eth.contract(
-        address=hmtoken_addr, abi=contract_interface['abi'])
+    contract = w3.eth.contract(address=hmtoken_addr,
+                               abi=contract_interface['abi'])
     return contract
 
 
@@ -176,8 +176,8 @@ def get_escrow(escrow_addr: str) -> Contract:
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
-    escrow = w3.eth.contract(
-        address=escrow_addr, abi=contract_interface['abi'])
+    escrow = w3.eth.contract(address=escrow_addr,
+                             abi=contract_interface['abi'])
     return escrow
 
 
@@ -202,8 +202,8 @@ def get_factory(factory_addr: Optional[str]) -> Contract:
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
-    escrow_factory = w3.eth.contract(
-        address=factory_addr, abi=contract_interface['abi'])
+    escrow_factory = w3.eth.contract(address=factory_addr,
+                                     abi=contract_interface['abi'])
     return escrow_factory
 
 
@@ -223,8 +223,8 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     w3 = get_w3()
     contract_interface = get_contract_interface(
         '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
-    factory = w3.eth.contract(
-        abi=contract_interface['abi'], bytecode=contract_interface['bin'])
+    factory = w3.eth.contract(abi=contract_interface['abi'],
+                              bytecode=contract_interface['bin'])
 
     txn_func = factory.constructor
     func_args = [HMTOKEN_ADDR]
@@ -282,10 +282,8 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     w3 = get_w3()
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
-    addr_pub_key = kvstore.functions.get(GAS_PAYER, 'hmt_pub_key').call({
-        'from':
-        GAS_PAYER
-    })
+    addr_pub_key = kvstore.functions.get(GAS_PAYER, 'hmt_pub_key').call(
+        {'from': GAS_PAYER})
 
     return bytes(addr_pub_key, encoding='utf-8')
 
