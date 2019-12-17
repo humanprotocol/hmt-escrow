@@ -21,6 +21,7 @@ IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
 IPNS_PATH = os.getenv("IPNS_PATH", f"{IPFS_HOST}:{IPFS_PORT}/ipns/")
 
+
 @timeout_decorator.timeout(20)
 def _connect(host: str, port: int) -> Client:
     try:
