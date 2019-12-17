@@ -25,7 +25,7 @@ class MockIpns():
         _id = str(self._id_counter)
         self.ipns_id_to_hash[_id] = None
         self.ipns_name_to_id[name] = _id
-        log.debug('>>>> key_gen', _id, name)
+        log.debug('>>>> key_gen {_id} {name}')
 
     def key_list(self):
         # ret = {'Keys': [{'Name': self._name, 'Id': self._id}]}
@@ -35,7 +35,7 @@ class MockIpns():
                 'Id': self.ipns_name_to_id[name]
             } for name in self.ipns_name_to_id if True]
         }
-        log.debug('>>>> key_list', ret)
+        log.debug('>>>> key_list {ret}')
         return ret
 
     def add_bytes(self, data):
@@ -49,19 +49,19 @@ class MockIpns():
         _hash = path.split('/')[-1]
         _id = self.ipns_name_to_id[key]
         self.ipns_id_to_hash[_id] = _hash
-        log.debug('...........',self.ipns_id_to_hash[_id])
+        log.debug('........... {self.ipns_id_to_hash[_id]}')
 
-        log.debug('>>>> publish', path, key, _hash, _id)
+        log.debug(f'>>>> publish, {path}, {key}, {_hash}, {_id}')
 
     def resolve(self, ipns_path):
         ipns_id = ipns_path.split('/')[-1]
-        log.debug('>>>> resolve', self.ipns_id_to_hash)
+        log.debug(f'>>>> resolve{self.ipns_id_to_hash}')
         _hash = self.ipns_id_to_hash[ipns_id]
-        log.debug('>>>> resolve', ipns_id, _hash)
+        log.debug('>>>> resolve, {ipns_id}, {_hash}')
         return {'Path': f'_/{_hash}'}
 
     def cat(self, _hash):
-        log.debug('>>>> cat', _hash)
+        log.debug(f'>>>> cat{_hash}')
         return self.ipns_hash_to_data[_hash]
 
 

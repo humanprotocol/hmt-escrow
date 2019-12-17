@@ -1130,6 +1130,7 @@ class Job:
         # job_addr = self._last_escrow_addr()
         return True  #job_addr
 
+
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
