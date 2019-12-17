@@ -1100,12 +1100,6 @@ class Job:
             gas
         })
 
-
-# goes at end of _create_escrow test
-#        >>> get_ipns_link(addr)
-#        Traceback (most recent call last):
-#        ValueError: Given private key doesn't match the ethereum address.
-
     def _create_escrow(self, gas: int = GAS_LIMIT) -> bool:
         """Launches a new escrow contract to the ethereum network.
 

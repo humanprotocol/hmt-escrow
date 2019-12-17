@@ -19,8 +19,7 @@ SHARED_MAC_DATA = os.getenv(
 LOG = logging.getLogger("hmt_escrow.storage")
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
-IPNS_PATH = os.getenv("IPNS_PATH", "localhost")
-
+IPNS_PATH = os.getenv("IPNS_PATH", f"{IPFS_HOST}:{IPFS_PORT}/ipns/")
 
 @timeout_decorator.timeout(20)
 def _connect(host: str, port: int) -> Client:
@@ -60,9 +59,11 @@ def download(key: str, private_key: bytes) -> Dict:
     True
     """
 
-    # Q prefix is ipfs. else assume ipns
-    if key[0] != 'Q':
-        res = IPFS_CLIENT.resolve(f'/ipns/{key}')
+    # Q prefix is ipfs. If no q prefix, assume IPNS: https://github.com/ipfs/faq/issues/22
+    is_ipns = lambda s: s[0] != 'Q'
+
+    if is_ipns(key):
+        res = IPFS_CLIENT.resolve(f'{IPNS_PATH}{key}')
         ipfs_path = res['Path']
         key = ipfs_path.split('/')[-1]
     try:
@@ -124,7 +125,6 @@ def upload(msg: Dict, public_key: bytes,
     if ipns_keypair_name != '':
         try:
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
-            # TODO: is it faster if
             IPFS_CLIENT.name.publish(
                 f'/ipfs/{ipfs_file_hash}',
                 key=ipns_keypair_name.lower(),
