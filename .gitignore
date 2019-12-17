@@ -103,6 +103,10 @@ ENV/
 # vim
 *.swp
 
+# emacs
+*~
+*[#]*
+
 .idea
 venv*
 het/secrets.json
