@@ -32,5 +32,4 @@ else
   python3 hmt_escrow/job.py
   python3 hmt_escrow/storage.py
   python3 hmt_escrow/eth_bridge.py
-  python3 hmt_escrow/tests/test_ipns.py
 fi
