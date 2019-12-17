@@ -7,6 +7,8 @@ let reputationOracle;
 let recordingOracle;
 const url = 'http://google.com/fake';
 const hash = 'fakehash';
+const recOIpns = 'https://recO.io';
+const repOIpns = 'https://repO.com';
 
 contract('Escrow', (accounts) => {
   beforeEach(async () => {
@@ -87,7 +89,7 @@ contract('Escrow', (accounts) => {
   describe('calling setup', () => {
     it('fails when calling with different address than the contract was created with', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[1] });
+        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, recOIpns, repOIpns, url, hash, { from: accounts[1] });
         assert(false);
       } catch (ex) {
         assert(true);
@@ -96,7 +98,7 @@ contract('Escrow', (accounts) => {
 
     it('fails if reputation oracle or recording oracle stake is too high', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 500, 500, 10, url, hash, { from: accounts[1] });
+        await Escrow.setup(reputationOracle, recordingOracle, 500, 500, 10, recOIpns, repOIpns, url, hash, { from: accounts[1] });
         assert(false);
       } catch (ex) {
         assert(true);
@@ -105,7 +107,7 @@ contract('Escrow', (accounts) => {
 
     it('fails if reputation oracle or recording oracle stake is too low', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 0, 0, 10, url, hash, { from: accounts[1] });
+        await Escrow.setup(reputationOracle, recordingOracle, 0, 0, 10, recOIpns, repOIpns, url, hash, { from: accounts[1] });
         assert(false);
       } catch (ex) {
         assert(true);
@@ -114,7 +116,7 @@ contract('Escrow', (accounts) => {
 
     it('fails if contract has sufficient funds', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 10, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         assert(false);
       } catch (ex) {
         assert(true);
@@ -123,21 +125,25 @@ contract('Escrow', (accounts) => {
 
     it('sets parameters correctly', async () => {
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, recOIpns, repOIpns, url, hash, { from: accounts[0] });
       const contractReputationOracle = await Escrow.getReputationOracle.call();
       const contractRecordingOracle = await Escrow.getRecordingOracle.call();
       const contractManifestUrl = await Escrow.getManifestUrl.call();
       const contractManifestHash = await Escrow.getManifestHash.call();
+      const _recOIpns = await Escrow.getRecordingOracleIpnsHash.call();
+      const _repOIpns = await Escrow.getReputationOracleIpnsHash.call();
 
       assert.equal(contractReputationOracle, reputationOracle);
       assert.equal(contractRecordingOracle, recordingOracle);
       assert.equal(contractManifestUrl, url);
       assert.equal(contractManifestHash, hash);
+      assert.equal(_recOIpns, recOIpns);
+      assert.equal(_repOIpns, repOIpns);
     });
 
     it('sets status to pending', async () => {
       await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: accounts[0] });
+      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, recOIpns, repOIpns, url, hash, { from: accounts[0] });
       const status = await Escrow.getStatus.call();
       assert.equal(1, status);
     });
@@ -175,7 +181,7 @@ contract('Escrow', (accounts) => {
 
     it('fails if status is other than pending or partial', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 0, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 0, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         await Escrow.storeResults('url', 'hash', { from: accounts[2] });
         assert(false);
       } catch (ex) {
@@ -185,7 +191,7 @@ contract('Escrow', (accounts) => {
 
     it('succeeds if status is pending', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         await Escrow.storeResults(url, hash, { from: accounts[2] });
         const IntermediateResultsUrl = await Escrow.getIntermediateResultsUrl.call();
         const IntermediateResultsHash = await Escrow.getIntermediateResultsHash.call();
@@ -211,7 +217,7 @@ contract('Escrow', (accounts) => {
       try {
         const initialAccountBalance = await Escrow.getAddressBalance.call(accounts[0]);
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         await Escrow.cancel({ from: accounts[0] });
         const accountBalance = await Escrow.getAddressBalance.call(accounts[0]);
         assert.equal(accountBalance.toNumber(), initialAccountBalance.toNumber());
@@ -223,7 +229,7 @@ contract('Escrow', (accounts) => {
     it('sets status to canceled if succesful', async () => {
       try {
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         await Escrow.cancel({ from: accounts[0] });
         const contractStatus = await Escrow.getStatus.call();
         assert.equal(contractStatus, 5);
@@ -237,7 +243,7 @@ contract('Escrow', (accounts) => {
     it('pays each recipient their corresponding amount', async () => {
       try {
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         const initialAccount3Balance = await Escrow.getAddressBalance.call(accounts[3]);
         const initialAccount4Balance = await Escrow.getAddressBalance.call(accounts[4]);
         const initialAccount5Balance = await Escrow.getAddressBalance.call(accounts[5]);
@@ -263,7 +269,7 @@ contract('Escrow', (accounts) => {
     it('pays oracles their fees', async () => {
       try {
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         const initialRecordingOracleBalance = await Escrow.getAddressBalance.call(recordingOracle);
         const initialReputationOracleBalance = await Escrow.getAddressBalance.call(reputationOracle);
 
@@ -292,7 +298,7 @@ contract('Escrow', (accounts) => {
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
 
         // Setup escrow
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         const setupStatus = await Escrow.getStatus.call();
         assert.equal(setupStatus, 1);
 
@@ -310,6 +316,34 @@ contract('Escrow', (accounts) => {
       }
     });
 
+    it('optionally writes out internal url & hash', async () => {
+      try {
+        const toAddress = [accounts[0]];
+        const initialStatus = await Escrow.getStatus.call();
+        assert.equal(initialStatus, 0);
+
+        // Transer funds to escrow
+        await HMT.transfer(Escrow.address, 200, { from: accounts[0] });
+
+        // Setup escrow
+        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, recOIpns, repOIpns, url, hash, { from: accounts[0] });
+        const setupStatus = await Escrow.getStatus.call();
+        assert.equal(setupStatus, 1);
+
+        const amountToPay = [4];
+        assert(await Escrow.getFinalResultsUrl.call() === '' && await Escrow.getFinalResultsHash.call() === '',
+              'hash and url should be empty');
+        await Escrow.bulkPayOut(toAddress, amountToPay, url, hash, '000', { from: reputationOracle });
+        assert(await Escrow.getFinalResultsUrl.call() === url && await Escrow.getFinalResultsHash.call() === hash,
+              'either hash or url not set');
+        await Escrow.bulkPayOut(toAddress, amountToPay, '', '', '000', { from: reputationOracle });
+        assert(await Escrow.getFinalResultsUrl.call() === url && await Escrow.getFinalResultsHash.call() === hash,
+                    'hash or url changed when it should not have');
+      } catch (ex) {
+        assert(false);
+      }
+    });
+
     it('runs from setup to bulkPayOut to complete correctly with multiple addresses', async () => {
       try {
         const toAddresses = [accounts[0], accounts[1]];
@@ -320,7 +354,7 @@ contract('Escrow', (accounts) => {
         await HMT.transfer(Escrow.address, 100, { from: accounts[0] });
 
         // Setup escrow
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: accounts[0] });
+        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, recOIpns, repOIpns, url, hash, { from: accounts[0] });
         const setupStatus = await Escrow.getStatus.call();
         assert.equal(setupStatus, 1);
 
