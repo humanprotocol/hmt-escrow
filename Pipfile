@@ -7,7 +7,7 @@ verify_ssl = true
 
 [packages]
 web3 = "==4.8.3"
-ipfsapi = "*"
+ipfsapi = "==0.4.4"
 py-solc = "*"
 yapf = "*"
 py-evm = "==0.2.0a37"
