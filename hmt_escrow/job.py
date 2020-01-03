@@ -119,7 +119,7 @@ def manifest_hash(escrow_contract: Contract,
     })
 
 
-def intermediate_ipns_id(escrow_contract: Contract, gas_payer: str) -> str:
+def intermediate_url(escrow_contract: Contract, gas_payer: str) -> str:
     """Retrieves the deployed intermediate results url uploaded on Job initialization.
 
     Args:
@@ -138,7 +138,7 @@ def intermediate_ipns_id(escrow_contract: Contract, gas_payer: str) -> str:
     })
 
 
-def final_ipns_id(escrow_contract: Contract, gas_payer: str) -> str:
+def final_url(escrow_contract: Contract, gas_payer: str) -> str:
     """Retrieves the deployed intermediate results url uploaded on Job initialization.
 
     Args:
@@ -176,6 +176,25 @@ def intermediate_hash(escrow_contract: Contract,
         gas
     })
 
+def final_hash(escrow_contract: Contract,
+               gas_payer: str,
+               gas: int = GAS_LIMIT) -> str:
+    """Retrieves the deployed final results hash uploaded on Job initialization.
+
+    Args:
+        escrow_contract (Contract): the escrow contract of the Job.
+        gas_payer (str): an ethereum address paying for the gas costs.
+        gas (int): maximum amount of gas the caller is ready to pay.
+
+    Returns:
+        str: returns the intermediate results hash of Job's escrow contract.
+    """
+    return escrow_contract.functions.getFinalResultsHash().call({
+        'from':
+        gas_payer,
+        'gas':
+        gas
+    })
 
 def launcher(escrow_contract: Contract, gas_payer: str,
              gas: int = GAS_LIMIT) -> str:
@@ -875,9 +894,6 @@ class Job:
         final_results_url = final_ipns_id(self.job_contract,
                                           self.gas_payer).split('/')[-1]
         return download(final_results_url, priv_key)
-
-    def get_ipns_url_with_name(self, key_name: str) -> str:
-        return get_ipns_link(key_name)
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
