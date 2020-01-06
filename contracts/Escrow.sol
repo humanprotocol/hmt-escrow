@@ -4,7 +4,7 @@ import "./SafeMath.sol";
 
 contract Escrow {
     using SafeMath for uint256;
-    event IntermediateStorage(string _url, string _hash);
+    event IntermediateStorage(string _hash);
     enum EscrowStatuses { Launched, Pending, Partial, Paid, Complete, Cancelled }
     EscrowStatuses private status;
 
@@ -26,14 +26,11 @@ contract Escrow {
 
     string private finalResultsUrl;
     string private finalResultsHash;
- 
+
     uint private expiration;
 
     uint256[] private finalAmounts;
     bool private bulkPaid;
-
-    string private recordingOracleIpnsHash;
-    string private reputationOracleIpnsHash;
 
     constructor(address _eip20, address _canceler, uint _expiration) public {
         eip20 = _eip20;
@@ -100,14 +97,6 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function getRecordingOracleIpnsHash() public view returns (string) {
-        return recordingOracleIpnsHash;
-    }
-
-    function getReputationOracleIpnsHash() public view returns (string) {
-        return reputationOracleIpnsHash;
-    }
-
     // The escrower puts the Token in the contract without an agentless
     // and assigsn a reputation oracle to payout the bounty of size of the
     // amount specified
@@ -116,10 +105,10 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
-        string _recordingOracleIpnsHash,
-        string _reputationOracleIpnsHash,
-        string _url,
-        string _hash
+        string _intermediateResultsUrl,
+        string _finalResultsUrl,
+        string _manifestUrl,
+        string _manifestHash
     ) public
     {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
@@ -133,16 +122,18 @@ contract Escrow {
         );
         require(status == EscrowStatuses.Launched, "Escrow not in Launched status state");
 
-        reputationOracle = _reputationOracle;
-        recordingOracle = _recordingOracle;
         reputationOracleStake = _reputationOracleStake;
         recordingOracleStake = _recordingOracleStake;
+        reputationOracle = _reputationOracle;
+        recordingOracle = _recordingOracle;
+        intermediateResultsUrl = _intermediateResultsUrl;
+        finalResultsUrl = _finalResultsUrl;
         bulkPaid = false;
 
-        recordingOracleIpnsHash  = _recordingOracleIpnsHash;
-        reputationOracleIpnsHash = _reputationOracleIpnsHash;
-        manifestUrl = _url;
-        manifestHash = _hash;
+        intermediateResultsUrl  = _intermediateResultsUrl;
+        finalResultsUrl = _finalResultsUrl;
+        manifestUrl = _manifestUrl;
+        manifestHash = _manifestHash;
         status = EscrowStatuses.Pending;
         emit Pending(manifestUrl, manifestHash);
     }
@@ -178,7 +169,7 @@ contract Escrow {
         }
     }
 
-    function storeResults(string _url, string _hash) public {
+    function storeResults(string _hash) public {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == recordingOracle, "Address calling not the recording oracle");
         require(
@@ -186,15 +177,13 @@ contract Escrow {
             status == EscrowStatuses.Partial,
             "Escrow not in Pending or Partial status state"
         );
-        intermediateResultsUrl = _url;
         intermediateResultsHash = _hash;
-        emit IntermediateStorage(_url, _hash);
+        emit IntermediateStorage(_hash);
     }
 
     function bulkPayOut(
         address[] _recipients,
         uint256[] _amounts,
-        string _url,
         string _hash,
         uint256 _txId
     ) public returns (bool)
@@ -217,10 +206,8 @@ contract Escrow {
             return bulkPaid;
         }
 
-        bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
+        bool writeOnchain = bytes(_hash).length != 0;
         if (writeOnchain) {
-          // Be sure they are both zero if one of them is
-          finalResultsUrl = _url;
           finalResultsHash = _hash;
         }
 

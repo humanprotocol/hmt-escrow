@@ -4,6 +4,3 @@ docker-compose build
 docker-compose run job bash -c "./bin/wait_then_run $*"
 docker-compose run job bash -c "./bin/unittests $*"
 docker-compose run contracts
-
-
-
