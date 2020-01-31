@@ -26,7 +26,7 @@ contract Escrow {
 
     string private finalResultsUrl;
     string private finalResultsHash;
- 
+
     uint private expiration;
 
     uint256[] private finalAmounts;
