@@ -1,4 +1,30 @@
 # Contributing
+## hCaptcha Open Source Guidelines
+### Introduction
+We want to embrace a vibrant open source community. On top of that we believe programming together is the best way to interview. If you want to work for hCaptcha, the best way to do that is to start working on bounty labeled issues found at our Open Source Project Dashboard. To make it worth your while, each bounty is valued between $100, $200 or $400 depending on the scope of the task (small, medium or large). We pay only via PayPal.
+Project
+Main repository we are starting the bounty program with is hmt-escrow. The project is divided into two main modules: python and solidity.
+
+### Solidity
+The solidity project is based on truffle. The smart contracts can be found from the contracts/ folder.
+Python
+The python part of the project is to act as a wrapper for the smart contracts since the main way we use the smart contracts is via python. You can find the python related part of the project inside the hmt_escrow/ folder.
+Development
+We encourage using Docker as the main way to develop since it assembles all the solidity and python dependencies together neatly. Docker will be especially handy when developing python related modules. If you are only developing smart contract related features, a local ganache together with truffle should be sufficient.
+
+### The First Issue
+We don’t want multiple people working on the same task. That’s why it’s important to let us know in the issue two things: 
+
+A comment that you want to give it a shot
+An estimate how long you think it will take you
+
+We will be checking on issues frequently to see if people are working on them. If 24-48 hours goes by without any comment, we will be giving it to someone else that wants to work on the bounty.
+
+### The First Pull Request
+So you created a Pull Request and want to merge your code to the master. Great! The first thing we’ll want you to do is sign a CLA (Contributor License Agreement). Otherwise we can’t accept your code changes. We will remind you when you open the PR about this.
+
+Once the PR has been merged and if it was a bounty labeled Issue, we will DM you for your bounty. At this point we might also contact you on a possible job opportunity. If not, keep working on more bounties.
+
 ## Advice for new contributors
 Small tasks get merged easier as the scope of changes won't require wider review. We recommend starting with these.
 
@@ -9,6 +35,7 @@ Search through already labeled Issues such as `area:contracts` and `kind:feature
 If you want to start solving the `Issue`, please comment in it with something like: "I would like to take a stab at this". This will help us coordinate and distribute the workload.
 
 See below for more guidelines on [Pull Requests](#pull-requests).
+
 ## Developer setup
 We support the current version through Docker. We will be adding the pip library in the near future.
 
