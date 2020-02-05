@@ -172,13 +172,13 @@ contract Escrow {
         emit Pending(manifestUrl, manifestHash);
     }
 
-    function abort() public {
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
-        require(
-            status != EscrowStatuses.Complete,
-            "Escrow in Complete status state"
-        );
-        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+    function abort()  public {
+        EscrowStatuses memory _status = status;
+
+        require(msg.sender == canceler, "Address calling not the canceler");
+        require(_status != EscrowStatuses.Partial, "Escrow in Partial status state");
+        require(_status != EscrowStatuses.Complete, "Escrow in Complete status state");
+        require(_status != EscrowStatuses.Paid, "Escrow in Paid status state");
         selfdestruct(canceler);
     }
 
@@ -230,18 +230,18 @@ contract Escrow {
         string memory _url,
         string memory _hash,
         uint256 _txId
-    ) public returns (bool) {
-        require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
+    ) public returns (bool)
+    {
+        EscrowStatuses memory _status = status;
+
+        require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
+        require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
         uint256 balance = getBalance();
         require(balance > 0, "EIP20 contract out of funds");
-        require(
-            status != EscrowStatuses.Launched,
-            "Escrow in Launched status state"
-        );
-        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+        require(_status != EscrowStatuses.Launched, "Escrow in Launched status state");
+        require(_status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
-        bulkPaid = false;
+        _bulkPaid = false;
 
         uint256 aggregatedBulkAmount = 0;
         for (uint256 i; i < _amounts.length; i++) {
@@ -249,7 +249,7 @@ contract Escrow {
         }
 
         if (balance < aggregatedBulkAmount) {
-            return bulkPaid;
+            return _bulkPaid;
         }
 
         bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
@@ -266,23 +266,24 @@ contract Escrow {
             _recipients.length
         ) {
             delete finalAmounts;
-            bulkPaid = token.transfer(reputationOracle, reputationOracleFee);
-            bulkPaid = token.transfer(recordingOracle, recordingOracleFee);
+            _bulkPaid = token.transfer(reputationOracle, reputationOracleFee);
+            _bulkPaid = token.transfer(recordingOracle, recordingOracleFee);
         }
 
         balance = getBalance();
-        if (bulkPaid) {
-            if (status == EscrowStatuses.Pending) {
-                status = EscrowStatuses.Partial;
+        if (_bulkPaid) {
+            if (_status == EscrowStatuses.Pending) {
+                _status = EscrowStatuses.Partial;
             }
-            if (
-                balance == 0 &&
-                (status == EscrowStatuses.Pending ||
-                    status == EscrowStatuses.Partial)
-            ) {
-                status = EscrowStatuses.Paid;
+            if (balance == 0 && (_status == EscrowStatuses.Pending || _status == EscrowStatuses.Partial)) {
+                _status = EscrowStatuses.Paid;
             }
         }
+
+        bulkPaid = _bulkPaid;
+
+        status = _status;
+
         return bulkPaid;
     }
 
