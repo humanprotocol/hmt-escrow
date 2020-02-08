@@ -250,7 +250,7 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] _amounts) public returns (uint256, uint256) {
+    function finalizePayouts(uint256[] _amounts) internal returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {
