@@ -205,10 +205,6 @@ contract('Escrow', accounts => {
         'Address calling not the reputation oracle'
       );
     });
-
-    it('fails if escrow status is not complete or paid', async () => {
-      await testWillThrow(Escrow.complete, [], { from: reputationOracle }, '');
-    });
   });
 
   describe('calling storeResults', () => {
