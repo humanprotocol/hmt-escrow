@@ -4,6 +4,9 @@ const { INFURA_TOKEN, MNEMONIC, ETH_HOST, ETH_PORT } = process.env;
 const HDWalletProvider = require('truffle-hdwallet-provider');
 
 module.exports = {
+
+  plugins: ["truffle-security"],
+
   networks: {
     development: {
       host: ETH_HOST || '127.0.0.1',
