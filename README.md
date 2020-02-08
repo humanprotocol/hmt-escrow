@@ -161,11 +161,11 @@ Versioning should follow the [semver](https://semver.org/) versioning methodolog
 
 Join our [Telegram](https://t.me/hcaptchachat) channel, we will gladly answer your questions.
 
-## Found a bug?
+## Found a bug or a feature request?
 
-Please search for any existing issues at our [Issues](https://github.com/IntuitionMachines/hmt-contracts/issues) page before submitting your own.
+Please search for any existing issues at our [Issues](https://github.com/IntuitionMachines/hmt-contracts/issues) page before submitting your own. If you submit your own, please follow our `Bug Request` and `Feature Request` templates.
 
-Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties).
+Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties) and [Bounty Issues](https://github.com/hCaptcha/hmt-escrow/issues?q=is%3Aopen+is%3Aissue+label%3Abounty).
 
 ## Contributions
 
