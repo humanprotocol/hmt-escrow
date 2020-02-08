@@ -174,3 +174,13 @@ Interesting in contributing to the project? Please see our [Contributing guideli
 ## License
 
 MIT © HUMAN Protocol
+
+## Audit Status
+
+The HUMAN Protocol token contract (HMToken.sol) has been audited by several third parties, most recently CertiK. You can see the results of this audit in the `audits` directory. The code for this contract is stable and not expected to change materially in the future.
+
+The escrow factory and related code are under active development, and escrow factories on the testnet are frequently launched during development. 
+
+Although all code goes through internal reviews before being committed, you should assume the current code in master has not been externally audited to the same degree as the token contract. 
+
+When a stable 1.0 version of the escrow factory contract is released, this section of the README will be updated with a link to audit results for that githash.
