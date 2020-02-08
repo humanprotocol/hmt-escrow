@@ -51,6 +51,7 @@ library SafeMath {
         uint256 c = a + b;
         require(c >= a);
 
+        /* SWC-116: A control flow decision is made based on a predictable variable */
         return c;
     }
 

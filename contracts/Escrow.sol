@@ -56,11 +56,15 @@ contract Escrow {
     }
 
     function getBalance() public view returns (uint256) {
+
+        /* SWC-107: A call to a user-supplied address is executed */
         return HMTokenInterface(eip20).balanceOf(address(this));
     }
 
     function getAddressBalance(address _address) public view returns (uint256) {
         require(_address != address(0), "Token spender is an uninitialized address");
+
+        /* SWC-107: A call to a user-supplied address is executed */
         return HMTokenInterface(eip20).balanceOf(address(_address));
     }
 
@@ -152,6 +156,8 @@ contract Escrow {
         require(status != EscrowStatuses.Partial, "Escrow in Partial status state");
         require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+
+        /* SWC-106: The contract can be killed by anyone */
         selfdestruct(canceler);
     }
 
