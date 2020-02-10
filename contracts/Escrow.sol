@@ -166,6 +166,8 @@ contract Escrow {
         recordingOracleStake = _recordingOracleStake;
         bulkPaid = false;
 
+        recordingOracleIpnsHash = _recordingOracleIpnsHash;
+        reputationOracleIpnsHash = _reputationOracleIpnsHash;
         manifestUrl = _url;
         manifestHash = _hash;
         status = EscrowStatuses.Pending;
@@ -243,21 +245,13 @@ contract Escrow {
 
         bool _bulkPaid = false;
 
-        uint256 aggregatedBulkAmount = 0;
-        for (uint256 i; i < _amounts.length; i++) {
-            aggregatedBulkAmount += _amounts[i];
-        }
+        uint256 aggregatedBulkAmount = calcAggregatedBulkAmount(_amounts);
 
         if (balance < aggregatedBulkAmount) {
             return _bulkPaid;
         }
 
-        bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
-        if (writeOnchain) {
-          // Be sure they are both zero if one of them is
-          finalResultsUrl = _url;
-          finalResultsHash = _hash;
-        }
+        writeOnChain(_hash, _url);
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
@@ -309,6 +303,23 @@ contract Escrow {
             finalAmounts.push(amount);
         }
         return (reputationOracleFee, recordingOracleFee);
+    }
+
+    function calcAggregatedBulkAmount(uint256[] _amounts) internal returns (uint256) {
+        uint256 aggregatedBulkAmount = 0;
+        for (uint256 i; i < _amounts.length; i++) {
+            aggregatedBulkAmount += _amounts[i];
+        }
+        return aggregatedBulkAmount;
+    }
+
+    function writeOnChain(string _hash, string _url) internal {
+        bool _writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
+        if (_writeOnchain) {
+            // Be sure they are both zero if one of them is
+            finalResultsUrl = _url;
+            finalResultsHash = _hash;
+        }
     }
 
     event Pending(string manifest, string hash);
