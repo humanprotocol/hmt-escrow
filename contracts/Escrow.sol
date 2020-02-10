@@ -173,7 +173,7 @@ contract Escrow {
     }
 
     function abort()  public {
-        EscrowStatuses memory _status = status;
+        EscrowStatuses _status = status;
 
         require(msg.sender == canceler, "Address calling not the canceler");
         require(_status != EscrowStatuses.Partial, "Escrow in Partial status state");
@@ -232,7 +232,7 @@ contract Escrow {
         uint256 _txId
     ) public returns (bool)
     {
-        EscrowStatuses memory _status = status;
+        EscrowStatuses _status = status;
 
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == reputationOracle, "Address calling not the reputation oracle");
@@ -241,7 +241,7 @@ contract Escrow {
         require(_status != EscrowStatuses.Launched, "Escrow in Launched status state");
         require(_status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
-        _bulkPaid = false;
+        bool _bulkPaid = false;
 
         uint256 aggregatedBulkAmount = 0;
         for (uint256 i; i < _amounts.length; i++) {
