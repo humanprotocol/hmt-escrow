@@ -34,7 +34,7 @@ services:
       - ganache
 
   ganache:
-    image: trufflesuite/ganache-cli:v6.1.0
+    image: trufflesuite/ganache-cli:v6.2.0
     command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
     ports:
       - 8545:8545
