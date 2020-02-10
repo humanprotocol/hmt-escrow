@@ -12,7 +12,8 @@
   "rules": {
     "no-console": 0,
     "prefer-destructuring": ["error", { "object": true, "array": false }],
-    "max-len": 0
+    "max-len": 0,
+    "eol-last": ["error", "always"]
   },
   "globals": {
     "assert": true,

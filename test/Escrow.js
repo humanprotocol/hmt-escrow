@@ -34,7 +34,7 @@ contract('Escrow', accounts => {
   describe('initialization of Escrow contract works correctly', () => {
     it('status is launched', async () => {
       const initialStatus = await Escrow.getStatus();
-      assert.equal(0, initialStatus);
+      assert.equal(initialStatus, 0);
     });
 
     it('balance is 0', async () => {
@@ -192,7 +192,7 @@ contract('Escrow', accounts => {
         { from: accounts[0] }
       );
       const status = await Escrow.getStatus();
-      assert.equal(1, status);
+      assert.equal(status, 1);
     });
   });
 

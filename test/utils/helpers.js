@@ -11,4 +11,4 @@ const testWillThrow = async (contractFunction, input, args, errorMessage) => {
 	}
 }
 
-module.exports = { testWillThrow } 
+module.exports = { testWillThrow }
