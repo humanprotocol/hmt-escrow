@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.6.2;
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 
@@ -76,27 +76,27 @@ contract Escrow {
         return recordingOracle;
     }
 
-    function getManifestHash() public view returns (string) {
+    function getManifestHash() public view returns (string memory) {
         return manifestHash;
     }
 
-    function getManifestUrl() public view returns (string) {
+    function getManifestUrl() public view returns (string memory) {
         return manifestUrl;
     }
 
-    function getIntermediateResultsUrl() public view returns (string) {
+    function getIntermediateResultsUrl() public view returns (string memory) {
         return intermediateResultsUrl;
     }
 
-    function getIntermediateResultsHash() public view returns (string) {
+    function getIntermediateResultsHash() public view returns (string memory) {
         return intermediateResultsHash;
     }
 
-    function getFinalResultsUrl() public view returns (string) {
+    function getFinalResultsUrl() public view returns (string memory) {
         return finalResultsUrl;
     }
 
-    function getFinalResultsHash() public view returns (string) {
+    function getFinalResultsHash() public view returns (string memory) {
         return finalResultsHash;
     }
 
@@ -104,11 +104,11 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function getRecordingOracleIpnsHash() public view returns (string) {
+    function getRecordingOracleIpnsHash() public view returns (string memory) {
         return recordingOracleIpnsHash;
     }
 
-    function getReputationOracleIpnsHash() public view returns (string) {
+    function getReputationOracleIpnsHash() public view returns (string memory) {
         return reputationOracleIpnsHash;
     }
 
@@ -120,10 +120,10 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
-        string _recordingOracleIpnsHash,
-        string _reputationOracleIpnsHash,
-        string _url,
-        string _hash
+        string memory _recordingOracleIpnsHash,
+        string memory _reputationOracleIpnsHash,
+        string memory _url,
+        string memory _hash
     ) public
     {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
@@ -158,7 +158,7 @@ contract Escrow {
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
         /* SWC-106: The contract can be killed by anyone */
-        selfdestruct(canceler);
+        selfdestruct(payable(canceler));
     }
 
     function cancel() public returns (bool) {
@@ -184,7 +184,7 @@ contract Escrow {
         }
     }
 
-    function storeResults(string _url, string _hash) public {
+    function storeResults(string memory _url, string memory _hash) public {
         require(expiration > block.timestamp, "Contract expired");  // solhint-disable-line not-rely-on-time
         require(msg.sender == recordingOracle, "Address calling not the recording oracle");
         require(
@@ -198,10 +198,10 @@ contract Escrow {
     }
 
     function bulkPayOut(
-        address[] _recipients,
-        uint256[] _amounts,
-        string _url,
-        string _hash,
+        address[] memory _recipients,
+        uint256[] memory _amounts,
+        string memory _url,
+        string memory _hash,
         uint256 _txId
     ) public returns (bool)
     {
@@ -250,7 +250,7 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] _amounts) internal returns (uint256, uint256) {
+    function finalizePayouts(uint256[] memory _amounts) internal returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {
