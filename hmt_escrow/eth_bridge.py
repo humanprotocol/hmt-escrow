@@ -4,7 +4,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from hmt_escrow.kvstore_abi import abi as kvstore_abi
-from solc import compile_files
+from solcx import compile_files
 from web3 import EthereumTesterProvider, HTTPProvider, Web3
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
@@ -28,9 +28,10 @@ CONTRACTS = compile_files([
 ])
 
 # See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
-KVSTORE_CONTRACT = Web3.toChecksumAddress(
-    os.getenv("KVSTORE_CONTRACT",
-              "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
+# KVSTORE_CONTRACT = Web3.toChecksumAddress(
+#      os.getenv("KVSTORE_CONTRACT", "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
+
+KVSTORE_CONTRACT = Web3.toChecksumAddress("0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
 
 
 def get_w3() -> Web3:

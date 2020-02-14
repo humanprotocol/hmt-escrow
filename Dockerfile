@@ -21,8 +21,8 @@ COPY Pipfile Pipfile.lock /work/
 RUN pip3 install pipenv
 RUN pipenv install --system --deploy
 
-RUN python3 -m solc.install v0.4.24
-ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
+RUN python3 -m solcx.install v0.6.2
+ENV SOLC_BINARY="/root/.py-solc-x/solc-v0.6.2/bin/solc"
 
 # Necessary files for smart contract compilation, migration and testing
 COPY contracts /work/contracts/
