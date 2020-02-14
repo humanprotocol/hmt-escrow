@@ -12,6 +12,8 @@ module.exports = {
       host: ETH_HOST || '127.0.0.1',
       port: ETH_PORT || 9545,
       network_id: '*',
+      gas: 0xfffffffffff,
+      gasPrice: 0x01,
     },
     live: {
       provider: () => new HDWalletProvider(MNEMONIC, `https://mainnet.infura.io/${INFURA_TOKEN}`),
@@ -33,14 +35,14 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: "0.4.24", // Fetch exact version from solc-bin (default: truffle's version)
+      version: "0.6.2", // Fetch exact version from solc-bin (default: truffle's version)
       settings: {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
-          enabled: false,
+          enabled: true,
           runs: 200
         },
-        evmVersion: "byzantium"
+        evmVersion: "constantinople"
       }
     }
   }
