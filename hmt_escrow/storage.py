@@ -80,7 +80,8 @@ def download(key: str, private_key: bytes) -> Dict:
 
 
 @timeout_decorator.timeout(20)
-def upload(msg: Dict, public_key: bytes,
+def upload(msg: Dict,
+           public_key: bytes,
            ipns_keypair_name: str = '') -> Tuple[str, str]:
     """Upload encrypted string to IPFS.
     This can be manifest files, results, or anything that's been already encrypted.
@@ -126,10 +127,9 @@ def upload(msg: Dict, public_key: bytes,
     if ipns_keypair_name != '':
         try:
             # publish ipns ... docs: https://ipfs.io/ipns/12D3KooWEqnTdgqHnkkwarSrJjeMP2ZJiADWLYADaNvUb6SQNyPF/docs/http_client_ref.html#ipfshttpclient.Client.name
-            IPFS_CLIENT.name.publish(
-                f'/ipfs/{ipfs_file_hash}',
-                key=ipns_keypair_name.lower(),
-                allow_offline=True)
+            IPFS_CLIENT.name.publish(f'/ipfs/{ipfs_file_hash}',
+                                     key=ipns_keypair_name.lower(),
+                                     allow_offline=True)
         except Exception as e:
             LOG.warning("IPNS failed because of: {}".format(e))
             raise e
