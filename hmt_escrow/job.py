@@ -543,7 +543,7 @@ class Job:
         # After abort the contract should be destroyed
         w3 = get_w3()
         contract_code = w3.eth.getCode(self.job_contract.address)
-        return contract_code == b"\x00"
+        return contract_code == b''
 
     def cancel(self, gas: int = GAS_LIMIT) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
