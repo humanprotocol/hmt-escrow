@@ -17,5 +17,5 @@ setuptools.setup(
     install_requires=[
         "ipfsapi==0.4.3", "py-evm==0.2.0a37", "py-solc==3.2.0", "web3==4.8.3",
         "yapf==0.25.0", "mypy==0.670", "timeout-decorator==0.4.1",
-        "hmt-basemodels>=0.0.1"
+        "hmt-basemodels>=0.0.18"
     ])
