@@ -32,9 +32,6 @@ contract Escrow {
     uint256[] private finalAmounts;
     bool private bulkPaid;
 
-    string private recordingOracleIpnsHash;
-    string private reputationOracleIpnsHash;
-
     constructor(address _eip20, address _canceler, uint _expiration) public {
         eip20 = _eip20;
         canceler = _canceler;
@@ -56,15 +53,11 @@ contract Escrow {
     }
 
     function getBalance() public view returns (uint256) {
-
-        /* SWC-107: A call to a user-supplied address is executed */
         return HMTokenInterface(eip20).balanceOf(address(this));
     }
 
     function getAddressBalance(address _address) public view returns (uint256) {
         require(_address != address(0), "Token spender is an uninitialized address");
-
-        /* SWC-107: A call to a user-supplied address is executed */
         return HMTokenInterface(eip20).balanceOf(address(_address));
     }
 
@@ -104,14 +97,6 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function getRecordingOracleIpnsHash() public view returns (string) {
-        return recordingOracleIpnsHash;
-    }
-
-    function getReputationOracleIpnsHash() public view returns (string) {
-        return reputationOracleIpnsHash;
-    }
-
     // The escrower puts the Token in the contract without an agentless
     // and assigsn a reputation oracle to payout the bounty of size of the
     // amount specified
@@ -120,8 +105,6 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
-        string _recordingOracleIpnsHash,
-        string _reputationOracleIpnsHash,
         string _url,
         string _hash
     ) public
@@ -143,8 +126,6 @@ contract Escrow {
         recordingOracleStake = _recordingOracleStake;
         bulkPaid = false;
 
-        recordingOracleIpnsHash  = _recordingOracleIpnsHash;
-        reputationOracleIpnsHash = _reputationOracleIpnsHash;
         manifestUrl = _url;
         manifestHash = _hash;
         status = EscrowStatuses.Pending;
@@ -156,8 +137,6 @@ contract Escrow {
         require(status != EscrowStatuses.Partial, "Escrow in Partial status state");
         require(status != EscrowStatuses.Complete, "Escrow in Complete status state");
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-
-        /* SWC-106: The contract can be killed by anyone */
         selfdestruct(canceler);
     }
 
@@ -223,12 +202,8 @@ contract Escrow {
             return bulkPaid;
         }
 
-        bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
-        if (writeOnchain) {
-          // Be sure they are both zero if one of them is
-          finalResultsUrl = _url;
-          finalResultsHash = _hash;
-        }
+        finalResultsUrl = _url;
+        finalResultsHash = _hash;
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
@@ -250,7 +225,7 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] _amounts) internal returns (uint256, uint256) {
+    function finalizePayouts(uint256[] _amounts) public returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {

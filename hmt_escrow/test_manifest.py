@@ -2,8 +2,8 @@
 
 import logging
 import os
-
 import basemodels
+
 from web3 import Web3
 
 CALLBACK_URL = 'http://google.com/webback'
