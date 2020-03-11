@@ -180,7 +180,7 @@ def launcher(escrow_contract: Contract,
         str: returns the address of who launched the job.
 
     """
-    return escrow_contract.functions.getLauncher().call({
+    return escrow_contract.job_contract.functions.getLauncher().call({
         'from': gas_payer,
         'gas': gas
     })
@@ -244,8 +244,8 @@ class Job:
         True
         >>> job.setup()
         True
-        >>> job.launcher()
-        "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+        >>> launcher(job, credentials['gas_payer']).lower() == job.factory_contract.address.lower()
+        True
 
         Initializing an existing Job instance with a factory and escrow address succeeds.
         >>> credentials = {
@@ -486,6 +486,9 @@ class Job:
         """Kills the contract and returns the HMT back to the gas payer.
         The contract cannot be aborted if the contract is in Partial, Paid or Complete state.
 
+        Returns:        
+            bool: returns True if contract has been destroyed successfully.
+        
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
