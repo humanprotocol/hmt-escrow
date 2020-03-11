@@ -20,7 +20,6 @@ IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
 
 
-@timeout_decorator.timeout(20)
 def _connect(host: str, port: int) -> Client:
     try:
         IPFS_CLIENT = ipfsapi.connect(host, port)
@@ -33,7 +32,6 @@ def _connect(host: str, port: int) -> Client:
 IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
 
 
-@timeout_decorator.timeout(20)
 def download(key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
@@ -71,7 +69,6 @@ def download(key: str, private_key: bytes) -> Dict:
     return json.loads(msg)
 
 
-@timeout_decorator.timeout(20)
 def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
