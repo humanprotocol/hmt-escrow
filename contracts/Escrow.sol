@@ -29,6 +29,8 @@ contract Escrow {
 
     uint private expiration;
 
+    mapping(address => bool) private trustedHandlers;
+
     uint256[] private finalAmounts;
     bool private bulkPaid;
 
@@ -95,6 +97,15 @@ contract Escrow {
 
     function getBulkPaid() public view returns (bool) {
         return bulkPaid;
+    }
+
+    function isTrustedHandler(address _handler) public view returns (bool) {
+        return trustedHandlers[_handler]
+    }
+
+    function setTrustedHandler(address _handler) public {
+        require(status == EscrowStatuses.Launched, "Escrow not in Launched status state");
+        trustedHandlers[_handler] = true;
     }
 
     // The escrower puts the Token in the contract without an agentless
