@@ -12,7 +12,7 @@ py-solc = "*"
 yapf = "*"
 py-evm = "==0.2.0a37"
 mypy = "*"
-hmt-basemodels = "==0.0.17"
+hmt-basemodels = "==0.0.18"
 timeout-decorator = "*"
 
 [requires]
