@@ -62,7 +62,7 @@ def download(key: str, private_key: bytes) -> Dict:
         ciphertext = IPFS_CLIENT.cat(key)
     except Exception as e:
         LOG.warning(
-            "Reading the key {} with private key {} with IPFS failed because of: {}"
+            "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
             .format(key, private_key, e))
         raise e
     msg = _decrypt(private_key, ciphertext)
