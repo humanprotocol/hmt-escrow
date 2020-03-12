@@ -186,17 +186,6 @@ def launcher(escrow_contract: Contract,
     })
 
 
-def trusted_handler(escrow_contract: Contract,
-                    addr: str,
-                    gas_payer,
-                    str,
-                    gas: int = GAS_LIMIT) -> str:
-    return escrow_contract.isTrustedHandler().call({
-        'from': gas_payer,
-        'gas': gas
-    })
-
-
 class Job:
     """A class used to represent a given Job launched on the HUMAN network.
     A Job  can be created from a manifest or by accessing an existing escrow contract
@@ -706,17 +695,6 @@ class Job:
 
         handle_transaction(txn_func, *[], **txn_info)
         return self.status() == Status.Complete
-
-    def set_trusted_handler(self, addr, gas: int = GAS_LIMIT) -> bool:
-        txn_func = self.job_contract.functions.setTrustedHandler
-        func_args = [addr]
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
-        handle_transaction(txn_func, *func_args, **txn_info)
-        return self.job_contract.functions.isTrustedHandler == True
 
     def status(self, gas: int = GAS_LIMIT) -> Enum:
         """Returns the status of the Job.
