@@ -24,12 +24,6 @@ until curl --silent ipfs:5001; do
   sleep 1
 done
 
-
-export PYTHONPATH=$(pwd)
-if [ ! -z $* ]; then
-  $*
-else
-  python3 hmt_escrow/job.py
-  python3 hmt_escrow/storage.py
-  python3 hmt_escrow/eth_bridge.py
-fi
+python3 hmt_escrow/job.py
+python3 hmt_escrow/storage.py
+python3 hmt_escrow/eth_bridge.py
