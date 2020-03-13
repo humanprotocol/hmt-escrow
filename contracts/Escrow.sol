@@ -166,8 +166,6 @@ contract Escrow {
         recordingOracleStake = _recordingOracleStake;
         bulkPaid = false;
 
-        recordingOracleIpnsHash = _recordingOracleIpnsHash;
-        reputationOracleIpnsHash = _reputationOracleIpnsHash;
         manifestUrl = _url;
         manifestHash = _hash;
         status = EscrowStatuses.Pending;
