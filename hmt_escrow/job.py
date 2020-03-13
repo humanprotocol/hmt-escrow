@@ -1107,4 +1107,4 @@ class Job:
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
-    doctest.testmod()
+    doctest.testmod(raise_on_error=True)
