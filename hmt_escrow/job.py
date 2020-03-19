@@ -210,6 +210,7 @@ class Job:
     """
     def __init__(self,
                  credentials: Dict[str, str],
+                 multi_credentials: Dict[str, str] = None,
                  escrow_manifest: Manifest = None,
                  factory_addr: str = None,
                  escrow_addr: str = None):
@@ -285,10 +286,10 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
-        credentials_valid = self._validate_credentials(**credentials)
+        credentials_valid = self._validate_credentials(**credentials, **multi_credentials)
         if not credentials_valid:
             raise ValueError(
-                "Given private key doesn't match the ethereum address.")
+                "Given private keys don't match the ethereum addresses.")
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
