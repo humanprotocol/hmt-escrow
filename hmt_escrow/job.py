@@ -883,8 +883,15 @@ class Job:
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         self.serialized_manifest = serialized_manifest
         self.amount = Decimal(per_job_cost * number_of_answers)
+    
+    def _eth_addr_valid(self, addr, priv_key):
+        priv_key_bytes = decode_hex(priv_key)
+        pub_key = keys.PrivateKey(priv_key_bytes).public_key
+        calculated_addr = pub_key.to_checksum_address()
+        return Web3.toChecksumAddress(addr) == calculated_addr
 
-    def _validate_credentials(self, **credentials) -> bool:
+
+    def _validate_credentials(self, **credentials, **multi_credentials) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
@@ -912,13 +919,22 @@ class Job:
             bool: returns True if the calculated and the given address match.
 
         """
-        addr = credentials["gas_payer"]
-        priv_key = credentials["gas_payer_priv"]
+        addr_valid = False
+        gas_payer_addr = credentials["gas_payer"]
+        gas_payer_priv = credentials["gas_payer_priv"]
+        
+        addr_valid = _eth_addr_valid(gas_payer_addr, gas_payer_priv)
 
-        priv_key_bytes = decode_hex(priv_key)
-        pub_key = keys.PrivateKey(priv_key_bytes).public_key
-        calculated_addr = pub_key.to_checksum_address()
-        return Web3.toChecksumAddress(addr) == calculated_addr
+        if not multi_credentials:
+            return addr_valid
+
+        for eth_addr, priv_key in multi_credentials.items():
+            addr_valid = _eth_addr_valid(eth_addr, priv_key)
+            if not addr_valid:
+                LOG.error(f"Ethereum address {eth_addr} doesn't match private key {priv_key}")
+                break
+
+        return addr_valid
 
     def _factory_contains_escrow(self,
                                  escrow_addr: str,
