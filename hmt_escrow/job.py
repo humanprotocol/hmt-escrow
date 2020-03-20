@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+import random
 
 from decimal import Decimal
 from enum import Enum
@@ -210,7 +211,7 @@ class Job:
     """
     def __init__(self,
                  credentials: Dict[str, str],
-                 multi_credentials: Dict[str, str] = None,
+                 multi_credentials: Dict[str, str] = {},
                  escrow_manifest: Manifest = None,
                  factory_addr: str = None,
                  escrow_addr: str = None):
@@ -286,13 +287,15 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
-        credentials_valid = self._validate_credentials(**credentials, **multi_credentials)
+        credentials_valid = self._validate_credentials(credentials,
+                                                       multi_credentials)
         if not credentials_valid:
             raise ValueError(
                 "Given private keys don't match the ethereum addresses.")
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
+        self.multi_credentials = multi_credentials
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
@@ -883,15 +886,15 @@ class Job:
         number_of_answers = int(serialized_manifest['job_total_tasks'])
         self.serialized_manifest = serialized_manifest
         self.amount = Decimal(per_job_cost * number_of_answers)
-    
+
     def _eth_addr_valid(self, addr, priv_key):
         priv_key_bytes = decode_hex(priv_key)
         pub_key = keys.PrivateKey(priv_key_bytes).public_key
         calculated_addr = pub_key.to_checksum_address()
         return Web3.toChecksumAddress(addr) == calculated_addr
 
-
-    def _validate_credentials(self, **credentials, **multi_credentials) -> bool:
+    def _validate_credentials(self, primary_credentials,
+                              multi_credentials) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
@@ -920,18 +923,20 @@ class Job:
 
         """
         addr_valid = False
-        gas_payer_addr = credentials["gas_payer"]
-        gas_payer_priv = credentials["gas_payer_priv"]
-        
-        addr_valid = _eth_addr_valid(gas_payer_addr, gas_payer_priv)
+        gas_payer_addr = primary_credentials["gas_payer"]
+        gas_payer_priv = primary_credentials["gas_payer_priv"]
+
+        addr_valid = self._eth_addr_valid(gas_payer_addr, gas_payer_priv)
 
         if not multi_credentials:
             return addr_valid
 
         for eth_addr, priv_key in multi_credentials.items():
-            addr_valid = _eth_addr_valid(eth_addr, priv_key)
+            addr_valid = self._eth_addr_valid(eth_addr, priv_key)
             if not addr_valid:
-                LOG.error(f"Ethereum address {eth_addr} doesn't match private key {priv_key}")
+                LOG.error(
+                    f"Ethereum address {eth_addr} doesn't match private key {priv_key}"
+                )
                 break
 
         return addr_valid
@@ -1110,15 +1115,31 @@ class Job:
             TimeoutError: if wait_on_transaction times out.
 
         """
-        txn_func = self.factory_contract.functions.createEscrow
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
+        escrow_created = False
+        gas_payer = self.gas_payer
+        gas_payer_priv = self.gas_payer_priv
 
-        handle_transaction(txn_func, *[], **txn_info)
-        return True
+        for i in range(len(list(self.multi_credentials.keys()))):
+            txn_func = self.factory_contract.functions.createEscrow
+            txn_info = {
+                "gas_payer": gas_payer,
+                "gas_payer_priv": gas_payer_priv,
+                "gas": gas
+            }
+            try:
+                handle_transaction(txn_func, *[], **txn_info)
+                escrow_created = True
+                break
+            except:
+                LOG.error(
+                    f"Contract creation failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
+                )
+                gas_payer, gas_payer_priv = self._raffle_new_credentials()
+
+        return escrow_created
+
+    def _raffle_new_credentials(self):
+        return random.choice(list(self.multi_credentials.keys()))
 
 
 if __name__ == "__main__":
