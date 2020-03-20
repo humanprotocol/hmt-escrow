@@ -1128,6 +1128,8 @@ class Job:
             }
             try:
                 handle_transaction(txn_func, *[], **txn_info)
+                self.gas_payer = gas_payer
+                self.gas_payer_priv = gas_payer_priv
                 escrow_created = True
                 break
             except:
