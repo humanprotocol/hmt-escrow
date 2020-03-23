@@ -2,7 +2,6 @@
 import os
 import sys
 import logging
-import random
 
 from decimal import Decimal
 from enum import Enum
@@ -33,7 +32,7 @@ def status(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> job = Job(credentials, manifest)
 
     After deployment status is "Launched".
     >>> job.launch(rep_oracle_pub_key)
@@ -67,7 +66,7 @@ def manifest_url(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -100,7 +99,7 @@ def manifest_hash(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> job.setup()
@@ -211,10 +210,10 @@ class Job:
     """
     def __init__(self,
                  credentials: Dict[str, str],
-                 multi_credentials=[],
                  escrow_manifest: Manifest = None,
                  factory_addr: str = None,
-                 escrow_addr: str = None):
+                 escrow_addr: str = None,
+                 multi_credentials: list = []):
         """Initializes a Job instance with values from a Manifest class and
         checks that the provided credentials are valid. An optional factory
         address is used to initialize the factory of the Job. Alternatively
@@ -225,7 +224,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.gas_payer == credentials["gas_payer"]
         True
         >>> job.gas_payer_priv == credentials["gas_payer_priv"]
@@ -237,7 +236,7 @@ class Job:
 
         Initializing a new Job instance with a factory address succeeds.
         >>> factory_addr = deploy_factory(**credentials)
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest, factory_addr=factory_addr)
+        >>> job = Job(credentials, manifest, factory_addr)
         >>> job.factory_contract.address == factory_addr
         True
 
@@ -274,7 +273,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
         ... }
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         Traceback (most recent call last):
         ValueError: Given private key doesn't match the ethereum address.
 
@@ -287,10 +286,11 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
-        credentials_valid = self._validate_credentials(*multi_credentials, **credentials)
+        credentials_valid = self._validate_credentials(multi_credentials,
+                                                       **credentials)
         if not credentials_valid:
             raise ValueError(
-                "Given private keys don't match the ethereum addresses.")
+                "Given private key doesn't match the ethereum address.")
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
@@ -325,13 +325,30 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
 
         Deploying a new Job to the ethereum network succeeds.
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.status()
         <Status.Launched: 1>
+
+        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
+
+        Inject wrong credentials on purpose to test out raffling
+        >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
+        >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.status()
+        <Status.Launched: 1>
+
+        Make sure we launched with raffled credentials
+        >>> job.gas_payer
+        '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
+        >>> job.gas_payer_priv
+        'f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1'
 
         Args:
             pub_key (bytes): the public key of the Reputation Oracle.
@@ -363,7 +380,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
 
         A Job can't be setup without deploying it first.
         >>> job.setup()
@@ -432,7 +449,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -497,7 +514,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
 
         The escrow contract is in Pending state after setup so it can be aborted.
         >>> job.launch(rep_oracle_pub_key)
@@ -508,7 +525,7 @@ class Job:
         True
 
         The escrow contract is in Partial state after the first payout and it can't be aborted.
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -556,7 +573,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
         >>> job.launch(rep_oracle_pub_key)
@@ -573,7 +590,7 @@ class Job:
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -619,7 +636,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -661,7 +678,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -707,7 +724,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
 
         After deployment status is "Launched".
         >>> job.launch(rep_oracle_pub_key)
@@ -729,7 +746,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -759,7 +776,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -789,7 +806,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -823,7 +840,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -892,8 +909,7 @@ class Job:
         calculated_addr = pub_key.to_checksum_address()
         return Web3.toChecksumAddress(addr) == calculated_addr
 
-    def _validate_credentials(self, *multi_credentials,
-                              **credentials) -> bool:
+    def _validate_credentials(self, multi_credentials, **credentials) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
@@ -903,14 +919,17 @@ class Job:
         ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
+
+        >>> multi_credentials = [("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")]
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)        
 
         Validating falsy credentials fails.
         >>> credentials = {
         ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"
         ... }
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         Traceback (most recent call last):
         ValueError: Given private key doesn't match the ethereum address.
 
@@ -952,7 +971,7 @@ class Job:
         ...     "rep_oracle_priv_key": b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -995,13 +1014,13 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> type(job.factory_contract)
         <class 'web3.utils.datatypes.Contract'>
 
         Initializing a new Job instance with a factory address succeeds.
         >>> factory_addr = deploy_factory(**credentials)
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest, factory_addr=factory_addr))
+        >>> job = Job(credentials, manifest, factory_addr)
         >>> job.factory_contract.address == factory_addr
         True
 
@@ -1035,7 +1054,7 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -1073,7 +1092,7 @@ class Job:
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         >>> factory_addr = deploy_factory(**credentials)
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest, factory_addr=factory_addr))
+        >>> job = Job(credentials, manifest, factory_addr)
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job._last_escrow_addr() == job.job_contract.address
@@ -1100,7 +1119,16 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
-        >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+        >>> job = Job(credentials, manifest)
+        >>> job._create_escrow()
+        True
+
+        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
+
+        Inject wrong credentials on purpose to test out raffling
+        >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
+        >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job._create_escrow()
         True
 
@@ -1114,12 +1142,24 @@ class Job:
             TimeoutError: if wait_on_transaction times out.
 
         """
-        escrow_created = False
-        gas_payer = self.gas_payer
-        gas_payer_priv = self.gas_payer_priv
-
-        for i in range(len(self.multi_credentials)):
+        try:
             txn_func = self.factory_contract.functions.createEscrow
+            txn_info = {
+                "gas_payer": self.gas_payer,
+                "gas_payer_priv": self.gas_payer_priv,
+                "gas": gas
+            }
+
+            handle_transaction(txn_func, *[], **txn_info)
+            return True
+        except:
+            LOG.error(
+                f"Contract creation failed with main credentials: {self.gas_payer}, {self.gas_payer_priv}"
+            )
+
+        escrow_created = False
+
+        for gas_payer, gas_payer_priv in self.multi_credentials:
             txn_info = {
                 "gas_payer": gas_payer,
                 "gas_payer_priv": gas_payer_priv,
@@ -1135,12 +1175,8 @@ class Job:
                 LOG.error(
                     f"Contract creation failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
                 )
-                gas_payer, gas_payer_priv = self._raffle_new_credentials()
 
         return escrow_created
-
-    def _raffle_new_credentials(self):
-        return random.choice(self.multi_credentials)
 
 
 if __name__ == "__main__":
