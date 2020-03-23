@@ -914,6 +914,31 @@ class Job:
 
     def _validate_multi_credentials(
             self, multi_credentials: List[Tuple]) -> List[Tuple[Any, Any]]:
+        """Validates whether the given ethereum private key maps to the address
+        by calculating the checksum address from the private key and comparing that
+        to the given address.
+
+        >>> credentials = {
+        ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> valid_multi_credentials = [("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e")]
+        >>> job = Job(credentials, manifest, multi_credentials=valid_multi_credentials)
+        >>> job.multi_credentials
+        [('0x1413862C2B7054CDbfdc181B83962CB0FC11fD92', '28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5'), ('0x61F9F0B31eacB420553da8BCC59DC617279731Ac', '486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e')]
+
+        >>> invalid_multi_credentials = [("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")]
+        >>> job = Job(credentials, manifest, multi_credentials=invalid_multi_credentials)
+        >>> job.multi_credentials
+        [('0x1413862C2B7054CDbfdc181B83962CB0FC11fD92', '28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5')]
+
+        Args:
+            multi_credentials (List[Tuple]): a list of tuples with ethereum address, private key pairs.
+
+        Returns:
+            List (List[Tuple]): returns a list of tuples with ethereum address, private key pairs that are valid.
+
+        """
         valid_credentials = []
         for gas_payer, gas_payer_priv in multi_credentials:
             credentials_valid = self._eth_addr_valid(gas_payer, gas_payer_priv)
