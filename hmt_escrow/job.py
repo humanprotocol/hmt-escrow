@@ -5,7 +5,7 @@ import logging
 
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 
 from web3 import Web3
 from web3.contract import Contract
@@ -288,15 +288,16 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
-        credentials_valid = self._validate_credentials(multi_credentials,
-                                                       **credentials)
-        if not credentials_valid:
+        main_credentials_valid = self._validate_credentials(
+            multi_credentials, **credentials)
+        if not main_credentials_valid:
             raise ValueError(
                 "Given private key doesn't match the ethereum address.")
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
-        self.multi_credentials = multi_credentials
+        self.multi_credentials = self._validate_multi_credentials(
+            multi_credentials)
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
@@ -911,6 +912,19 @@ class Job:
         calculated_addr = pub_key.to_checksum_address()
         return Web3.toChecksumAddress(addr) == calculated_addr
 
+    def _validate_multi_credentials(
+            self, multi_credentials: List[Tuple]) -> List[Tuple[Any, Any]]:
+        valid_credentials = []
+        for gas_payer, gas_payer_priv in multi_credentials:
+            credentials_valid = self._eth_addr_valid(gas_payer, gas_payer_priv)
+            if not credentials_valid:
+                LOG.warn(
+                    f"Ethereum address {gas_payer} doesn't match private key {gas_payer_priv}"
+                )
+                continue
+            valid_credentials.append((gas_payer, gas_payer_priv))
+        return valid_credentials
+
     def _validate_credentials(self, multi_credentials: List[Tuple],
                               **credentials) -> bool:
         """Validates whether the given ethereum private key maps to the address
@@ -948,20 +962,7 @@ class Job:
         gas_payer_addr = credentials["gas_payer"]
         gas_payer_priv = credentials["gas_payer_priv"]
 
-        addr_valid = self._eth_addr_valid(gas_payer_addr, gas_payer_priv)
-
-        if not multi_credentials:
-            return addr_valid
-
-        for eth_addr, priv_key in multi_credentials:
-            addr_valid = self._eth_addr_valid(eth_addr, priv_key)
-            if not addr_valid:
-                LOG.error(
-                    f"Ethereum address {eth_addr} doesn't match private key {priv_key}"
-                )
-                break
-
-        return addr_valid
+        return self._eth_addr_valid(gas_payer_addr, gas_payer_priv)
 
     def _factory_contains_escrow(self,
                                  escrow_addr: str,
