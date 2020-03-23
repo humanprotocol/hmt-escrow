@@ -213,7 +213,7 @@ class Job:
                  escrow_manifest: Manifest = None,
                  factory_addr: str = None,
                  escrow_addr: str = None,
-                 multi_credentials: list = []):
+                 multi_credentials: List[Tuple] = []):
         """Initializes a Job instance with values from a Manifest class and
         checks that the provided credentials are valid. An optional factory
         address is used to initialize the factory of the Job. Alternatively
@@ -281,6 +281,8 @@ class Job:
             manifest (Manifest): an instance of the Manifest class.
             credentials (Dict[str, str]): an ethereum address and its private key.
             factory_addr (str): an ethereum address of the factory.
+            escrow_addr (str): an ethereum address of an existing escrow address.
+            multi_credentials (List[Tuple]): a list of tuples with ethereum address, private key pairs.
 
         Raises:
             ValueError: if the credentials are not valid.
@@ -909,7 +911,7 @@ class Job:
         calculated_addr = pub_key.to_checksum_address()
         return Web3.toChecksumAddress(addr) == calculated_addr
 
-    def _validate_credentials(self, multi_credentials, **credentials) -> bool:
+    def _validate_credentials(self, multi_credentials: List[Tuple], **credentials) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
@@ -934,6 +936,7 @@ class Job:
         ValueError: Given private key doesn't match the ethereum address.
 
         Args:
+            multi_credentials (List[Tuple]): a list of tuples with ethereum address, private key pairs.
             **credentials: an unpacked dict of an ethereum address and its private key.
 
         Returns:
