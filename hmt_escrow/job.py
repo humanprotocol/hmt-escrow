@@ -911,7 +911,8 @@ class Job:
         calculated_addr = pub_key.to_checksum_address()
         return Web3.toChecksumAddress(addr) == calculated_addr
 
-    def _validate_credentials(self, multi_credentials: List[Tuple], **credentials) -> bool:
+    def _validate_credentials(self, multi_credentials: List[Tuple],
+                              **credentials) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
