@@ -166,6 +166,18 @@ def intermediate_hash(escrow_contract: Contract,
     })
 
 
+def is_trusted_handler(escrow_contract: Contract,
+                       handler_addr: str,
+                       gas_payer: str,
+                       gas: int = GAS_LIMIT) -> bool:
+    return escrow_contract.functions.isTrustedHandler(handler_addr).call({
+        'from':
+        gas_payer,
+        'gas':
+        gas
+    })
+
+
 def launcher(escrow_contract: Contract,
              gas_payer: str,
              gas: int = GAS_LIMIT) -> str:
@@ -437,6 +449,49 @@ class Job:
         }
         handle_transaction(txn_func, *func_args, **txn_info)
         return self.status() == Status.Pending and self.balance() == hmt_amount
+
+    def add_trusted_handlers(self,
+                             handlers: List[str],
+                             gas: int = GAS_LIMIT) -> bool:
+        """Add trusted handlers that can freely transact with the contract and perform aborts and cancels for example.
+
+        >>> credentials = {
+        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> job = Job(credentials, manifest)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+
+        Make sure we se set our gas payer as a trusted handler by default.
+        >>> is_trusted_handler(job.job_contract, job.gas_payer, job.gas_payer)
+        True
+
+        >>> trusted_handlers = ['0x61F9F0B31eacB420553da8BCC59DC617279731Ac', '0xD979105297fB0eee83F7433fC09279cb5B94fFC6']
+        >>> job.add_trusted_handlers(trusted_handlers)
+        True
+        >>> is_trusted_handler(job.job_contract, '0x61F9F0B31eacB420553da8BCC59DC617279731Ac', job.gas_payer)
+        True
+        >>> is_trusted_handler(job.job_contract, '0xD979105297fB0eee83F7433fC09279cb5B94fFC6', job.gas_payer)
+        True
+
+        Args:
+            handlers (List[str]): a list of trusted handlers.
+
+        Returns:
+            bool: returns True if trusted handlers have been setup successfully.
+
+        """
+        txn_func = self.job_contract.functions.addTrustedHandlers
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
+        func_args = [handlers]
+        handle_transaction(txn_func, *func_args, **txn_info)
+        return True
 
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
