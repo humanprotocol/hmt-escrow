@@ -157,10 +157,6 @@ contract Escrow {
     function abort() public {
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
-            status != EscrowStatuses.Partial,
-            "Escrow in Partial status state"
-        );
-        require(
             status != EscrowStatuses.Complete,
             "Escrow in Complete status state"
         );
