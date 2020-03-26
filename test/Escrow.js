@@ -82,6 +82,16 @@ contract('Escrow', (accounts) => {
         assert(true);
       }
     });
+
+    it('succeeds if caller is a trusted handler', async () => {
+      try {
+        await Escrow.addTrustedHandlers([reputationOracle])
+        await Escrow.abort({ from: reputationOracle });
+        assert(true);
+      } catch (ex) {
+        assert(false);
+      }
+    })
   });
 
   describe('calling setup', () => {
