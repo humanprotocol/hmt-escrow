@@ -38,6 +38,7 @@ contract Escrow {
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
         launcher = msg.sender;
+        canceler = _canceler;
         trustedHandlers[_canceler] = true;
     }
 
@@ -161,7 +162,7 @@ contract Escrow {
             "Escrow in Complete status state"
         );
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-        selfdestruct(launcher);
+        selfdestruct(canceler);
     }
 
     function cancel() public returns (bool) {
@@ -175,7 +176,7 @@ contract Escrow {
         require(balance > 0, "EIP20 contract out of funds");
 
         HMTokenInterface token = HMTokenInterface(eip20);
-        bool success = token.transfer(launcher, balance);
+        bool success = token.transfer(canceler, balance);
         status = EscrowStatuses.Cancelled;
 
         return success;
