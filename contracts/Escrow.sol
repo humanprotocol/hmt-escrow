@@ -11,6 +11,7 @@ contract Escrow {
     address private reputationOracle;
     address private recordingOracle;
     address private launcher;
+    address private canceler;
 
     uint256 private reputationOracleStake;
     uint256 private recordingOracleStake;
