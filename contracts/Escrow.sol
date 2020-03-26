@@ -15,7 +15,6 @@ contract Escrow {
     uint256 private reputationOracleStake;
     uint256 private recordingOracleStake;
 
-    address private canceler;
     address private eip20;
 
     string private manifestUrl;
@@ -32,12 +31,14 @@ contract Escrow {
     uint256[] private finalAmounts;
     bool private bulkPaid;
 
+    mapping(address => bool) trustedHandlers;
+
     constructor(address _eip20, address _canceler, uint256 _expiration) public {
         eip20 = _eip20;
-        canceler = _canceler;
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
         launcher = msg.sender;
+        trustedHandlers[_canceler] = true;
     }
 
     function getLauncher() public view returns (address) {
@@ -100,6 +101,16 @@ contract Escrow {
         return bulkPaid;
     }
 
+    function isTrustedHandler(address _handler) public view returns (bool) {
+        return trustedHandlers[_handler];
+    }
+
+    function addTrustedHandlers(address[] _handlers) public {
+        for (uint256 i; i < _handlers.length; i++) {
+            trustedHandlers[_handlers[i]] = true;
+        }
+    }
+
     // The escrower puts the Token in the contract without an agentless
     // and assigsn a reputation oracle to payout the bounty of size of the
     // amount specified
@@ -112,7 +123,7 @@ contract Escrow {
         string _hash
     ) public {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(msg.sender == canceler, "Address calling not the canceler");
+        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             _reputationOracle != address(0),
             "Token spender is an uninitialized address"
@@ -144,7 +155,7 @@ contract Escrow {
     }
 
     function abort() public {
-        require(msg.sender == canceler, "Address calling not the canceler");
+        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             status != EscrowStatuses.Partial,
             "Escrow in Partial status state"
@@ -154,11 +165,11 @@ contract Escrow {
             "Escrow in Complete status state"
         );
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-        selfdestruct(canceler);
+        selfdestruct(launcher);
     }
 
     function cancel() public returns (bool) {
-        require(msg.sender == canceler, "Address calling not the canceler");
+        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             status != EscrowStatuses.Complete,
             "Escrow in Complete status state"
@@ -168,7 +179,7 @@ contract Escrow {
         require(balance > 0, "EIP20 contract out of funds");
 
         HMTokenInterface token = HMTokenInterface(eip20);
-        bool success = token.transfer(canceler, balance);
+        bool success = token.transfer(launcher, balance);
         status = EscrowStatuses.Cancelled;
 
         return success;
