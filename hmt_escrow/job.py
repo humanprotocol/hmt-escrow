@@ -572,17 +572,9 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
+        
 
-        The escrow contract is in Pending state after setup so it can be aborted.
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job.setup()
-        True
-        >>> job.abort()
-        True
-
-        The escrow contract is in Partial state after the first payout and it can't be aborted.
+        The escrow contract is in Partial state after a partial bulk payout so it can be aborted.
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
@@ -592,12 +584,16 @@ class Job:
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
         >>> job.abort()
-        False
-        >>> job.status()
-        <Status.Partial: 3>
+        True
 
-        The escrow contract is in Paid state after the second payout and it can't be aborted.
-        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
+
+        The escrow contract is in Paid state after the a full bulk payout and it can't be aborted.
+        >>> job = Job(credentials, manifest)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
+        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
         >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
         True
         >>> job.abort()
@@ -1267,4 +1263,4 @@ class Job:
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
