@@ -601,6 +601,26 @@ class Job:
         >>> job.status()
         <Status.Paid: 4>
 
+
+        Trusted handler should be able to abort an existing contract
+        >>> trusted_handler = "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809"
+        >>> job = Job(credentials, manifest)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
+        >>> job.add_trusted_handlers([trusted_handler])
+        True
+
+        >>> handler_credentials = {
+        ... 	"gas_payer": "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
+        ... 	"gas_payer_priv": "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+        ...     "rep_oracle_priv_key": b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        ... }
+        >>> access_job = Job(credentials=handler_credentials, factory_addr=job.factory_contract.address, escrow_addr=job.job_contract.address)
+        >>> access_job.abort()
+        True
+
         Returns:
             bool: returns True if contract has been destroyed successfully.
 
