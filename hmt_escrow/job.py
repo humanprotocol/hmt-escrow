@@ -545,20 +545,47 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key)
-        eth_addrs = [eth_addr for eth_addr, amount in payouts]
-        hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
+        try:
+            (hash_, url) = upload(results, pub_key)
+            eth_addrs = [eth_addr for eth_addr, amount in payouts]
+            hmt_amounts = [
+                int(amount * 10**18) for eth_addr, amount in payouts
+            ]
 
-        txn_func = self.job_contract.functions.bulkPayOut
-        func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
+            txn_func = self.job_contract.functions.bulkPayOut
+            func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
+            txn_info = {
+                "gas_payer": self.gas_payer,
+                "gas_payer_priv": self.gas_payer_priv,
+                "gas": gas
+            }
 
-        handle_transaction(txn_func, *func_args, **txn_info)
-        return self._bulk_paid() == True
+            handle_transaction(txn_func, *func_args, **txn_info)
+            return self._bulk_paid() == True
+        except:
+            LOG.error(
+                f"Bulk payout failed with main credentials: {self.gas_payer}, {self.gas_payer_priv}"
+            )
+
+        bulk_paid = False
+
+        for gas_payer, gas_payer_priv in self.multi_credentials:
+            txn_info = {
+                "gas_payer": gas_payer,
+                "gas_payer_priv": gas_payer_priv,
+                "gas": gas
+            }
+            try:
+                handle_transaction(txn_func, *[], **txn_info)
+                self.gas_payer = gas_payer
+                self.gas_payer_priv = gas_payer_priv
+                bulk_paid = True
+                break
+            except:
+                LOG.error(
+                    f"Bulk payout failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
+                )
+        return bulk_paid == True
 
     def abort(self, gas: int = GAS_LIMIT) -> bool:
         """Kills the contract and returns the HMT back to the gas payer.
@@ -761,7 +788,7 @@ class Job:
                 handle_transaction(txn_func, *[], **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
-                escrow_created = True
+                results_stored = True
                 break
             except:
                 LOG.error(
