@@ -732,17 +732,42 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key)
-        txn_func = self.job_contract.functions.storeResults
-        func_args = [url, hash_]
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
+        try:
+            (hash_, url) = upload(results, pub_key)
+            txn_func = self.job_contract.functions.storeResults
+            func_args = [url, hash_]
+            txn_info = {
+                "gas_payer": self.gas_payer,
+                "gas_payer_priv": self.gas_payer_priv,
+                "gas": gas
+            }
 
-        handle_transaction(txn_func, *func_args, **txn_info)
-        return True
+            handle_transaction(txn_func, *func_args, **txn_info)
+            return True
+        except:
+            LOG.error(
+                f"Storing intermediate results failed with main credentials: {self.gas_payer}, {self.gas_payer_priv}"
+            )
+
+        results_stored = False
+
+        for gas_payer, gas_payer_priv in self.multi_credentials:
+            txn_info = {
+                "gas_payer": gas_payer,
+                "gas_payer_priv": gas_payer_priv,
+                "gas": gas
+            }
+            try:
+                handle_transaction(txn_func, *[], **txn_info)
+                self.gas_payer = gas_payer
+                self.gas_payer_priv = gas_payer_priv
+                escrow_created = True
+                break
+            except:
+                LOG.error(
+                    f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
+                )
+        return results_stored
 
     def complete(self, gas: int = GAS_LIMIT) -> bool:
         """Completes the Job if it has been paid.
