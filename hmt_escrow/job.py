@@ -750,6 +750,18 @@ class Job:
         >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
+        
+        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
+        >>> trusted_handlers = ['0x61F9F0B31eacB420553da8BCC59DC617279731Ac', '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809']
+        >>> job.add_trusted_handlers(trusted_handlers)
+        True
+        >>> job.store_intermediate_results(results, rep_oracle_pub_key)
+        True
 
         Args:
             results (Dict): intermediate results of the Recording Oracle.
@@ -1335,4 +1347,4 @@ class Job:
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
