@@ -3,13 +3,13 @@ import logging
 import codecs
 import hashlib
 import json
-import ipfsapi
+import ipfshttpclient
 import timeout_decorator
 
 from typing import Dict, Tuple
 from eth_keys import keys
 from p2p import ecies
-from ipfsapi import Client
+from ipfshttpclient import Client
 
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC",
@@ -22,7 +22,7 @@ IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
 
 def _connect(host: str, port: int) -> Client:
     try:
-        IPFS_CLIENT = ipfsapi.connect(host, port)
+        IPFS_CLIENT = ipfshttpclient.connect(f'/dns/{host}/tcp/{port}/http')
         return IPFS_CLIENT
     except Exception as e:
         LOG.error("Connection with IPFS failed because of: {}".format(e))
