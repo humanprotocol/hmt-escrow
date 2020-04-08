@@ -2,6 +2,7 @@ pragma solidity 0.4.24;
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 
+
 contract Escrow {
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
@@ -146,6 +147,9 @@ contract Escrow {
 
         reputationOracle = _reputationOracle;
         recordingOracle = _recordingOracle;
+        trustedHandlers[reputationOracle] = true;
+        trustedHandlers[recordingOracle] = true;
+
         reputationOracleStake = _reputationOracleStake;
         recordingOracleStake = _recordingOracleStake;
         bulkPaid = false;
@@ -197,10 +201,7 @@ contract Escrow {
 
     function storeResults(string _url, string _hash) public {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(
-            msg.sender == recordingOracle,
-            "Address calling not the recording oracle"
-        );
+        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             status == EscrowStatuses.Pending ||
                 status == EscrowStatuses.Partial,
@@ -245,9 +246,10 @@ contract Escrow {
         finalResultsUrl = _url;
         finalResultsHash = _hash;
 
-        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(
-            _amounts
-        );
+        (
+            uint256 reputationOracleFee,
+            uint256 recordingOracleFee
+        ) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
         if (
             token.transferBulk(_recipients, finalAmounts, _txId) ==
