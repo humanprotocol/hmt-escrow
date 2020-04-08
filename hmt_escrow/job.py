@@ -1360,4 +1360,6 @@ class Job:
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
-    doctest.testmod()
+
+    # IMPORTANT, don't modify this so CI catches the doctest errors.
+    doctest.testmod(raise_on_error=True)
