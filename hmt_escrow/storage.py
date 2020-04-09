@@ -4,7 +4,6 @@ import codecs
 import hashlib
 import json
 import ipfshttpclient
-import timeout_decorator
 
 from typing import Dict, Tuple
 from eth_keys import keys
