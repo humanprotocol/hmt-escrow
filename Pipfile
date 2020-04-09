@@ -7,13 +7,13 @@ verify_ssl = true
 
 [packages]
 web3 = "==4.8.3"
-ipfsapi = "*"
 py-solc = "*"
 yapf = "*"
 py-evm = "==0.2.0a37"
 mypy = "*"
 hmt-basemodels = "==0.0.18"
 timeout-decorator = "*"
+ipfshttpclient = "*"
 
 [requires]
 python_version = "3.7"
