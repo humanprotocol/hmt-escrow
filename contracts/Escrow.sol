@@ -33,7 +33,7 @@ contract Escrow {
     uint256[] private finalAmounts;
     bool private bulkPaid;
 
-    mapping(address => bool) trustedHandlers;
+    mapping(address => bool) private trustedHandlers;
 
     constructor(address _eip20, address _canceler, uint256 _expiration) public {
         eip20 = _eip20;
@@ -42,6 +42,7 @@ contract Escrow {
         launcher = msg.sender;
         canceler = _canceler;
         trustedHandlers[_canceler] = true;
+        trustedHandlers[msg.sender] = true;
     }
 
     function getLauncher() public view returns (address) {
@@ -109,7 +110,7 @@ contract Escrow {
     }
 
     function addTrustedHandlers(address[] _handlers) public {
-        for (uint256 i; i < _handlers.length; i++) {
+        for (uint256 i = 0; i < _handlers.length; ++i) {
             trustedHandlers[_handlers[i]] = true;
         }
     }
@@ -220,10 +221,7 @@ contract Escrow {
         uint256 _txId
     ) public returns (bool) {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(
-            msg.sender == reputationOracle,
-            "Address calling not the reputation oracle"
-        );
+        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         uint256 balance = getBalance();
         require(balance > 0, "EIP20 contract out of funds");
         require(
