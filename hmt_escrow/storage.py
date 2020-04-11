@@ -112,7 +112,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
-    return hash_, key['Hash']
+    return hash_, key
 
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
