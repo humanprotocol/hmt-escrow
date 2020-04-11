@@ -57,7 +57,6 @@ def download(key: str, private_key: bytes) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
-    LOG.info("The key is {!r} and private key {!r}".format(key, private_key))
     try:
         LOG.debug("Downloading key: {}".format(key))
         ciphertext = IPFS_CLIENT.cat(key, timeout=30)
@@ -97,8 +96,6 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
         Exception: if adding bytes with IPFS fails.
 
     """
-    LOG.info("Loading manifest {!r} with public key {!r}".format(
-        msg, public_key))
     try:
         manifest_ = json.dumps(msg, sort_keys=True)
     except Exception as e:
