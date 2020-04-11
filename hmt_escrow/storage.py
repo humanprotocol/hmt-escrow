@@ -56,6 +56,7 @@ def download(key: str, private_key: bytes) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
+    LOG.info("The key is {!r} and private key {!r}".format(key, private_key))
     try:
         LOG.debug("Downloading key: {}".format(key))
         ciphertext = IPFS_CLIENT.cat(key, timeout=30)
@@ -95,6 +96,8 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
         Exception: if adding bytes with IPFS fails.
 
     """
+    LOG.info("Loading manifest {!r} with public key {!r}".format(
+        msg, public_key))
     try:
         manifest_ = json.dumps(msg, sort_keys=True)
     except Exception as e:
@@ -104,6 +107,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
         key = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
+        LOG.info("The key is {!r}".format(key))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
@@ -134,9 +138,8 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
 
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
-    LOG.info(
-        f"The private key bytes {str(private_key)} and decoded: {str(priv_key)}. Message is {msg}."
-    )
+    LOG.info("The private key bytes {!r} and decoded: {!r}. Message is {!r}.".
+             format(private_key, priv_key, msg))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
     return e.decode(encoding='utf-8')
 
