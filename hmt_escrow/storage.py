@@ -109,7 +109,6 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     try:
         encrypted_msg = _encrypt(public_key, manifest_)
         key = IPFS_CLIENT.add_bytes(encrypted_msg)
-        LOG.info("The key is {!r}, encrypted message {!r}".format(key, encrypted_msg))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
@@ -140,8 +139,6 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
 
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
-    LOG.info("The private key bytes {!r} and decoded: {!r}. Message is {!r}.".
-             format(private_key, priv_key, msg))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
     return zlib.decompress(e).decode('utf-8')
 
