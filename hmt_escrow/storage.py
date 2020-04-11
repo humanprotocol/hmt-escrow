@@ -143,7 +143,7 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
     LOG.info("The private key bytes {!r} and decoded: {!r}. Message is {!r}.".
              format(private_key, priv_key, msg))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
-    return zlib.decompress(e)
+    return zlib.decompress(e).decode('utf-8')
 
 
 def _encrypt(public_key: bytes, msg: str) -> bytes:
@@ -164,7 +164,7 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
-    msg_bytes = zlib.compress(msg)
+    msg_bytes = zlib.compress(msg.encode('utf-8'))
     return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
