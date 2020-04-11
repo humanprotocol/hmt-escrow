@@ -166,7 +166,7 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
     msg_bytes = msg.encode(encoding='utf-8')
-    compressed_bytes = zlip.compress(msg_bytes)
+    compressed_bytes = zlib.compress(msg_bytes)
     return ecies.encrypt(compressed_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
