@@ -13,7 +13,7 @@ py-evm = "==0.2.0a37"
 mypy = "*"
 hmt-basemodels = "==0.0.18"
 timeout-decorator = "*"
-ipfshttpclient = {git = "https://github.com/WouterGlorieux/py-ipfs-http-client", ref ="a73e4db661d991a81352bbd051648cae3d63cd51"}
+ipfshttpclient = {git = "https://github.com/rbval/py-ipfs-http-client", ref ="6fafe3daeb6ff3ddb44303c4bdf646e62d3640e0"}
 
 [requires]
 python_version = "3.7"

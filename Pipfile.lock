@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "50dc05eb4648280cd059d32464960ef953dd535aacd34cf48ee7e60c80b72aae"
+            "sha256": "341bd1a4e0410c04ddadbbb1e7e5800e9e49cad7758daf51118a92a68115df13"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -189,8 +189,8 @@
             "version": "==2.9"
         },
         "ipfshttpclient": {
-            "git": "https://github.com/WouterGlorieux/py-ipfs-http-client",
-            "ref": "a73e4db661d991a81352bbd051648cae3d63cd51"
+            "git": "https://github.com/rbval/py-ipfs-http-client",
+            "ref": "6fafe3daeb6ff3ddb44303c4bdf646e62d3640e0"
         },
         "lru-dict": {
             "hashes": [
