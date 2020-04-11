@@ -2,6 +2,7 @@ import os
 import logging
 import codecs
 import hashlib
+import zlib
 import json
 import ipfshttpclient
 
@@ -59,12 +60,12 @@ def download(key: str, private_key: bytes) -> Dict:
     try:
         LOG.debug("Downloading key: {}".format(key))
         ciphertext = IPFS_CLIENT.cat(key, timeout=30)
+        msg = _decrypt(private_key, ciphertext)
     except Exception as e:
         LOG.warning(
             "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
             .format(key, private_key, e))
         raise e
-    msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
 
@@ -103,7 +104,8 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
-        key = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
+        encrypted_msg = _encrypt(public_key, manifest_)
+        key = IPFS_CLIENT.add_bytes(encrypted_msg)
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
@@ -135,7 +137,7 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
-    return e.decode(encoding='utf-8')
+    return zlib.decompress(e).decode('utf-8')
 
 
 def _encrypt(public_key: bytes, msg: str) -> bytes:
@@ -156,7 +158,7 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
-    msg_bytes = msg.encode(encoding='utf-8')
+    msg_bytes = zlib.compress(msg.encode('utf-8'))
     return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
