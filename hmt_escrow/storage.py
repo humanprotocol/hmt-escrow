@@ -106,8 +106,9 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
-        key = IPFS_CLIENT.add_bytes(_encrypt(public_key, manifest_))
-        LOG.info("The key is {!r}".format(key))
+        encrypted_msg = _encrypt(public_key, manifest_)
+        key = IPFS_CLIENT.add_bytes(encryptd_msg)
+        LOG.info("The key is {!r}, encrypted message {!r}".format(key, encrypted_msg))
     except Exception as e:
         LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
         raise e
