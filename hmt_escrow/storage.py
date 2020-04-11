@@ -59,12 +59,12 @@ def download(key: str, private_key: bytes) -> Dict:
     try:
         LOG.debug("Downloading key: {}".format(key))
         ciphertext = IPFS_CLIENT.cat(key, timeout=30)
+        msg = _decrypt(private_key, ciphertext)
     except Exception as e:
         LOG.warning(
             "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
             .format(key, private_key, e))
         raise e
-    msg = _decrypt(private_key, ciphertext)
     return json.loads(msg)
 
 
@@ -134,6 +134,9 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
 
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
+    LOG.info(
+        f"The private key bytes {str(private_key)} and decoded: {str(priv_key)}. Message is {msg}."
+    )
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
     return e.decode(encoding='utf-8')
 
