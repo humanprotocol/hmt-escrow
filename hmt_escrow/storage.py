@@ -116,7 +116,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     return hash_, key
 
 
-def _decrypt(private_key: bytes, compressed_msg: bytes) -> str:
+def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
 
     >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -139,12 +139,11 @@ def _decrypt(private_key: bytes, compressed_msg: bytes) -> str:
         str: returns the plaintext equivalent to the originally encrypted one.
 
     """
-    msg = zlib.decompress(compressed_msg)
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
     LOG.info("The private key bytes {!r} and decoded: {!r}. Message is {!r}.".
              format(private_key, priv_key, msg))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
-    return e.decode(encoding='utf-8')
+    return zlib.decompress(e)
 
 
 def _encrypt(public_key: bytes, msg: str) -> bytes:
@@ -165,9 +164,8 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
-    msg_bytes = msg.encode(encoding='utf-8')
-    compressed_bytes = zlib.compress(msg_bytes)
-    return ecies.encrypt(compressed_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
+    msg_bytes = zlib.compress(msg)
+    return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
 if __name__ == "__main__":
