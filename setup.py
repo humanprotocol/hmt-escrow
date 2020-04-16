@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="hmt-escrow",
-    version="0.7.9",
+    version="0.7.10",
     author="HUMAN Protocol",
     description=
     "A python library to launch escrow contracts to the HUMAN network.",
