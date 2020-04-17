@@ -14,4 +14,7 @@ setuptools.setup(
         "Operating System :: OS Independent", "Programming Language :: Python"
     ],
     packages=setuptools.find_packages(),
-)
+    install_requires=[
+        "ipfshttpclient==0.4.13.2", "py-evm==0.2.0a37", "py-solc==3.2.0",
+        "web3==4.8.3", "hmt-basemodels"
+    ])
