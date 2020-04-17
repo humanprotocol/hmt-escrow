@@ -2,7 +2,6 @@ import os
 import logging
 import codecs
 import hashlib
-import zlib
 import json
 import ipfshttpclient
 
@@ -137,7 +136,7 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
-    return zlib.decompress(e).decode('utf-8')
+    return e.decode('utf-8')
 
 
 def _encrypt(public_key: bytes, msg: str) -> bytes:
@@ -158,7 +157,7 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
 
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
-    msg_bytes = zlib.compress(msg.encode('utf-8'))
+    msg_bytes = msg.encode('utf-8')
     return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
