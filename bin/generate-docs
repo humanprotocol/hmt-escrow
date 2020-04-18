@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# this script edits the sources allowing the autodoc to import them, runs the generation, then reverts the changes.
+
+format='html'
+if [ $# -eq 1 ] ; then
+  format=$1
+fi
+
+mv hmt_escrow/storage.py hmt_escrow/storage.py.backup
+mv hmt_escrow/eth_bridge.py hmt_escrow/eth_bridge.py.backup
+python sphinx-documentation/escape_code.py storage
+python sphinx-documentation/escape_code.py eth_bridge
+
+cd sphinx-documentation
+make $format
+cd ..
+
+mv hmt_escrow/storage.py.backup hmt_escrow/storage.py
+mv hmt_escrow/eth_bridge.py.backup hmt_escrow/eth_bridge.py
