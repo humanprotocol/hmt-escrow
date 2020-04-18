@@ -508,6 +508,7 @@ class Job:
         True
 
         Make sure we se set our gas payer as a trusted handler by default.
+
         >>> is_trusted_handler(job.job_contract, job.gas_payer, job.gas_payer)
         True
 
@@ -664,6 +665,7 @@ class Job:
 
 
         The escrow contract is in Partial state after a partial bulk payout so it can be aborted.
+
         >>> from test_manifest import manifest
         >>> job = Job(credentials, manifest)
 
@@ -872,6 +874,7 @@ class Job:
         >>> results = {"results": False}
 
         Inject wrong credentials on purpose to test out raffling
+
         >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
         >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)

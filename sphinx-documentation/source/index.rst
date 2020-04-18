@@ -20,11 +20,11 @@ Indices and tables
 * :ref:`search`
 
 
-.. automodule:: hmt_escrow.eth_bridge
+.. automodule:: eth_bridge
    :members:
 
-.. automodule:: hmt_escrow.job
+.. automodule:: job
    :members:
 
-.. automodule:: hmt_escrow.storage
+.. automodule:: storage
    :members:
