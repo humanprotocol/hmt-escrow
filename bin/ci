@@ -10,3 +10,4 @@ docker-compose run -w /work contracts
 docker-compose stop || true
 docker-compose kill || true
 yes | docker-compose rm || true
+./bin/generate-docs
