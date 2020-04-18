@@ -35,6 +35,7 @@ def status(escrow_contract: Contract,
     >>> job = Job(credentials, manifest)
 
     After deployment status is "Launched".
+
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> status(job.job_contract, job.gas_payer)
@@ -343,6 +344,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         Deploying a new Job to the ethereum network succeeds.
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.status()
@@ -352,6 +354,7 @@ class Job:
         >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
 
         Inject wrong credentials on purpose to test out raffling
+
         >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
         >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job.launch(rep_oracle_pub_key)
@@ -360,6 +363,7 @@ class Job:
         <Status.Launched: 1>
 
         Make sure we launched with raffled credentials
+
         >>> job.gas_payer
         '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
         >>> job.gas_payer_priv
@@ -398,6 +402,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         A Job can't be setup without deploying it first.
+
         >>> job.setup()
         Traceback (most recent call last):
         AttributeError: 'Job' object has no attribute 'job_contract'
@@ -517,17 +522,20 @@ class Job:
         True
 
         The escrow contract is still in Partial state as there's still balance left.
+
         >>> job.balance()
         30000000000000000000
         >>> job.status()
         <Status.Partial: 3>
 
         Trying to pay more than the contract balance results in failure.
+
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('40.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         False
 
         Paying the remaining amount empties the escrow and updates the status correctly.
+
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
@@ -612,10 +620,14 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        
+
 
         The escrow contract is in Partial state after a partial bulk payout so it can be aborted.
+
         >>> job = Job(credentials, manifest)
+
+        The escrow contract is in Pending state after setup so it can be aborted.
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -626,11 +638,15 @@ class Job:
         >>> job.abort()
         True
 
+        The escrow contract is in Partial state after the first payout and it can't be aborted.
+
 
         The escrow contract is in Paid state after the a full bulk payout and it can't be aborted.
+
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
+
         >>> job.setup()
         True
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
@@ -643,6 +659,7 @@ class Job:
 
 
         Trusted handler should be able to abort an existing contract
+
         >>> trusted_handler = "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809"
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
@@ -690,6 +707,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -698,12 +716,14 @@ class Job:
         True
 
         Contract balance is zero and status is "Cancelled".
+
         >>> job.balance()
         0
         >>> job.status()
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
+
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
@@ -716,6 +736,7 @@ class Job:
         <Status.Partial: 3>
 
         The escrow contract is in Paid state after the second payout and it can't be cancelled.
+
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
         >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
         True
@@ -757,13 +778,14 @@ class Job:
         True
 
         Storing intermediate results uploads and updates results url correctly.
+
         >>> results = {"results": True}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
         >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
-        
+
         >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
         >>> job.launch(rep_oracle_pub_key)
@@ -839,12 +861,14 @@ class Job:
         True
 
         A Job can't be completed when it is still in partially paid state.
+
         >>> job.status()
         <Status.Partial: 3>
         >>> job.complete()
         False
 
         Job completes in paid state correctly.
+
         >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('80.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
@@ -878,6 +902,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         After deployment status is "Launched".
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.status()
@@ -964,6 +989,7 @@ class Job:
         True
 
         Trying to download the results with the wrong key fails.
+
         >>> results = {"results": True}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
@@ -998,6 +1024,7 @@ class Job:
         True
 
         Getting final results succeeds after payout.
+
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
         >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
         True
@@ -1112,7 +1139,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         >>> multi_credentials = [("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")]
-        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)        
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
 
         Validating falsy credentials fails.
         >>> credentials = {

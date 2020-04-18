@@ -83,8 +83,10 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
 
     Args:
         txn_func: the transaction function to be handled.
-        *args: all the arguments the function takes.
-        **kwargs: the transaction data used to complete the transaction.
+
+        \*args: all the arguments the function takes.
+
+        \*\*kwargs: the transaction data used to complete the transaction.
 
     Returns:
         AttributeDict: returns the transaction receipt.
@@ -160,6 +162,7 @@ def get_escrow(escrow_addr: str) -> Contract:
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
 
     Deploying a new Job to the ethereum network succeeds.
+    
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> type(get_escrow(job.job_contract.address))
