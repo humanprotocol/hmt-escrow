@@ -796,9 +796,9 @@ class Job:
 
             handle_transaction(txn_func, *func_args, **txn_info)
             return True
-        except:
+        except Exception as e:
             LOG.error(
-                f"Storing intermediate results failed with main credentials: {self.gas_payer}, {self.gas_payer_priv}"
+                f"Storing intermediate results failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
             )
 
         results_stored = False
@@ -815,9 +815,9 @@ class Job:
                 self.gas_payer_priv = gas_payer_priv
                 results_stored = True
                 break
-            except:
+            except Exception as e:
                 LOG.error(
-                    f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
+                    f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
                 )
         return results_stored
 
