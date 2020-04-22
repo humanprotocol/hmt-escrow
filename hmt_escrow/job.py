@@ -575,9 +575,9 @@ class Job:
 
             handle_transaction(txn_func, *func_args, **txn_info)
             return self._bulk_paid() == True
-        except:
+        except Exception as e:
             LOG.error(
-                f"Bulk payout failed with main credentials: {self.gas_payer}, {self.gas_payer_priv}"
+                f"Bulk payout failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
             )
 
         bulk_paid = False
@@ -594,9 +594,9 @@ class Job:
                 self.gas_payer_priv = gas_payer_priv
                 bulk_paid = True
                 break
-            except:
+            except Exception as e:
                 LOG.error(
-                    f"Bulk payout failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
+                    f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
                 )
         return bulk_paid == True
 
@@ -1330,9 +1330,9 @@ class Job:
 
             handle_transaction(txn_func, *[], **txn_info)
             return True
-        except:
+        except Exception as e:
             LOG.error(
-                f"Contract creation failed with main credentials: {self.gas_payer}, {self.gas_payer_priv}"
+                f"Contract creation failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
             )
 
         escrow_created = False
@@ -1349,9 +1349,9 @@ class Job:
                 self.gas_payer_priv = gas_payer_priv
                 escrow_created = True
                 break
-            except:
+            except Exception as e:
                 LOG.error(
-                    f"Contract creation failed with {gas_payer} and {gas_payer_priv}. Raffling new ones..."
+                    f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
                 )
 
         return escrow_created
