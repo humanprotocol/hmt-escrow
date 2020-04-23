@@ -558,7 +558,6 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key)
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
@@ -570,6 +569,7 @@ class Job:
             "gas": gas
         }
         try:
+            (hash_, url) = upload(results, pub_key)
             handle_transaction(txn_func, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
@@ -586,6 +586,7 @@ class Job:
                 "gas": gas
             }
             try:
+                (hash_, url) = upload(results, pub_key)
                 handle_transaction(txn_func, *func_args, **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
@@ -781,7 +782,6 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
-        (hash_, url) = upload(results, pub_key)
         txn_func = self.job_contract.functions.storeResults
         func_args = [url, hash_]
         txn_info = {
@@ -790,6 +790,7 @@ class Job:
             "gas": gas
         }
         try:
+            (hash_, url) = upload(results, pub_key)
             handle_transaction(txn_func, *func_args, **txn_info)
             return True
         except Exception as e:
@@ -806,6 +807,7 @@ class Job:
                 "gas": gas
             }
             try:
+                (hash_, url) = upload(results, pub_key)
                 handle_transaction(txn_func, *func_args, **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
