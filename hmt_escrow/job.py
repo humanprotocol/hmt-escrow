@@ -562,7 +562,6 @@ class Job:
         hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
 
         txn_func = self.job_contract.functions.bulkPayOut
-        func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
@@ -570,6 +569,7 @@ class Job:
         }
         try:
             (hash_, url) = upload(results, pub_key)
+            func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
             handle_transaction(txn_func, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
@@ -587,6 +587,7 @@ class Job:
             }
             try:
                 (hash_, url) = upload(results, pub_key)
+                func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
                 handle_transaction(txn_func, *func_args, **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
@@ -783,7 +784,6 @@ class Job:
 
         """
         txn_func = self.job_contract.functions.storeResults
-        func_args = [url, hash_]
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
@@ -791,6 +791,7 @@ class Job:
         }
         try:
             (hash_, url) = upload(results, pub_key)
+            func_args = [url, hash_]
             handle_transaction(txn_func, *func_args, **txn_info)
             return True
         except Exception as e:
@@ -808,6 +809,7 @@ class Job:
             }
             try:
                 (hash_, url) = upload(results, pub_key)
+                func_args = [url, hash_]
                 handle_transaction(txn_func, *func_args, **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
