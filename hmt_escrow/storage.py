@@ -17,11 +17,15 @@ SHARED_MAC_DATA = os.getenv(
 LOG = logging.getLogger("hmt_escrow.storage")
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
+IPFS_HTTPS = int(os.getenv("IPFS_HTTPS", True))
 
 
 def _connect(host: str, port: int) -> Client:
     try:
-        IPFS_CLIENT = ipfshttpclient.connect(f'/dns/{host}/tcp/{port}/http')
+        IPFS_CLIENT = ipfshttpclient.connect(
+            f'/dns/{host}/tcp/{port}/https'
+        ) if IPFS_HTTPS else ipfshttpclient.connect(
+            f'/dns/{host}/tcp/{port}/http')
         return IPFS_CLIENT
     except Exception as e:
         LOG.error("Connection with IPFS failed because of: {}".format(e))
