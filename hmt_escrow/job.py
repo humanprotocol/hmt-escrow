@@ -513,7 +513,6 @@ class Job:
                     LOG.error(
                         f"Setup failed with: {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
                     )
-        LOG.debug("Do we get here?")
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
     def add_trusted_handlers(self,
