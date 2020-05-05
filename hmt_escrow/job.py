@@ -830,6 +830,17 @@ class Job:
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
 
+        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
+
+        Inject wrong credentials on purpose to test out raffling
+        >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
+        >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.setup()
+        True
+
         Args:
             results (Dict): intermediate results of the Recording Oracle.
             pub_key (bytes): public key of the Reputation Oracle.
@@ -1417,4 +1428,4 @@ if __name__ == "__main__":
     from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
