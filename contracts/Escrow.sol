@@ -40,7 +40,12 @@ contract Escrow {
 
     mapping(address => TrustedHandler) public trustedHandlers;
 
-    constructor(address _eip20, address _canceler, uint256 _expiration) public {
+    constructor(
+        address _eip20,
+        address _canceler,
+        uint256 _expiration,
+        address[] _handlers
+    ) public {
         eip20 = _eip20;
         status = EscrowStatuses.Launched;
         expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
@@ -48,6 +53,7 @@ contract Escrow {
         canceler = _canceler;
         trustedHandlers[_canceler].isTrusted = true;
         trustedHandlers[msg.sender].isTrusted = true;
+        addTrustedHandlers(_handlers);
     }
 
     function getLauncher() public view returns (address) {

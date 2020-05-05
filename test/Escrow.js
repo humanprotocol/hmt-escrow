@@ -15,8 +15,9 @@ contract('Escrow', (accounts) => {
     reputationOracle = accounts[2];
     recordingOracle = accounts[3];
     externalAddress = accounts[4]
+    trustedHandlers = [reputationOracle, recordingOracle]
     HMT = await HMTokenAbstraction.new('100', 'Human Token', 4, 'HMT', { from: canceler });
-    Escrow = await EscrowAbstraction.new(HMT.address, canceler, 5, { from: launcher });
+    Escrow = await EscrowAbstraction.new(HMT.address, canceler, 5, trustedHandlers, { from: launcher });
   });
 
   describe('calling getTokenAddress', () => {
