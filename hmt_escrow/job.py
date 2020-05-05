@@ -425,29 +425,84 @@ class Job:
             self.serialized_manifest["recording_oracle_addr"])
         hmt_amount = int(self.amount * 10**18)
 
+        hmt_transferred = False
+        contract_is_setup = False
+
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
+
         # Fund the escrow contract with HMT.
         hmtoken_contract = get_hmtoken()
-        txn_func = hmtoken_contract.functions.transfer
-        func_args = [self.job_contract.address, hmt_amount]
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
-        handle_transaction(txn_func, *func_args, **txn_info)
+        try:
+            txn_func = hmtoken_contract.functions.transfer
+            func_args = [self.job_contract.address, hmt_amount]
+            handle_transaction(txn_func, *func_args, **txn_info)
+            hmt_transferred = True
+        except Exception as e:
+            LOG.error(
+                f"Transferring HMT failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            )
 
-        # Setup the escrow contract with manifest and IPFS data.
-        txn_func = self.job_contract.functions.setup
-        func_args = [
-            reputation_oracle, recording_oracle, reputation_oracle_stake,
-            recording_oracle_stake, self.manifest_url, self.manifest_hash
-        ]
+        if not hmt_transferred:
+            for gas_payer, gas_payer_priv in self.multi_credentials:
+                txn_info = {
+                    "gas_payer": gas_payer,
+                    "gas_payer_priv": gas_payer_priv,
+                    "gas": gas
+                }
+
+                try:
+                    txn_func = hmtoken_contract.functions.transfer
+                    func_args = [self.job_contract.address, hmt_amount]
+                    handle_transaction(txn_func, *func_args, **txn_info)
+                    break
+                except Exception as e:
+                    LOG.error(
+                        f"Transferring HMT failed with: {self.gas_payer} and {self.gas_payer_priv} due to {e}. Raffling new ones..."
+                    )
+
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
             "gas": gas
         }
-        handle_transaction(txn_func, *func_args, **txn_info)
+
+        try:
+            # Setup the escrow contract with manifest and IPFS data.
+            txn_func = self.job_contract.functions.setup
+            func_args = [
+                reputation_oracle, recording_oracle, reputation_oracle_stake,
+                recording_oracle_stake, self.manifest_url, self.manifest_hash
+            ]
+            handle_transaction(txn_func, *func_args, **txn_info)
+            contract_is_setup = True
+        except Exception as e:
+            LOG.error(
+                f"Setup failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            )
+
+        if not contract_is_setup:
+            for gas_payer, gas_payer_priv in self.multi_credentials:
+                txn_info = {
+                    "gas_payer": gas_payer,
+                    "gas_payer_priv": gas_payer_priv,
+                    "gas": gas
+                }
+                try:
+                    txn_func = self.job_contract.functions.setup
+                    func_args = [
+                        reputation_oracle, recording_oracle,
+                        reputation_oracle_stake, recording_oracle_stake,
+                        self.manifest_url, self.manifest_hash
+                    ]
+                    handle_transaction(txn_func, *func_args, **txn_info)
+                except Exception as e:
+                    LOG.error(
+                        f"Setup failed with: {self.gas_payer} and {self.gas_payer_priv} due to {e}. Raffling new ones..."
+                    )
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
     def add_trusted_handlers(self,
