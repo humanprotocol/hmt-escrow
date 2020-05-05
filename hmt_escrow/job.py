@@ -375,8 +375,7 @@ class Job:
             raise AttributeError("The escrow has been already deployed.")
 
         # Use factory to deploy a new escrow contract.
-        trusted_handlers = [addr for addr, priv_key in self.multi_credentials
-                            ] if self.multi_credentials else [self.gas_payer]
+        trusted_handlers = [addr for addr, priv_key in self.multi_credentials]
         self._create_escrow(trusted_handlers)
         job_addr = self._last_escrow_addr()
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
