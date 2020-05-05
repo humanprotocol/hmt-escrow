@@ -607,9 +607,6 @@ class Job:
         True
         >>> job.setup()
         True
-        >>> trusted_handlers = ['0x61F9F0B31eacB420553da8BCC59DC617279731Ac', '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809']
-        >>> job.add_trusted_handlers(trusted_handlers)
-        True
         >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
@@ -833,9 +830,6 @@ class Job:
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
-        True
-        >>> trusted_handlers = ['0x61F9F0B31eacB420553da8BCC59DC617279731Ac', '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809']
-        >>> job.add_trusted_handlers(trusted_handlers)
         True
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
