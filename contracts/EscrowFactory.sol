@@ -1,9 +1,10 @@
 pragma solidity 0.4.24;
 import "./Escrow.sol";
 
+
 contract EscrowFactory {
-    uint private counter;
-    mapping(address => uint) private escrowCounters;
+    uint256 private counter;
+    mapping(address => uint256) private escrowCounters;
     address private lastEscrow;
     address private eip20;
     event Launched(address eip20, address escrow);
@@ -12,15 +13,15 @@ contract EscrowFactory {
         eip20 = _eip20;
     }
 
-    function createEscrow() public returns (address) {
-        Escrow escrow = new Escrow(eip20, msg.sender, 8640000);
+    function createEscrow(address[] trustedHandlers) public returns (address) {
+        Escrow escrow = new Escrow(eip20, msg.sender, 8640000, trustedHandlers);
         counter++;
         escrowCounters[address(escrow)] = counter;
         lastEscrow = address(escrow);
         emit Launched(eip20, lastEscrow);
     }
 
-    function getCounter() public view returns (uint) {
+    function getCounter() public view returns (uint256) {
         return counter;
     }
 
@@ -28,8 +29,8 @@ contract EscrowFactory {
         return lastEscrow;
     }
 
-    function getEscrowCounter(address _address) public view returns (uint) {
-        uint escrowCounter = escrowCounters[_address];
+    function getEscrowCounter(address _address) public view returns (uint256) {
+        uint256 escrowCounter = escrowCounters[_address];
         return escrowCounter;
     }
 
@@ -42,7 +43,7 @@ contract EscrowFactory {
     }
 
     function hasEscrow(address _address) public view returns (bool) {
-        uint escrowCounter = getEscrowCounter(_address);
+        uint256 escrowCounter = getEscrowCounter(_address);
         return escrowCounter > 0;
     }
 }
