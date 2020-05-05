@@ -375,7 +375,9 @@ class Job:
             raise AttributeError("The escrow has been already deployed.")
 
         # Use factory to deploy a new escrow contract.
-        self._create_escrow()
+        trusted_handlers = [addr for addr, priv_key in self.multi_credentials
+                            ] if self.multi_credentials else [self.gas_payer]
+        self._create_escrow(trusted_handlers)
         job_addr = self._last_escrow_addr()
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
         self.job_contract = get_escrow(job_addr)
@@ -404,6 +406,12 @@ class Job:
 
         >>> job.launch(rep_oracle_pub_key)
         True
+        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
+        >>> job.launch(rep_oracle_pub_key)
+        True
+        >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
+        >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job.setup()
         True
 
@@ -499,10 +507,13 @@ class Job:
                         self.manifest_url, self.manifest_hash
                     ]
                     handle_transaction(txn_func, *func_args, **txn_info)
+                    return self.status() == Status.Pending and self.balance(
+                    ) == hmt_amount
                 except Exception as e:
                     LOG.error(
-                        f"Setup failed with: {self.gas_payer} and {self.gas_payer_priv} due to {e}. Raffling new ones..."
+                        f"Setup failed with: {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
                     )
+        LOG.debug("Do we get here?")
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
     def add_trusted_handlers(self,
@@ -837,7 +848,7 @@ class Job:
         >>> job.setup()
         True
         >>> results = {"results": False}
-        
+
         Inject wrong credentials on purpose to test out raffling
         >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
         >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
@@ -1359,24 +1370,27 @@ class Job:
             gas
         })
 
-    def _create_escrow(self, gas: int = GAS_LIMIT) -> bool:
+    def _create_escrow(self,
+                       trusted_handlers=[],
+                       gas: int = GAS_LIMIT) -> bool:
         """Launches a new escrow contract to the ethereum network.
 
+        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        >>> trusted_handlers = [addr for addr, priv_key in multi_credentials]
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> job = Job(credentials, manifest)
-        >>> job._create_escrow()
+        >>> job._create_escrow(trusted_handlers)
         True
 
-        >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
 
         Inject wrong credentials on purpose to test out raffling
         >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
         >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
-        >>> job._create_escrow()
+        >>> job._create_escrow(trusted_handlers)
         True
 
         Args:
@@ -1391,13 +1405,14 @@ class Job:
         """
         try:
             txn_func = self.factory_contract.functions.createEscrow
+            txn_args = [trusted_handlers]
             txn_info = {
                 "gas_payer": self.gas_payer,
                 "gas_payer_priv": self.gas_payer_priv,
                 "gas": gas
             }
 
-            handle_transaction(txn_func, *[], **txn_info)
+            handle_transaction(txn_func, *txn_args, **txn_info)
             return True
         except Exception as e:
             LOG.error(
@@ -1412,8 +1427,9 @@ class Job:
                 "gas_payer_priv": gas_payer_priv,
                 "gas": gas
             }
+            txn_args = [trusted_handlers]
             try:
-                handle_transaction(txn_func, *[], **txn_info)
+                handle_transaction(txn_func, *txn_args, **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
                 escrow_created = True
@@ -1431,4 +1447,4 @@ if __name__ == "__main__":
     from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod()
+    doctest.testmod(raise_on_error=True)
