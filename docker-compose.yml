@@ -10,7 +10,11 @@ services:
       - GAS_LIMIT=6700000
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
-      - IPNS_PATH=/ipns/
+      - ESCROW_BUCKETNAME=escrow-results
+      - ESCROW_AWS_ACCESS_KEY_ID=minio
+      - ESCROW_AWS_SECRET_ACCESS_KEY=minio123
+      - ESCROW_ENDPOINT_URL=http://minio:9000
+      - DEBUG=true
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
@@ -19,6 +23,7 @@ services:
       - ipfs
       - hmt
       - kvstore
+      - minio
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
