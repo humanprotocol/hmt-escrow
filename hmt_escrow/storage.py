@@ -21,10 +21,9 @@ logging.getLogger("boto").setLevel(logging.INFO)
 logging.getLogger("botocore").setLevel(logging.INFO)
 logging.getLogger("boto3").setLevel(logging.INFO)
 
-LOG = logging.getLogger("hmt_escrow.storage")
 DEBUG = "true" in os.getenv("DEBUG", "false").lower()
+LOG = logging.getLogger("hmt_escrow.storage")
 LOG.setLevel(logging.DEBUG if DEBUG else logging.INFO)
-LOCAL = os.getenv("LOCAL", False)
 
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
