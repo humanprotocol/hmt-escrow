@@ -24,6 +24,7 @@ until curl --silent ipfs:5001; do
   sleep 1
 done
 
+mkdir -p minio/ipfs-results/
 
 export PYTHONPATH=$(pwd)
 if [ ! -z $* ]; then
