@@ -10,10 +10,17 @@ services:
       - GAS_LIMIT=6700000
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
-      - IPNS_PATH=/ipns/
+      - ESCROW_BUCKETNAME=escrow-results
+      - ESCROW_AWS_ACCESS_KEY_ID=minio
+      - ESCROW_AWS_SECRET_ACCESS_KEY=minio123
+      - ESCROW_ENDPOINT_URL=http://minio:9000
+      - ESCROW_AWS_DEFAULT_REGION=us-west-2
+      - DEBUG=true
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
+    depends_on:
+      - minio
     links:
       - ganache
       - ipfs
@@ -22,6 +29,7 @@ services:
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
+      - ./minio:/data
       - .:/work
 
   contracts:
@@ -66,6 +74,19 @@ services:
     command: daemon --offline
     ports:
       - 5001:5001
+  
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    expose:
+      - "9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    entrypoint: sh -c 'minio server /data/'
+    volumes:
+      - ./minio:/data
 
 volumes:
   hmt_token_addr:
