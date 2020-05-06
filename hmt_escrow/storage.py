@@ -57,7 +57,7 @@ def _connect_s3():
         raise e
 
 
-def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
+def download(key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
     >>> credentials = {
@@ -66,14 +66,14 @@ def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, False)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv, False)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, s3_hash) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(s3_hash, job.gas_payer_priv)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, True)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
@@ -88,7 +88,21 @@ def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
-    if not s3:
+    if key.startswith("s3"):
+        try:
+            LOG.debug("Downloading s3 key: {}".format(key))
+            BOTO3_CLIENT = _connect_s3()
+            response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME,
+                                               Key=key)
+            ciphertext = response['Body'].read()
+            msg = _decrypt(private_key, ciphertext)
+        except Exception as e:
+            LOG.warning(
+                "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}"
+                .format(key, private_key, e))
+            raise e
+        return json.loads(msg)
+    else:
         try:
             IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
             LOG.debug("Downloading key: {}".format(key))
@@ -101,21 +115,8 @@ def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
             raise e
         return json.loads(msg)
 
-    try:
-        LOG.debug("Downloading s3 key: {}".format(key))
-        BOTO3_CLIENT = _connect_s3()
-        response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
-        ciphertext = response['Body'].read()
-        msg = _decrypt(private_key, ciphertext)
-    except Exception as e:
-        LOG.warning(
-            "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}"
-            .format(key, private_key, e))
-        raise e
-    return json.loads(msg)
 
-
-def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes, s3: bool = False) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -126,14 +127,16 @@ def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, False)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv, False)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
     
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, s3_hash) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(s3_hash, job.gas_payer_priv)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, True)
+    >>> manifest_url.startswith('s3')
+    True
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
@@ -171,15 +174,14 @@ def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
     try:
         BOTO3_CLIENT = _connect_s3()
         encrypted_msg = _encrypt(public_key, manifest_)
+        key = f"s3{hash_}"
         BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
-                                Key=hash_,
+                                Key=key,
                                 Body=encrypted_msg)
-        LOG.debug(f"Uploaded to S3, used hash as key: {hash_}")
+        LOG.debug(f"Uploaded to S3, key: {key}")
     except Exception as e:
-        LOG.warning(
-            f"Uploading with S3 failed with hash / key {hash_} because of: {e}"
-        )
-    return hash_, hash_
+        LOG.warning(f"Uploading with S3 failed with key {key} because of: {e}")
+    return hash_, key
 
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
@@ -236,4 +238,4 @@ if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
     from job import Job
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
