@@ -34,7 +34,6 @@ ESCROW_AWS_ACCESS_KEY_ID = os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio")
 ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY",
                                          "minio123")
 ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
-ESCROW_AWS_KMS = os.getenv("ESCROW_AWS_KMS", "abcd1234-efgh5678")
 ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
 
 
@@ -57,26 +56,6 @@ def _connect_s3():
     except Exception as e:
         LOG.error(f"Connection with S3 failed because of: {e}")
         raise e
-
-
-def _put_object_kwargs(s3_hash, encrypted_msg):
-    """Make sure we can do local development with minio without using KMS."""
-
-    # If LOCAL is set to True, we don't use KMS.
-    if LOCAL:
-        return {
-            "Bucket": ESCROW_BUCKETNAME,
-            "Key": s3_hash,
-            "Body": encrypted_msg
-        }
-    else:
-        return {
-            "ServerSideEncryption": "aws:kms",
-            "SSEKMSKeyId": ESCROW_AWS_KMS,
-            "Bucket": ESCROW_BUCKETNAME,
-            "Key": s3_hash,
-            "Body": encrypted_msg
-        }
 
 
 def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
@@ -193,7 +172,9 @@ def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
     try:
         BOTO3_CLIENT = _connect_s3()
         encrypted_msg = _encrypt(public_key, manifest_)
-        BOTO3_CLIENT.put_object(**_put_object_kwargs(hash_, encrypted_msg))
+        BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
+                                Key=hash_,
+                                Body=encrypted_msg)
         LOG.debug(f"Uploaded to S3, used hash as key: {hash_}")
     except Exception as e:
         LOG.warning(
