@@ -103,7 +103,7 @@ def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
     return json.loads(msg)
 
 
-def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -137,13 +137,30 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
         raise e
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
+
+    if not s3:
+        try:
+            IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+            encrypted_msg = _encrypt(public_key, manifest_)
+            key = IPFS_CLIENT.add_bytes(encrypted_msg)
+            LOG.debug(f"Uploaded to IPFS, key: {key}")
+            return hash_, key
+        except Exception as e:
+            LOG.warning(
+                "Adding bytes with IPFS failed because of: {}".format(e))
+            raise e
+
     try:
-        IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+        BOTO3_CLIENT = _connect_s3()
         encrypted_msg = _encrypt(public_key, manifest_)
-        key = IPFS_CLIENT.add_bytes(encrypted_msg)
+        BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
+                                KEY=hash_,
+                                Body=manifest_)
+        LOG.debug(f"Uploaded to S3, used hash as key: {hash_}")
     except Exception as e:
-        LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
-        raise e
+        LOG.warning(
+            f"Uploading with S3 failed with hash / key {hash_} because of: {e}"
+        )
     return hash_, key
 
 
