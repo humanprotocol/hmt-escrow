@@ -10,13 +10,23 @@ from eth_keys import keys
 from p2p import ecies
 from ipfshttpclient import Client
 
+import boto3
+from botocore.client import Config
+
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC",
     b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
 
+logging.getLogger("boto").setLevel(logging.INFO)
+logging.getLogger("botocore").setLevel(logging.INFO)
+logging.getLogger("boto3").setLevel(logging.INFO)
+
 LOG = logging.getLogger("hmt_escrow.storage")
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
+
+S3 = boto3.resource("s3", config=Config(signature_version="s3v4"))
+ESCROW_BUCKETNAME = os.getenv("ESCROW_BUCKETNAME", "escrow-results")
 
 
 def _connect(host: str, port: int) -> Client:
@@ -28,10 +38,21 @@ def _connect(host: str, port: int) -> Client:
         raise e
 
 
-IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+def _connect_s3():
+    try:
+        return boto3.client(
+            "s3",
+            aws_access_key_id=os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio"),
+            aws_secret_access_key=os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY",
+                                            "minio123"),
+            endpoint_url=os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000"),
+        )
+    except Exception as e:
+        LOG.error(f"Connection with S3 failed because of: {e}")
+        raise e
 
 
-def download(key: str, private_key: bytes) -> Dict:
+def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
     >>> credentials = {
@@ -56,13 +77,27 @@ def download(key: str, private_key: bytes) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
+    if not s3:
+        try:
+            IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+            LOG.debug("Downloading key: {}".format(key))
+            ciphertext = IPFS_CLIENT.cat(key, timeout=30)
+            msg = _decrypt(private_key, ciphertext)
+        except Exception as e:
+            LOG.warning(
+                "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
+                .format(key, private_key, e))
+            raise e
+        return json.loads(msg)
+
     try:
-        LOG.debug("Downloading key: {}".format(key))
-        ciphertext = IPFS_CLIENT.cat(key, timeout=30)
+        LOG.debug("Downloading s3 key: {}".format(key))
+        BOTO3_CLIENT = _connect_s3()
+        ciphertext = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
         msg = _decrypt(private_key, ciphertext)
     except Exception as e:
         LOG.warning(
-            "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
+            "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}"
             .format(key, private_key, e))
         raise e
     return json.loads(msg)
@@ -103,6 +138,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
     try:
+        IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
         encrypted_msg = _encrypt(public_key, manifest_)
         key = IPFS_CLIENT.add_bytes(encrypted_msg)
     except Exception as e:
