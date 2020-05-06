@@ -18,12 +18,13 @@ services:
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
+    depends_on:
+      - minio
     links:
       - ganache
       - ipfs
       - hmt
       - kvstore
-      - minio
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
