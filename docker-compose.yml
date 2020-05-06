@@ -66,6 +66,21 @@ services:
     command: daemon --offline
     ports:
       - 5001:5001
+  
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    expose:
+      - "9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    entrypoint: sh -c 'cp -a /template/. /data && minio server /data/'
+    volumes:
+      - ./minio:/template
+    tmpfs:
+      - /data
 
 volumes:
   hmt_token_addr:
