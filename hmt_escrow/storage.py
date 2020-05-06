@@ -22,6 +22,9 @@ logging.getLogger("botocore").setLevel(logging.INFO)
 logging.getLogger("boto3").setLevel(logging.INFO)
 
 LOG = logging.getLogger("hmt_escrow.storage")
+DEBUG = "true" in os.getenv("DEBUG", "false").lower()
+LOG.setLevel(logging.DEBUG if DEBUG else logging.INFO)
+
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
 
@@ -61,8 +64,14 @@ def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, False)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv, False)
+    >>> manifest_dict == job.serialized_manifest
+    True
+
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, s3_hash) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(s3_hash, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
@@ -93,7 +102,8 @@ def download(key: str, private_key: bytes, s3: bool = True) -> Dict:
     try:
         LOG.debug("Downloading s3 key: {}".format(key))
         BOTO3_CLIENT = _connect_s3()
-        ciphertext = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
+        response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
+        ciphertext = response['Body'].read()
         msg = _decrypt(private_key, ciphertext)
     except Exception as e:
         LOG.warning(
@@ -114,8 +124,14 @@ def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
     ... }
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, False)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv, False)
+    >>> manifest_dict == job.serialized_manifest
+    True
+    
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, s3_hash) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(s3_hash, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
 
@@ -154,14 +170,14 @@ def upload(msg: Dict, public_key: bytes, s3: bool = True) -> Tuple[str, str]:
         BOTO3_CLIENT = _connect_s3()
         encrypted_msg = _encrypt(public_key, manifest_)
         BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
-                                KEY=hash_,
-                                Body=manifest_)
+                                Key=hash_,
+                                Body=encrypted_msg)
         LOG.debug(f"Uploaded to S3, used hash as key: {hash_}")
     except Exception as e:
         LOG.warning(
             f"Uploading with S3 failed with hash / key {hash_} because of: {e}"
         )
-    return hash_, key
+    return hash_, hash_
 
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
@@ -218,4 +234,4 @@ if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
     from job import Job
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
