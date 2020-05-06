@@ -28,6 +28,7 @@ services:
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
+      - ./minio:/data
       - .:/work
 
   contracts:
@@ -82,11 +83,9 @@ services:
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
-    entrypoint: sh -c 'cp -a /template/. /data && minio server /data/'
+    entrypoint: sh -c 'minio server /data/'
     volumes:
-      - ./minio:/template
-    tmpfs:
-      - /data
+      - ./minio:/data
 
 volumes:
   hmt_token_addr:
