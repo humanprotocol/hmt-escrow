@@ -32,6 +32,7 @@ ESCROW_BUCKETNAME = os.getenv("ESCROW_BUCKETNAME", "escrow-results")
 ESCROW_AWS_ACCESS_KEY_ID = os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio")
 ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY",
                                          "minio123")
+ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
 ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
 
 
@@ -49,7 +50,8 @@ def _connect_s3():
         return boto3.client("s3",
                             aws_access_key_id=ESCROW_AWS_ACCESS_KEY_ID,
                             aws_secret_access_key=ESCROW_AWS_SECRET_ACCESS_KEY,
-                            endpoint_url=ESCROW_ENDPOINT_URL)
+                            endpoint_url=ESCROW_ENDPOINT_URL,
+                            region_name=ESCROW_AWS_REGION)
     except Exception as e:
         LOG.error(f"Connection with S3 failed because of: {e}")
         raise e
