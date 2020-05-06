@@ -123,3 +123,4 @@ build/
 node_modules/
 coverage/
 coverage.json
+minio/
