@@ -10,13 +10,30 @@ from eth_keys import keys
 from p2p import ecies
 from ipfshttpclient import Client
 
+import boto3
+from botocore.client import Config
+
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC",
     b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
 
+logging.getLogger("boto").setLevel(logging.INFO)
+logging.getLogger("botocore").setLevel(logging.INFO)
+logging.getLogger("boto3").setLevel(logging.INFO)
+
+DEBUG = "true" in os.getenv("DEBUG", "false").lower()
 LOG = logging.getLogger("hmt_escrow.storage")
+LOG.setLevel(logging.DEBUG if DEBUG else logging.INFO)
+
 IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
 IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
+
+ESCROW_BUCKETNAME = os.getenv("ESCROW_BUCKETNAME", "escrow-results")
+ESCROW_AWS_ACCESS_KEY_ID = os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio")
+ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY",
+                                         "minio123")
+ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
+ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
 
 
 def _connect(host: str, port: int) -> Client:
@@ -28,7 +45,16 @@ def _connect(host: str, port: int) -> Client:
         raise e
 
 
-IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+def _connect_s3():
+    try:
+        return boto3.client("s3",
+                            aws_access_key_id=ESCROW_AWS_ACCESS_KEY_ID,
+                            aws_secret_access_key=ESCROW_AWS_SECRET_ACCESS_KEY,
+                            endpoint_url=ESCROW_ENDPOINT_URL,
+                            region_name=ESCROW_AWS_REGION)
+    except Exception as e:
+        LOG.error(f"Connection with S3 failed because of: {e}")
+        raise e
 
 
 def download(key: str, private_key: bytes) -> Dict:
@@ -45,6 +71,12 @@ def download(key: str, private_key: bytes) -> Dict:
     >>> manifest_dict == job.serialized_manifest
     True
 
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, True)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> manifest_dict == job.serialized_manifest
+    True
+
     Args:
         key (str): This is the hash code returned when uploading.
         private_key (str): The private_key to decrypt this string with.
@@ -56,19 +88,35 @@ def download(key: str, private_key: bytes) -> Dict:
         Exception: if reading from IPFS fails.
 
     """
-    try:
-        LOG.debug("Downloading key: {}".format(key))
-        ciphertext = IPFS_CLIENT.cat(key, timeout=30)
-        msg = _decrypt(private_key, ciphertext)
-    except Exception as e:
-        LOG.warning(
-            "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
-            .format(key, private_key, e))
-        raise e
-    return json.loads(msg)
+    if key.startswith("s3"):
+        try:
+            LOG.debug("Downloading s3 key: {}".format(key))
+            BOTO3_CLIENT = _connect_s3()
+            response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME,
+                                               Key=key)
+            ciphertext = response['Body'].read()
+            msg = _decrypt(private_key, ciphertext)
+        except Exception as e:
+            LOG.warning(
+                "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}"
+                .format(key, private_key, e))
+            raise e
+        return json.loads(msg)
+    else:
+        try:
+            IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+            LOG.debug("Downloading key: {}".format(key))
+            ciphertext = IPFS_CLIENT.cat(key, timeout=30)
+            msg = _decrypt(private_key, ciphertext)
+        except Exception as e:
+            LOG.warning(
+                "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
+                .format(key, private_key, e))
+            raise e
+        return json.loads(msg)
 
 
-def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes, s3: bool = False) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -80,6 +128,14 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
     >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
+    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
+    >>> manifest_dict == job.serialized_manifest
+    True
+    
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, True)
+    >>> manifest_url.startswith('s3')
+    True
     >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
@@ -102,12 +158,29 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
         raise e
 
     hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
+
+    if not s3:
+        try:
+            IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
+            encrypted_msg = _encrypt(public_key, manifest_)
+            key = IPFS_CLIENT.add_bytes(encrypted_msg)
+            LOG.debug(f"Uploaded to IPFS, key: {key}")
+            return hash_, key
+        except Exception as e:
+            LOG.warning(
+                "Adding bytes with IPFS failed because of: {}".format(e))
+            raise e
+
     try:
+        BOTO3_CLIENT = _connect_s3()
         encrypted_msg = _encrypt(public_key, manifest_)
-        key = IPFS_CLIENT.add_bytes(encrypted_msg)
+        key = f"s3{hash_}"
+        BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
+                                Key=key,
+                                Body=encrypted_msg)
+        LOG.debug(f"Uploaded to S3, key: {key}")
     except Exception as e:
-        LOG.warning("Adding bytes with IPFS failed because of: {}".format(e))
-        raise e
+        LOG.warning(f"Uploading with S3 failed with key {key} because of: {e}")
     return hash_, key
 
 
