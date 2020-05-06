@@ -60,6 +60,9 @@ def _connect_s3():
 
 
 def _put_object_kwargs(s3_hash, encrypted_msg):
+    """Make sure we can do local development with minio without using KMS."""
+
+    # If LOCAL is set to True, we don't use KMS.
     if LOCAL:
         return {
             "Bucket": ESCROW_BUCKETNAME,
