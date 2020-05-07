@@ -18,6 +18,9 @@ from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
+# Explicit env variable that will use s3 for storing results.
+USE_S3_STORAGE = bool(os.getenv("USE_S3_STORAGE", False))
+
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
 
@@ -310,6 +313,7 @@ class Job:
         self.gas_payer_priv = credentials["gas_payer_priv"]
         self.multi_credentials = self._validate_multi_credentials(
             multi_credentials)
+        self.use_s3_storage = USE_S3_STORAGE
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
@@ -381,8 +385,9 @@ class Job:
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
         self.job_contract = get_escrow(job_addr)
 
-        # Upload the manifest to IPFS.
-        (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
+        # Upload the manifest to IPFS / S3.
+        (hash_, manifest_url) = upload(self.serialized_manifest, pub_key,
+                                       self.use_s3_storage)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
         return self.status() == Status.Launched and self.balance() == 0
@@ -629,7 +634,7 @@ class Job:
             "gas": gas
         }
         try:
-            (hash_, url) = upload(results, pub_key)
+            (hash_, url) = upload(results, pub_key, self.use_s3_storage)
             func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
             handle_transaction(txn_func, *func_args, **txn_info)
             return self._bulk_paid() == True
@@ -647,7 +652,7 @@ class Job:
                 "gas": gas
             }
             try:
-                (hash_, url) = upload(results, pub_key)
+                (hash_, url) = upload(results, pub_key, self.use_s3_storage)
                 func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
                 handle_transaction(txn_func, *func_args, **txn_info)
                 self.gas_payer = gas_payer
@@ -862,7 +867,7 @@ class Job:
             "gas": gas
         }
         try:
-            (hash_, url) = upload(results, pub_key)
+            (hash_, url) = upload(results, pub_key, self.use_s3_storage)
             func_args = [url, hash_]
             handle_transaction(txn_func, *func_args, **txn_info)
             return True
@@ -880,7 +885,7 @@ class Job:
                 "gas": gas
             }
             try:
-                (hash_, url) = upload(results, pub_key)
+                (hash_, url) = upload(results, pub_key, self.use_s3_storage)
                 func_args = [url, hash_]
                 handle_transaction(txn_func, *func_args, **txn_info)
                 self.gas_payer = gas_payer
