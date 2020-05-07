@@ -19,7 +19,7 @@ from basemodels import Manifest
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 # Explicit env variable that will use s3 for storing results.
-USE_S3_STORAGE = bool(os.getenv("USE_S3_STORAGE", False))
+USE_ESCROW_S3_STORAGE = bool(os.getenv("USE_ESCROW_S3_STORAGE", False))
 
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
@@ -313,7 +313,7 @@ class Job:
         self.gas_payer_priv = credentials["gas_payer_priv"]
         self.multi_credentials = self._validate_multi_credentials(
             multi_credentials)
-        self.use_s3_storage = USE_S3_STORAGE
+        self.use_s3_storage = USE_ESCROW_S3_STORAGE
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
