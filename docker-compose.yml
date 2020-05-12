@@ -13,21 +13,23 @@ services:
       - ESCROW_BUCKETNAME=escrow-results
       - ESCROW_AWS_ACCESS_KEY_ID=minio
       - ESCROW_AWS_SECRET_ACCESS_KEY=minio123
-      - ESCROW_ENDPOINT_URL=http://minio.internal.com:9000
+      - ESCROW_ENDPOINT_URL=http://minio:9000
       - ESCROW_AWS_DEFAULT_REGION=us-west-2
       - DEBUG=true
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
+    depends_on:
+      - minio
     links:
       - ganache
       - ipfs
       - hmt
       - kvstore
-      - minio:minio.internal.com
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
+      - ./minio:/data
       - .:/work
 
   contracts:
@@ -75,16 +77,16 @@ services:
   
   minio:
     image: minio/minio:9423-d242680
+    ports:
+      - "9000:9000"
     expose:
       - "9000"
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
-    entrypoint: sh -c 'cp -a /template/* /data && minio server /data/'
+    entrypoint: sh -c 'minio server /data/'
     volumes:
-      - ./minio:/template
-    tmpfs:
-      - /data
+      - ./minio:/data
 
 volumes:
   hmt_token_addr:
