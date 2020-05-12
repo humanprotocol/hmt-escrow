@@ -454,8 +454,8 @@ class Job:
             handle_transaction(txn_func, *func_args, **txn_info)
             hmt_transferred = True
         except Exception as e:
-            LOG.error(
-                f"Transferring HMT failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            LOG.info(
+                f"Transferring HMT failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         if not hmt_transferred:
@@ -472,9 +472,10 @@ class Job:
                     handle_transaction(txn_func, *func_args, **txn_info)
                     break
                 except Exception as e:
-                    LOG.error(
-                        f"Transferring HMT failed with: {self.gas_payer} and {self.gas_payer_priv} due to {e}. Raffling new ones..."
-                    )
+                    if gas_payer == self.multi_credentials[-1][0]:
+                        LOG.error(
+                            f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
+                        )
 
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -492,8 +493,8 @@ class Job:
             handle_transaction(txn_func, *func_args, **txn_info)
             contract_is_setup = True
         except Exception as e:
-            LOG.error(
-                f"Setup failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            LOG.info(
+                f"Setup failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         if not contract_is_setup:
@@ -514,9 +515,10 @@ class Job:
                     return self.status() == Status.Pending and self.balance(
                     ) == hmt_amount
                 except Exception as e:
-                    LOG.error(
-                        f"Setup failed with: {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
-                    )
+                    if gas_payer == self.multi_credentials[-1][0]:
+                        LOG.error(
+                            f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
+                        )
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
     def add_trusted_handlers(self,
@@ -639,8 +641,8 @@ class Job:
             handle_transaction(txn_func, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
-            LOG.error(
-                f"Bulk payout failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            LOG.info(
+                f"Bulk payout failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         bulk_paid = False
@@ -660,9 +662,10 @@ class Job:
                 bulk_paid = True
                 break
             except Exception as e:
-                LOG.error(
-                    f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
-                )
+                if gas_payer == self.multi_credentials[-1][0]:
+                    LOG.error(
+                        f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                    )
         return bulk_paid == True
 
     def abort(self, gas: int = GAS_LIMIT) -> bool:
@@ -872,8 +875,8 @@ class Job:
             handle_transaction(txn_func, *func_args, **txn_info)
             return True
         except Exception as e:
-            LOG.error(
-                f"Storing intermediate results failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            LOG.info(
+                f"Storing intermediate results failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         results_stored = False
@@ -893,9 +896,10 @@ class Job:
                 results_stored = True
                 break
             except Exception as e:
-                LOG.error(
-                    f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
-                )
+                if gas_payer == self.multi_credentials[-1][0]:
+                    LOG.error(
+                        f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                    )
         return results_stored
 
     def complete(self, gas: int = GAS_LIMIT) -> bool:
@@ -1412,8 +1416,8 @@ class Job:
             handle_transaction(txn_func, *txn_args, **txn_info)
             return True
         except Exception as e:
-            LOG.error(
-                f"Contract creation failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}."
+            LOG.info(
+                f"Contract creation failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         escrow_created = False
@@ -1432,9 +1436,10 @@ class Job:
                 escrow_created = True
                 break
             except Exception as e:
-                LOG.error(
-                    f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}. Raffling new ones..."
-                )
+                if gas_payer == self.multi_credentials[-1][0]:
+                    LOG.error(
+                        f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                    )
 
         return escrow_created
 
