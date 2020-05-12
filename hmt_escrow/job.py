@@ -405,11 +405,8 @@ class Job:
 
         A Job can't be setup without deploying it first.
         >>> job.setup()
-        Traceback (most recent call last):
-        AttributeError: 'Job' object has no attribute 'job_contract'
+        False
 
-        >>> job.launch(rep_oracle_pub_key)
-        True
         >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
         >>> job.launch(rep_oracle_pub_key)
@@ -470,12 +467,16 @@ class Job:
                     txn_func = hmtoken_contract.functions.transfer
                     func_args = [self.job_contract.address, hmt_amount]
                     handle_transaction(txn_func, *func_args, **txn_info)
+                    hmt_transferred = True
                     break
                 except Exception as e:
-                    if gas_payer == self.multi_credentials[-1][0]:
-                        LOG.exception(
-                            f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
-                        )
+                    LOG.info(
+                        f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
+                    )
+
+        if not hmt_transferred:
+            LOG.exception(f"Transferring HMT failed with all credentials, not continuing to setup.")
+            return False
 
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -515,10 +516,13 @@ class Job:
                     return self.status() == Status.Pending and self.balance(
                     ) == hmt_amount
                 except Exception as e:
-                    if gas_payer == self.multi_credentials[-1][0]:
-                        LOG.exception(
-                            f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
-                        )
+                    LOG.info(
+                        f"Setup failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
+                    )
+
+        if not contract_is_setup:
+            LOG.exception(f"Setup failed with all credentials.")
+
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
     def add_trusted_handlers(self,
@@ -662,10 +666,13 @@ class Job:
                 bulk_paid = True
                 break
             except Exception as e:
-                if gas_payer == self.multi_credentials[-1][0]:
-                    LOG.exception(
-                        f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}."
-                    )
+                LOG.info(
+                    f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                )
+
+        if not bulk_paid:
+            LOG.exception(f"Bulk payout failed with all credentials.")
+
         return bulk_paid == True
 
     def abort(self, gas: int = GAS_LIMIT) -> bool:
@@ -896,10 +903,13 @@ class Job:
                 results_stored = True
                 break
             except Exception as e:
-                if gas_payer == self.multi_credentials[-1][0]:
-                    LOG.exception(
-                        f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}."
-                    )
+                LOG.info(
+                    f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                )
+
+        if not results_stored:
+            LOG.exception(f"Storing results failed with all credentials.")
+
         return results_stored
 
     def complete(self, gas: int = GAS_LIMIT) -> bool:
@@ -1436,10 +1446,12 @@ class Job:
                 escrow_created = True
                 break
             except Exception as e:
-                if gas_payer == self.multi_credentials[-1][0]:
-                    LOG.exception(
-                        f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}."
-                    )
+                LOG.info(
+                    f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                )
+
+        if not escrow_created:
+            LOG.exception(f"Contract creation failed with all credentials.")
 
         return escrow_created
 
@@ -1449,4 +1461,4 @@ if __name__ == "__main__":
     from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
