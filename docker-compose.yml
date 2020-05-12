@@ -13,7 +13,7 @@ services:
       - ESCROW_BUCKETNAME=escrow-results
       - ESCROW_AWS_ACCESS_KEY_ID=minio
       - ESCROW_AWS_SECRET_ACCESS_KEY=minio123
-      - ESCROW_ENDPOINT_URL=http://minio:9000
+      - ESCROW_ENDPOINT_URL=http://minio.internal.com:9000
       - ESCROW_AWS_DEFAULT_REGION=us-west-2
       - DEBUG=true
     command: /work/bin/wait_then_run
@@ -24,11 +24,10 @@ services:
       - ipfs
       - hmt
       - kvstore
-      - minio
+      - minio:minio.internal.com
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
-      - ./minio:/data
       - .:/work
 
   contracts:
