@@ -76,7 +76,7 @@ services:
       - 5001:5001
   
   minio:
-    image: minio/minio:9423-d242680
+    image: minio/minio:RELEASE.2020-04-28T23-56-56Z
     ports:
       - "9000:9000"
     expose:
