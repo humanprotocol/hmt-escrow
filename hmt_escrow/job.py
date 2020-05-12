@@ -475,7 +475,9 @@ class Job:
                     )
 
         if not hmt_transferred:
-            LOG.exception(f"Transferring HMT failed with all credentials, not continuing to setup.")
+            LOG.exception(
+                f"Transferring HMT failed with all credentials, not continuing to setup."
+            )
             return False
 
         txn_info = {
@@ -1461,4 +1463,4 @@ if __name__ == "__main__":
     from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod()
+    doctest.testmod(raise_on_error=True)
