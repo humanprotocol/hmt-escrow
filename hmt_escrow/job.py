@@ -473,7 +473,7 @@ class Job:
                     break
                 except Exception as e:
                     if gas_payer == self.multi_credentials[-1][0]:
-                        LOG.error(
+                        LOG.exception(
                             f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
                         )
 
@@ -516,7 +516,7 @@ class Job:
                     ) == hmt_amount
                 except Exception as e:
                     if gas_payer == self.multi_credentials[-1][0]:
-                        LOG.error(
+                        LOG.exception(
                             f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
                         )
         return self.status() == Status.Pending and self.balance() == hmt_amount
@@ -663,7 +663,7 @@ class Job:
                 break
             except Exception as e:
                 if gas_payer == self.multi_credentials[-1][0]:
-                    LOG.error(
+                    LOG.exception(
                         f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}."
                     )
         return bulk_paid == True
@@ -897,7 +897,7 @@ class Job:
                 break
             except Exception as e:
                 if gas_payer == self.multi_credentials[-1][0]:
-                    LOG.error(
+                    LOG.exception(
                         f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}."
                     )
         return results_stored
@@ -1437,7 +1437,7 @@ class Job:
                 break
             except Exception as e:
                 if gas_payer == self.multi_credentials[-1][0]:
-                    LOG.error(
+                    LOG.exception(
                         f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}."
                     )
 
