@@ -19,13 +19,12 @@ services:
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
-    depends_on:
-      - minio
     links:
       - ganache
       - ipfs
       - hmt
       - kvstore
+      - minio
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
@@ -76,7 +75,7 @@ services:
       - 5001:5001
   
   minio:
-    image: minio/minio
+    image: minio/minio:9423-d242680
     ports:
       - "9000:9000"
     expose:
@@ -87,6 +86,8 @@ services:
     entrypoint: sh -c 'cp -a /template/* /data && minio server /data/'
     volumes:
       - ./minio:/template
+    tmpfs:
+      - /data
 
 volumes:
   hmt_token_addr:
