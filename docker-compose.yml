@@ -84,9 +84,9 @@ services:
     environment:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
-    entrypoint: sh -c 'minio server /data/'
+    entrypoint: sh -c 'cp -a /template/* /data && minio server /data/'
     volumes:
-      - ./minio:/data
+      - ./minio:/template
 
 volumes:
   hmt_token_addr:
