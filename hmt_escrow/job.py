@@ -19,7 +19,7 @@ from basemodels import Manifest
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 # Explicit env variable that will use s3 for storing results.
-USE_ESCROW_S3_STORAGE = bool(os.getenv("USE_ESCROW_S3_STORAGE", False))
+USE_ESCROW_S3_STORAGE = bool(os.getenv("USE_ESCROW_S3_STORAGE", True))
 
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
@@ -423,6 +423,10 @@ class Job:
             AttributeError: if trying to setup the job before deploying it.
 
         """
+
+        if not hasattr(self, 'job_contract'):
+            return False
+
         # Prepare setup arguments for the escrow contract.
         reputation_oracle_stake = int(
             Decimal(self.serialized_manifest["oracle_stake"]) * 100)
@@ -433,97 +437,60 @@ class Job:
         recording_oracle = str(
             self.serialized_manifest["recording_oracle_addr"])
         hmt_amount = int(self.amount * 10**18)
+        hmtoken_contract = get_hmtoken()
 
         hmt_transferred = False
         contract_is_setup = False
 
+        txn_event = "Transferring HMT"
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
             "gas": gas
         }
+        txn_func = hmtoken_contract.functions.transfer
+        func_args = [self.job_contract.address, hmt_amount]
 
-        # Fund the escrow contract with HMT.
-        hmtoken_contract = get_hmtoken()
         try:
-            txn_func = hmtoken_contract.functions.transfer
-            func_args = [self.job_contract.address, hmt_amount]
             handle_transaction(txn_func, *func_args, **txn_info)
             hmt_transferred = True
         except Exception as e:
             LOG.info(
-                f"Transferring HMT failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         if not hmt_transferred:
-            for gas_payer, gas_payer_priv in self.multi_credentials:
-                txn_info = {
-                    "gas_payer": gas_payer,
-                    "gas_payer_priv": gas_payer_priv,
-                    "gas": gas
-                }
-
-                try:
-                    txn_func = hmtoken_contract.functions.transfer
-                    func_args = [self.job_contract.address, hmt_amount]
-                    handle_transaction(txn_func, *func_args, **txn_info)
-                    hmt_transferred = True
-                    break
-                except Exception as e:
-                    LOG.info(
-                        f"Transferring HMT failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
-                    )
+            hmt_transferred = self._raffle_txn(self.multi_credentials,
+                                               txn_func, func_args, txn_event)
 
         if not hmt_transferred:
             LOG.exception(
-                f"Transferring HMT failed with all credentials, not continuing to setup."
+                f"{txn_event} failed with all credentials, not continuing to setup."
             )
             return False
 
-        txn_info = {
-            "gas_payer": self.gas_payer,
-            "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
-        }
+        txn_event = "Setup"
+        txn_func = self.job_contract.functions.setup
+        func_args = [
+            reputation_oracle, recording_oracle, reputation_oracle_stake,
+            recording_oracle_stake, self.manifest_url, self.manifest_hash
+        ]
 
         try:
-            # Setup the escrow contract with manifest and IPFS data.
-            txn_func = self.job_contract.functions.setup
-            func_args = [
-                reputation_oracle, recording_oracle, reputation_oracle_stake,
-                recording_oracle_stake, self.manifest_url, self.manifest_hash
-            ]
             handle_transaction(txn_func, *func_args, **txn_info)
             contract_is_setup = True
         except Exception as e:
             LOG.info(
-                f"Setup failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
         if not contract_is_setup:
-            for gas_payer, gas_payer_priv in self.multi_credentials:
-                txn_info = {
-                    "gas_payer": gas_payer,
-                    "gas_payer_priv": gas_payer_priv,
-                    "gas": gas
-                }
-                try:
-                    txn_func = self.job_contract.functions.setup
-                    func_args = [
-                        reputation_oracle, recording_oracle,
-                        reputation_oracle_stake, recording_oracle_stake,
-                        self.manifest_url, self.manifest_hash
-                    ]
-                    handle_transaction(txn_func, *func_args, **txn_info)
-                    return self.status() == Status.Pending and self.balance(
-                    ) == hmt_amount
-                except Exception as e:
-                    LOG.info(
-                        f"Setup failed with secondary credentials {self.gas_payer} and {self.gas_payer_priv} due to {e}."
-                    )
+            contract_is_setup = self._raffle_txn(self.multi_credentials,
+                                                 txn_func, func_args,
+                                                 txn_event)
 
         if not contract_is_setup:
-            LOG.exception(f"Setup failed with all credentials.")
+            LOG.exception(f"{txn_event} failed with all credentials.")
 
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
@@ -632,48 +599,32 @@ class Job:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
 
         """
-        eth_addrs = [eth_addr for eth_addr, amount in payouts]
-        hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
-
+        txn_event = "Bulk payout"
         txn_func = self.job_contract.functions.bulkPayOut
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
             "gas": gas
         }
+
+        (hash_, url) = upload(results, pub_key, self.use_s3_storage)
+        eth_addrs = [eth_addr for eth_addr, amount in payouts]
+        hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
+
+        func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
         try:
-            (hash_, url) = upload(results, pub_key, self.use_s3_storage)
-            func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
             handle_transaction(txn_func, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
             LOG.info(
-                f"Bulk payout failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        bulk_paid = False
-
-        for gas_payer, gas_payer_priv in self.multi_credentials:
-            txn_info = {
-                "gas_payer": gas_payer,
-                "gas_payer_priv": gas_payer_priv,
-                "gas": gas
-            }
-            try:
-                (hash_, url) = upload(results, pub_key, self.use_s3_storage)
-                func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
-                handle_transaction(txn_func, *func_args, **txn_info)
-                self.gas_payer = gas_payer
-                self.gas_payer_priv = gas_payer_priv
-                bulk_paid = True
-                break
-            except Exception as e:
-                LOG.info(
-                    f"Bulk payout failed with {gas_payer} and {gas_payer_priv} due to {e}."
-                )
+        bulk_paid = self._raffle_txn(self.multi_credentials, txn_func,
+                                     func_args, txn_event)
 
         if not bulk_paid:
-            LOG.exception(f"Bulk payout failed with all credentials.")
+            LOG.exception(f"{txn_event} failed with all credentials.")
 
         return bulk_paid == True
 
@@ -872,45 +823,29 @@ class Job:
             returns True if contract's state is updated and IPFS upload succeeds.
 
         """
+        txn_event = "Storing intermediate results"
         txn_func = self.job_contract.functions.storeResults
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
             "gas": gas
         }
+        (hash_, url) = upload(results, pub_key, self.use_s3_storage)
+        func_args = [url, hash_]
+
         try:
-            (hash_, url) = upload(results, pub_key, self.use_s3_storage)
-            func_args = [url, hash_]
             handle_transaction(txn_func, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
-                f"Storing intermediate results failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        results_stored = False
-
-        for gas_payer, gas_payer_priv in self.multi_credentials:
-            txn_info = {
-                "gas_payer": gas_payer,
-                "gas_payer_priv": gas_payer_priv,
-                "gas": gas
-            }
-            try:
-                (hash_, url) = upload(results, pub_key, self.use_s3_storage)
-                func_args = [url, hash_]
-                handle_transaction(txn_func, *func_args, **txn_info)
-                self.gas_payer = gas_payer
-                self.gas_payer_priv = gas_payer_priv
-                results_stored = True
-                break
-            except Exception as e:
-                LOG.info(
-                    f"Storing intermediate results failed with {gas_payer} and {gas_payer_priv} due to {e}."
-                )
+        results_stored = self._raffle_txn(self.multi_credentials, txn_func,
+                                          func_args, txn_event)
 
         if not results_stored:
-            LOG.exception(f"Storing results failed with all credentials.")
+            LOG.exception(f"{txn_event} failed with all credentials.")
 
         return results_stored
 
@@ -1417,27 +1352,24 @@ class Job:
 
         """
         txn_event = "Contract creation"
+        txn_func = self.factory_contract.functions.createEscrow
+        txn_info = {
+            "gas_payer": self.gas_payer,
+            "gas_payer_priv": self.gas_payer_priv,
+            "gas": gas
+        }
+        func_args = [trusted_handlers]
 
         try:
-            txn_func = self.factory_contract.functions.createEscrow
-            txn_args = [trusted_handlers]
-            txn_info = {
-                "gas_payer": self.gas_payer,
-                "gas_payer_priv": self.gas_payer_priv,
-                "gas": gas
-            }
-
-            handle_transaction(txn_func, *txn_args, **txn_info)
+            handle_transaction(txn_func, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        escrow_created = self._raffle_txn(
-            self.multi_credentials,
-            self.factory_contract.functions.createEscrow, [trusted_handlers],
-            txn_event)
+        escrow_created = self._raffle_txn(self.multi_credentials, txn_func,
+                                          func_args, txn_event)
 
         if not escrow_created:
             LOG.exception(f"{txn_event} failed with all credentials.")
