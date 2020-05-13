@@ -16,6 +16,7 @@ services:
       - ESCROW_ENDPOINT_URL=http://minio:9000
       - ESCROW_AWS_DEFAULT_REGION=us-west-2
       - DEBUG=true
+      - USE_ESCROW_S3_STORAGE=True
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
