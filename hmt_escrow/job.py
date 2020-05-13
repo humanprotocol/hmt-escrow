@@ -1416,6 +1416,8 @@ class Job:
             TimeoutError: if wait_on_transaction times out.
 
         """
+        txn_event = "Contract creation"
+
         try:
             txn_func = self.factory_contract.functions.createEscrow
             txn_args = [trusted_handlers]
@@ -1429,33 +1431,45 @@ class Job:
             return True
         except Exception as e:
             LOG.info(
-                f"Contract creation failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        escrow_created = False
+        escrow_created = self._raffle_txn(
+            self.multi_credentials,
+            self.factory_contract.functions.createEscrow, [trusted_handlers],
+            txn_event)
 
-        for gas_payer, gas_payer_priv in self.multi_credentials:
+        if not escrow_created:
+            LOG.exception(f"{txn_event} failed with all credentials.")
+
+        return escrow_created
+
+    def _raffle_txn(self,
+                    multi_creds,
+                    txn_func,
+                    txn_args,
+                    txn_event,
+                    gas: int = GAS_LIMIT):
+        txn_succeeded = False
+
+        for gas_payer, gas_payer_priv in multi_creds:
             txn_info = {
                 "gas_payer": gas_payer,
                 "gas_payer_priv": gas_payer_priv,
                 "gas": gas
             }
-            txn_args = [trusted_handlers]
             try:
                 handle_transaction(txn_func, *txn_args, **txn_info)
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
-                escrow_created = True
+                txn_succeeded = True
                 break
             except Exception as e:
                 LOG.info(
-                    f"Contract creation failed with {gas_payer} and {gas_payer_priv} due to {e}."
+                    f"{txn_event} failed with {gas_payer} and {gas_payer_priv} due to {e}."
                 )
 
-        if not escrow_created:
-            LOG.exception(f"Contract creation failed with all credentials.")
-
-        return escrow_created
+        return txn_succeeded
 
 
 if __name__ == "__main__":
@@ -1463,4 +1477,4 @@ if __name__ == "__main__":
     from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()
