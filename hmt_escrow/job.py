@@ -527,6 +527,7 @@ class Job:
             bool: returns True if trusted handlers have been setup successfully.
 
         """
+        txn_event = "Adding trusted handlers"
         txn_func = self.job_contract.functions.addTrustedHandlers
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -534,8 +535,22 @@ class Job:
             "gas": gas
         }
         func_args = [handlers]
-        handle_transaction(txn_func, *func_args, **txn_info)
-        return True
+
+        try:
+            handle_transaction(txn_func, *func_args, **txn_info)
+            return True
+        except Exception as e:
+            LOG.info(
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+            )
+        trusted_handlers_added = self._raffle_txn(self.multi_credentials,
+                                                  txn_func, func_args,
+                                                  txn_event)
+
+        if not trusted_handlers_added:
+            LOG.exception(f"{txn_event} failed with all credentials.")
+
+        return trusted_handlers_added
 
     def bulk_payout(self,
                     payouts: List[Tuple[str, Decimal]],
@@ -693,6 +708,8 @@ class Job:
             bool: returns True if contract has been destroyed successfully.
 
         """
+        w3 = get_w3()
+        txn_event = "Job abortion"
         txn_func = self.job_contract.functions.abort
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -700,12 +717,22 @@ class Job:
             "gas": gas
         }
 
-        handle_transaction(txn_func, *[], **txn_info)
+        try:
+            handle_transaction(txn_func, *[], **txn_info)
+            # After abort the contract should be destroyed
+            return w3.eth.getCode(self.job_contract.address) == b''
+        except Exception as e:
+            LOG.info(
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+            )
 
-        # After abort the contract should be destroyed
-        w3 = get_w3()
-        contract_code = w3.eth.getCode(self.job_contract.address)
-        return contract_code == b''
+        job_aborted = self._raffle_txn(self.multi_credentials, txn_func, [],
+                                       txn_event)
+
+        if not job_aborted:
+            LOG.exception(f"{txn_event} failed with all credentials.")
+
+        return w3.eth.getCode(self.job_contract.address) == b''
 
     def cancel(self, gas: int = GAS_LIMIT) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
@@ -756,6 +783,7 @@ class Job:
             bool: returns True if gas payer has been paid back and contract is in "Cancelled" state.
 
         """
+        txn_event = "Job cancellation"
         txn_func = self.job_contract.functions.cancel
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -763,7 +791,20 @@ class Job:
             "gas": gas
         }
 
-        handle_transaction(txn_func, *[], **txn_info)
+        try:
+            handle_transaction(txn_func, *[], **txn_info)
+            return self.status() == Status.Cancelled
+        except Exception as e:
+            LOG.info(
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+            )
+
+        job_cancelled = self._raffle_txn(self.multi_credentials, txn_func, [],
+                                         txn_event)
+
+        if not job_cancelled:
+            LOG.exception(f"{txn_event} failed with all credentials.")
+
         return self.status() == Status.Cancelled
 
     def store_intermediate_results(self,
@@ -885,6 +926,7 @@ class Job:
             bool: returns True if the contract has been completed.
 
         """
+        txn_event = "Job completion"
         txn_func = self.job_contract.functions.complete
         txn_info = {
             "gas_payer": self.gas_payer,
@@ -892,7 +934,20 @@ class Job:
             "gas": gas
         }
 
-        handle_transaction(txn_func, *[], **txn_info)
+        try:
+            handle_transaction(txn_func, *[], **txn_info)
+            return self.status() == Status.Complete
+        except Exception as e:
+            LOG.info(
+                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+            )
+
+        job_completed = self._raffle_txn(self.multi_credentials, txn_func, [],
+                                         txn_event)
+
+        if not job_completed:
+            LOG.exception(f"{txn_event} failed with all credentials.")
+
         return self.status() == Status.Complete
 
     def status(self, gas: int = GAS_LIMIT) -> Enum:
