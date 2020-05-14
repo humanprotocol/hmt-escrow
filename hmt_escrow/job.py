@@ -1437,6 +1437,19 @@ class Job:
                     txn_args,
                     txn_event,
                     gas: int = GAS_LIMIT):
+        """Takes in multiple credentials, loops through each and performs the given transaction.
+
+        Args:
+            credentials (Dict[str, str]): a dict of multiple ethereum addresses and their private keys.
+            txn_func: the transaction function to be handled.
+            txn_args (List): the arguments the transaction takes.
+            txn_event (str): the transaction event that will be performed.
+            gas (int): maximum amount of gas the caller is ready to pay.
+        
+        Returns:
+            bool: returns True if the given transaction succeeds.
+            
+        """
         txn_succeeded = False
 
         for gas_payer, gas_payer_priv in multi_creds:
