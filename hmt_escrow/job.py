@@ -19,7 +19,7 @@ from basemodels import Manifest
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 # Explicit env variable that will use s3 for storing results.
-USE_ESCROW_S3_STORAGE = bool(os.getenv("USE_ESCROW_S3_STORAGE", True))
+USE_ESCROW_S3_STORAGE = bool(os.getenv("USE_ESCROW_S3_STORAGE", False))
 
 LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
@@ -1448,7 +1448,7 @@ class Job:
         
         Returns:
             bool: returns True if the given transaction succeeds.
-            
+
         """
         txn_succeeded = False
 
@@ -1477,4 +1477,4 @@ if __name__ == "__main__":
     from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod()
+    doctest.testmod(raise_on_error=True)
