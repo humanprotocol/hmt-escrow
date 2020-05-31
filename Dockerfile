@@ -18,7 +18,9 @@ COPY yarn.lock /work/
 RUN yarn
 
 COPY Pipfile Pipfile.lock /work/
-RUN pip3 install pipenv
+
+# Pin to specific version that's guaranteed to work
+RUN pip3 install 'pipenv==2018.11.26'
 RUN pipenv install --system --deploy
 
 RUN python3 -m solc.install v0.4.24
