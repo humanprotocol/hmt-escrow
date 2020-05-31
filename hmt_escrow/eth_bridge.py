@@ -6,6 +6,7 @@ from solc import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
+from web3.utils.transactions import wait_for_transaction_receipt
 from hmt_escrow.kvstore_abi import abi as kvstore_abi
 from typing import Dict, List, Tuple, Optional, Any
 
@@ -31,6 +32,7 @@ CONTRACTS = compile_files([
 KVSTORE_CONTRACT = Web3.toChecksumAddress(
     os.getenv("KVSTORE_CONTRACT",
               "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
+WEB3_POLL_LATENCY = os.getenv("WEB3_POLL_LATENCY", 5)
 
 
 def get_w3() -> Web3:
@@ -110,7 +112,10 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
     txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     try:
-        txn_receipt = w3.eth.waitForTransactionReceipt(txn_hash, timeout=240)
+        txn_receipt = wait_for_transaction_receipt(w3,
+                                                   txn_hash,
+                                                   timeout=240,
+                                                   poll_latency=5)
     except TimeoutError as e:
         raise e
     return txn_receipt
