@@ -1,40 +1,25 @@
-FROM ubuntu:bionic
+FROM ubuntu:focal
+ENV LANG C.UTF-8
+ENV DEBIAN_FRONTEND noninteractive
+ENV PYTHONPATH "/usr/lib/python3.6/:/usr/local/lib/python3.6/dist-packages/:/work:/work/banhammer:/work/hmt-servers"
+ENV PYTHONUNBUFFERED True
 
 WORKDIR /work
 RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    apt-get install -y build-essential libffi-dev autoconf libtool \
-    python3-dev python3-pip \
-    git curl wget bash pandoc pkg-config jq && \
-    curl -sL https://deb.nodesource.com/setup_8.x | bash -  && \
-    apt-get install -y nodejs && \
-    npm install -g yarn && \
-    yarn global add truffle
-
-ENV LANG C.UTF-8
+    apt-get install -y automake bash black build-essential curl git jq libffi-dev libgmp-dev libtool mypy nodejs npm \
+	pandoc pkg-config python3-boto python3-dev python3-pip 
 
 COPY package.json /work/
-COPY yarn.lock /work/
-RUN yarn
+RUN npm install
 
-COPY Pipfile Pipfile.lock /work/
+COPY requirements.txt /work/
+RUN pip3 install -r requirements.txt
 
-# Pin to specific version that's guaranteed to work
-RUN pip3 install 'pipenv==2018.11.26'
-RUN pipenv install --system --deploy
-
-RUN python3 -m solc.install v0.4.24
-ENV SOLC_BINARY="/root/.py-solc/solc-v0.4.24/bin/solc"
+ENV SOLC_VERSION="v0.6.2"
+RUN python3 -m solcx.install ${SOLC_VERSION}
+ENV SOLC_BINARY="/root/.py-solc-x/solc-${SOLC_VERSION}/bin/solc"
 
 # Necessary files for smart contract compilation, migration and testing
-COPY contracts /work/contracts/
-COPY migrations /work/migrations/
-COPY test /work/test/
-COPY truffle.js /work/
-
-# Necessary files for the API to function properly
-COPY *.py /work/
-COPY hmt_escrow /work/hmt_escrow/
-COPY bin /work/bin/
+COPY . /work/
 
 CMD ./test.py
