@@ -1,5 +1,0 @@
-#!/bin/bash
-set -exu
-
-export PYTHONPATH=$(pwd)
-python3 hmt_escrow/tests/test_ipns.py

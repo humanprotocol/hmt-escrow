@@ -8,27 +8,18 @@ This repository contains a Python 3 library for launching and communicating with
 
 You need few essential system requirements to successfully install our Python 3 package.
 
+### Annoying testing feature
+Rightly or Wrongly we tried to use doctests for the vast majority of testing in this project
+. As a result you may have to remove the raise_on_error=True in the module you are testing
+to get good feedback on what's broken.
+
+
 #### Debian / Ubuntu
 
-```
-build-essential 
-libffi
-autoconf 
-libtool
-pkg-config
-```
-
-#### macOS
-
-```
-automake
-pkg-config
-libtool
-libffi
-gmp
-```
+We'd recommend you checking out the dockerfile for an explanation of what applications are required
 
 After that the following command should install the package successfully:
+
 ```
 pip install hmt-escrow
 ```

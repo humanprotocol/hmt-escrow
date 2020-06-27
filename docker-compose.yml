@@ -10,10 +10,18 @@ services:
       - GAS_LIMIT=6700000
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
-      - IPNS_PATH=/ipns/
+      - ESCROW_BUCKETNAME=escrow-results
+      - ESCROW_AWS_ACCESS_KEY_ID=minio
+      - ESCROW_AWS_SECRET_ACCESS_KEY=minio123
+      - ESCROW_ENDPOINT_URL=http://minio:9000
+      - ESCROW_AWS_DEFAULT_REGION=us-west-2
+      - DEBUG=true
+      - USE_ESCROW_S3_STORAGE=True
     command: /work/bin/wait_then_run
     build: .
     image: hmtcentral.azurecr.io/contracts:latest
+    depends_on:
+      - minio
     links:
       - ganache
       - ipfs
@@ -22,14 +30,15 @@ services:
     volumes:
       - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
+      - ./minio:/data
       - .:/work
 
   contracts:
     environment:
       - ETH_HOST=ganache
       - ETH_PORT=8545
-    command: sh -c "yarn run compile; yarn run test"
-    build: .
+    command: sh -c "npm install; npm run test"
+    image: hmtcentral.azurecr.io/contracts:latest
     links:
       - ganache
 
@@ -62,10 +71,23 @@ services:
       - eth_kvstore_addr:/deployed
 
   ipfs:
-    image: ipfs/go-ipfs:v0.4.20
+    image: ipfs/go-ipfs:v0.4.22
     command: daemon --offline
     ports:
       - 5001:5001
+  
+  minio:
+    image: minio/minio:RELEASE.2020-04-28T23-56-56Z
+    ports:
+      - "9000:9000"
+    expose:
+      - "9000"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    entrypoint: sh -c 'minio server /data/'
+    volumes:
+      - ./minio:/data
 
 volumes:
   hmt_token_addr:

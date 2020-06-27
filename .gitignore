@@ -111,8 +111,6 @@ ENV/
 venv*
 het/secrets.json
 
-# requirements (we use Pipfile)
-requirements.txt
 
 # Generated stuff
 # ================================================
@@ -123,3 +121,4 @@ build/
 node_modules/
 coverage/
 coverage.json
+minio/

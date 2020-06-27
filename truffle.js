@@ -11,9 +11,7 @@ module.exports = {
     development: {
       host: ETH_HOST || '127.0.0.1',
       port: ETH_PORT || 9545,
-      network_id: '*',
-      gas: 0xfffffffffff,
-      gasPrice: 0x01,
+      network_id: '*'
     },
     live: {
       provider: () => new HDWalletProvider(MNEMONIC, `https://mainnet.infura.io/${INFURA_TOKEN}`),

@@ -1,13 +1,14 @@
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
 
-from hmt_escrow.kvstore_abi import abi as kvstore_abi
 from solcx import compile_files
-from web3 import EthereumTesterProvider, HTTPProvider, Web3
+from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
+from web3.utils.transactions import wait_for_transaction_receipt
+from hmt_escrow.kvstore_abi import abi as kvstore_abi
+from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
 
@@ -15,23 +16,26 @@ GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 LOG = logging.getLogger("hmt_escrow.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
-    os.getenv("HMTOKEN_ADDR", '0x9b0ff099c4e8df24ec077e0ccd46571f915afb25'))
+    os.getenv("HMTOKEN_ADDR", "0x9b0ff099c4e8df24ec077e0ccd46571f915afb25")
+)
 
-CONTRACT_FOLDER = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), 'contracts')
-CONTRACTS = compile_files([
-    "{}/Escrow.sol".format(CONTRACT_FOLDER),
-    "{}/EscrowFactory.sol".format(CONTRACT_FOLDER),
-    "{}/HMToken.sol".format(CONTRACT_FOLDER),
-    "{}/HMTokenInterface.sol".format(CONTRACT_FOLDER),
-    "{}/SafeMath.sol".format(CONTRACT_FOLDER)
-])
+CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contracts")
+CONTRACTS = compile_files(
+    [
+        "{}/Escrow.sol".format(CONTRACT_FOLDER),
+        "{}/EscrowFactory.sol".format(CONTRACT_FOLDER),
+        "{}/HMToken.sol".format(CONTRACT_FOLDER),
+        "{}/HMTokenInterface.sol".format(CONTRACT_FOLDER),
+        "{}/SafeMath.sol".format(CONTRACT_FOLDER),
+    ]
+)
 
 # See more details about the eth-kvstore here: https://github.com/hCaptcha/eth-kvstore
-# KVSTORE_CONTRACT = Web3.toChecksumAddress(
-#      os.getenv("KVSTORE_CONTRACT", "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44"))
-
-KVSTORE_CONTRACT = Web3.toChecksumAddress("0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
+KVSTORE_CONTRACT = Web3.toChecksumAddress(
+    os.getenv("KVSTORE_CONTRACT", "0xbcF8274FAb0cbeD0099B2cAFe862035a6217Bf44")
+)
+WEB3_POLL_LATENCY = float(os.getenv("WEB3_POLL_LATENCY", 5))
+WEB3_TIMEOUT = int(os.getenv("WEB3_TIMEOUT", 240))
 
 
 def get_w3() -> Web3:
@@ -45,7 +49,7 @@ def get_w3() -> Web3:
         Web3: returns the web3 provider.
 
     """
-    endpoint = os.getenv("HMT_ETH_SERVER", 'http://localhost:8545')
+    endpoint = os.getenv("HMT_ETH_SERVER", "http://localhost:8545")
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
     provider = HTTPProvider(endpoint) if endpoint else EthereumTesterProvider
@@ -100,18 +104,17 @@ def handle_transaction(txn_func, *args, **kwargs) -> AttributeDict:
     w3 = get_w3()
     nonce = w3.eth.getTransactionCount(gas_payer)
 
-    txn_dict = txn_func(*args).buildTransaction({
-        'from': gas_payer,
-        'gas': gas,
-        'nonce': nonce
-    })
+    txn_dict = txn_func(*args).buildTransaction(
+        {"from": gas_payer, "gas": gas, "nonce": nonce}
+    )
 
-    signed_txn = w3.eth.account.signTransaction(
-        txn_dict, private_key=gas_payer_priv)
+    signed_txn = w3.eth.account.signTransaction(txn_dict, private_key=gas_payer_priv)
     txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     try:
-        txn_receipt = w3.eth.waitForTransactionReceipt(txn_hash, timeout=240)
+        txn_receipt = wait_for_transaction_receipt(
+            w3, txn_hash, timeout=WEB3_TIMEOUT, poll_latency=WEB3_POLL_LATENCY
+        )
     except TimeoutError as e:
         raise e
     return txn_receipt
@@ -144,9 +147,9 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
     """
     w3 = get_w3()
     contract_interface = get_contract_interface(
-        '{}/HMTokenInterface.sol:HMTokenInterface'.format(CONTRACT_FOLDER))
-    contract = w3.eth.contract(
-        address=hmtoken_addr, abi=contract_interface['abi'])
+        "{}/HMTokenInterface.sol:HMTokenInterface".format(CONTRACT_FOLDER)
+    )
+    contract = w3.eth.contract(address=hmtoken_addr, abi=contract_interface["abi"])
     return contract
 
 
@@ -176,9 +179,9 @@ def get_escrow(escrow_addr: str) -> Contract:
 
     w3 = get_w3()
     contract_interface = get_contract_interface(
-        '{}/Escrow.sol:Escrow'.format(CONTRACT_FOLDER))
-    escrow = w3.eth.contract(
-        address=escrow_addr, abi=contract_interface['abi'])
+        "{}/Escrow.sol:Escrow".format(CONTRACT_FOLDER)
+    )
+    escrow = w3.eth.contract(address=escrow_addr, abi=contract_interface["abi"])
     return escrow
 
 
@@ -202,9 +205,11 @@ def get_factory(factory_addr: Optional[str]) -> Contract:
     """
     w3 = get_w3()
     contract_interface = get_contract_interface(
-        '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
+        "{}/EscrowFactory.sol:EscrowFactory".format(CONTRACT_FOLDER)
+    )
     escrow_factory = w3.eth.contract(
-        address=factory_addr, abi=contract_interface['abi'])
+        address=factory_addr, abi=contract_interface["abi"]
+    )
     return escrow_factory
 
 
@@ -223,19 +228,17 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
 
     w3 = get_w3()
     contract_interface = get_contract_interface(
-        '{}/EscrowFactory.sol:EscrowFactory'.format(CONTRACT_FOLDER))
+        "{}/EscrowFactory.sol:EscrowFactory".format(CONTRACT_FOLDER)
+    )
     factory = w3.eth.contract(
-        abi=contract_interface['abi'], bytecode=contract_interface['bin'])
+        abi=contract_interface["abi"], bytecode=contract_interface["bin"]
+    )
 
     txn_func = factory.constructor
     func_args = [HMTOKEN_ADDR]
-    txn_info = {
-        "gas_payer": gas_payer,
-        "gas_payer_priv": gas_payer_priv,
-        "gas": gas
-    }
+    txn_info = {"gas_payer": gas_payer, "gas_payer_priv": gas_payer_priv, "gas": gas}
     txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
-    contract_addr = txn_receipt['contractAddress']
+    contract_addr = txn_receipt["contractAddress"]
     return contract_addr
 
 
@@ -275,20 +278,19 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
 
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?
-    GAS_PAYER = os.getenv('GAS_PAYER')
+    GAS_PAYER = os.getenv("GAS_PAYER")
 
     if not GAS_PAYER:
-        raise ValueError('environment variable GAS_PAYER required')
+        raise ValueError("environment variable GAS_PAYER required")
 
     w3 = get_w3()
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
-    addr_pub_key = kvstore.functions.get(GAS_PAYER, 'hmt_pub_key').call({
-        'from':
-        GAS_PAYER
-    })
+    addr_pub_key = kvstore.functions.get(GAS_PAYER, "hmt_pub_key").call(
+        {"from": GAS_PAYER}
+    )
 
-    return bytes(addr_pub_key, encoding='utf-8')
+    return bytes(addr_pub_key, encoding="utf-8")
 
 
 def set_pub_key_at_addr(pub_key: str) -> Dict[str, Any]:
@@ -315,22 +317,21 @@ def set_pub_key_at_addr(pub_key: str) -> Dict[str, Any]:
     AttributeDict({'transactionHash': ...})
 
     """
-    GAS_PAYER = os.getenv('GAS_PAYER')
-    GAS_PAYER_PRIV = os.getenv('GAS_PAYER_PRIV')
+    GAS_PAYER = os.getenv("GAS_PAYER")
+    GAS_PAYER_PRIV = os.getenv("GAS_PAYER_PRIV")
 
     if not (GAS_PAYER or GAS_PAYER_PRIV):
-        raise ValueError(
-            'environment variable GAS_PAYER AND GAS_PAYER_PRIV required')
+        raise ValueError("environment variable GAS_PAYER AND GAS_PAYER_PRIV required")
 
     w3 = get_w3()
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
 
     txn_func = kvstore.functions.set
-    func_args = ['hmt_pub_key', pub_key]
+    func_args = ["hmt_pub_key", pub_key]
     txn_info = {
         "gas_payer": GAS_PAYER,
         "gas_payer_priv": GAS_PAYER_PRIV,
-        "gas": GAS_LIMIT
+        "gas": GAS_LIMIT,
     }
 
     return handle_transaction(txn_func, *func_args, **txn_info)
@@ -340,4 +341,5 @@ if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
     from job import Job
-    doctest.testmod()
+
+    doctest.testmod(raise_on_error=True)
