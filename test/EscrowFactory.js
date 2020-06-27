@@ -5,6 +5,10 @@ let EscrowFactory;
 let HMT;
 
 contract('EscrowFactory', (accounts) => {
+  const reputationOracle = accounts[2];
+  const recordingOracle = accounts[3];
+  const trustedHandlers = [reputationOracle, recordingOracle]
+
   beforeEach(async () => {
     HMT = await HMTokenAbstraction.new('100', 'Human Token', 4, 'HMT', { from: accounts[0] });
     EscrowFactory = await EscrowFactoryAbstraction.new(HMT.address, { from: accounts[0] });
@@ -21,7 +25,7 @@ contract('EscrowFactory', (accounts) => {
   describe('calling createEscrow', () => {
     it('creates new escrow contract', async () => {
       try {
-        const escrow = await EscrowFactory.createEscrow({ from: accounts[0] });
+        const escrow = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
         assert(escrow);
       } catch (ex) {
         assert(false);
@@ -33,12 +37,12 @@ contract('EscrowFactory', (accounts) => {
         const initialCounter = await EscrowFactory.getCounter();
         assert.equal(initialCounter.toNumber(), 0);
 
-        await EscrowFactory.createEscrow({ from: accounts[0] });
+        await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
 
         const counterAfterFirstEscrow = await EscrowFactory.getCounter();
         assert.equal(counterAfterFirstEscrow.toNumber(), 1);
 
-        await EscrowFactory.createEscrow({ from: accounts[0] });
+        await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
 
         const counterAfterSecondEscrow = await EscrowFactory.getCounter();
         assert.equal(counterAfterSecondEscrow.toNumber(), 2);
@@ -52,7 +56,7 @@ contract('EscrowFactory', (accounts) => {
         const initialCounter = await EscrowFactory.getCounter();
         assert.equal(initialCounter.toNumber(), 0);
 
-        await EscrowFactory.createEscrow({ from: accounts[0] });
+        await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
         const escrowAddress = await EscrowFactory.getLastEscrow();
         const hasEscrow = await EscrowFactory.hasEscrow(escrowAddress);
         assert.equal(hasEscrow, true);
