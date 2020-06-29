@@ -1,12 +1,11 @@
 #!/bin/sh
 set -exu
 
+
 FILES="*.py hmt_escrow/*.py"
 if [ -z ${CI+x} ]
-	then
-	yapf --i $FILES 
-	mypy $FILES --ignore-missing-imports
-else
-	yapf --diff $FILES
-    mypy $FILES --ignore-missing-imports
+        then black ${FILES}
+else 
+        black --check ${FILES}
 fi
+mypy $FILES --ignore-missing-imports

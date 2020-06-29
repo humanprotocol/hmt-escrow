@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.6.2;
 import "./Escrow.sol";
 
 
@@ -13,7 +13,7 @@ contract EscrowFactory {
         eip20 = _eip20;
     }
 
-    function createEscrow(address[] trustedHandlers) public returns (address) {
+    function createEscrow(address[] memory trustedHandlers) public returns (address) {
         Escrow escrow = new Escrow(eip20, msg.sender, 8640000, trustedHandlers);
         counter++;
         escrowCounters[address(escrow)] = counter;

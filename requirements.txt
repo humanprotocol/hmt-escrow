@@ -1,0 +1,5 @@
+web3==4.8.3
+py-evm==0.2.0a37
+py-solc-x
+boto3
+hmt-basemodels
