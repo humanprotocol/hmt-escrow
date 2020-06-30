@@ -303,7 +303,7 @@ contract Escrow {
         return (reputationOracleFee, recordingOracleFee);
     }
 
-    function calcAggregatedBulkAmount(uint256[] _amounts) internal returns (uint256) {
+    function calcAggregatedBulkAmount(uint256[] memory _amounts) internal returns (uint256) {
         uint256 aggregatedBulkAmount = 0;
         for (uint256 i; i < _amounts.length; i++) {
             aggregatedBulkAmount += _amounts[i];
@@ -311,7 +311,7 @@ contract Escrow {
         return aggregatedBulkAmount;
     }
 
-    function writeOnChain(string _hash, string _url) internal {
+    function writeOnChain(string memory _hash, string memory _url) internal {
         bool _writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
         if (_writeOnchain) {
             // Be sure they are both zero if one of them is
