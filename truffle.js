@@ -5,7 +5,7 @@ const HDWalletProvider = require('truffle-hdwallet-provider');
 
 module.exports = {
 
-  plugins: ["truffle-security"],
+  plugins: ["truffle-security, solidity-coverage"],
 
   networks: {
     development: {
