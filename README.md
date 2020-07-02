@@ -1,5 +1,9 @@
 # <img height="60px" src="./static/human.svg" alt="human" />
 
+# Help Wanted!
+
+Please read through this repo to contribute for cash and prizes.
+
 This repository contains a Python 3 library for launching and communicating with HMT Solidity contracts.
 
 ## Installation
