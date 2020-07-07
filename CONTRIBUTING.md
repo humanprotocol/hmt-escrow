@@ -8,9 +8,11 @@ Main repository we are starting the bounty program with is hmt-escrow. The proje
 
 ### Solidity
 The solidity project is based on truffle. The smart contracts can be found from the contracts/ folder.
-Python
+
+### Python
 The python part of the project is to act as a wrapper for the smart contracts since the main way we use the smart contracts is via python. You can find the python related part of the project inside the hmt_escrow/ folder.
-Development
+
+### Development
 We encourage using Docker as the main way to develop since it assembles all the solidity and python dependencies together neatly. Docker will be especially handy when developing python related modules. If you are only developing smart contract related features, a local ganache together with truffle should be sufficient.
 
 ### The First Issue

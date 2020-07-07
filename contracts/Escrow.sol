@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.6.2;
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 
@@ -12,7 +12,7 @@ contract Escrow {
     address private reputationOracle;
     address private recordingOracle;
     address private launcher;
-    address private canceler;
+    address payable canceler;
 
     uint256 private reputationOracleStake;
     uint256 private recordingOracleStake;
@@ -42,9 +42,9 @@ contract Escrow {
 
     constructor(
         address _eip20,
-        address _canceler,
+        address payable _canceler,
         uint256 _expiration,
-        address[] _handlers
+        address[] memory _handlers
     ) public {
         eip20 = _eip20;
         status = EscrowStatuses.Launched;
@@ -88,27 +88,27 @@ contract Escrow {
         return recordingOracle;
     }
 
-    function getManifestHash() public view returns (string) {
+    function getManifestHash() public view returns (string memory) {
         return manifestHash;
     }
 
-    function getManifestUrl() public view returns (string) {
+    function getManifestUrl() public view returns (string memory) {
         return manifestUrl;
     }
 
-    function getIntermediateResultsUrl() public view returns (string) {
+    function getIntermediateResultsUrl() public view returns (string memory) {
         return intermediateResultsUrl;
     }
 
-    function getIntermediateResultsHash() public view returns (string) {
+    function getIntermediateResultsHash() public view returns (string memory) {
         return intermediateResultsHash;
     }
 
-    function getFinalResultsUrl() public view returns (string) {
+    function getFinalResultsUrl() public view returns (string memory) {
         return finalResultsUrl;
     }
 
-    function getFinalResultsHash() public view returns (string) {
+    function getFinalResultsHash() public view returns (string memory) {
         return finalResultsHash;
     }
 
@@ -120,7 +120,7 @@ contract Escrow {
         return trustedHandlers[_handler].isTrusted;
     }
 
-    function addTrustedHandlers(address[] _handlers) public {
+    function addTrustedHandlers(address[] memory _handlers) public {
         for (uint256 i = 0; i < _handlers.length; i++) {
             trustedHandlers[_handlers[i]].isTrusted = true;
         }
@@ -134,8 +134,8 @@ contract Escrow {
         address _recordingOracle,
         uint256 _reputationOracleStake,
         uint256 _recordingOracleStake,
-        string _url,
-        string _hash
+        string memory _url,
+        string memory _hash
     ) public {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
@@ -211,7 +211,7 @@ contract Escrow {
         }
     }
 
-    function storeResults(string _url, string _hash) public {
+    function storeResults(string memory _url, string memory _hash) public {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
@@ -225,10 +225,10 @@ contract Escrow {
     }
 
     function bulkPayOut(
-        address[] _recipients,
-        uint256[] _amounts,
-        string _url,
-        string _hash,
+        address[] memory _recipients,
+        uint256[] memory _amounts,
+        string memory _url,
+        string memory _hash,
         uint256 _txId
     ) public returns (bool) {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
@@ -252,13 +252,14 @@ contract Escrow {
             return bulkPaid;
         }
 
-        finalResultsUrl = _url;
-        finalResultsHash = _hash;
+        bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
+        if (writeOnchain) {
+          // Be sure they are both zero if one of them is
+          finalResultsUrl = _url;
+          finalResultsHash = _hash;
+        }
 
-        (
-            uint256 reputationOracleFee,
-            uint256 recordingOracleFee
-        ) = finalizePayouts(_amounts);
+        (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
         if (
             token.transferBulk(_recipients, finalAmounts, _txId) ==
@@ -285,10 +286,7 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] _amounts)
-        public
-        returns (uint256, uint256)
-    {
+    function finalizePayouts(uint256[] memory _amounts) public returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {

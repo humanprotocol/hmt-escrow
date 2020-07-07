@@ -1,6 +1,6 @@
 {
   "name": "hmt-escrow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Launch escrow contracts to the HUMAN network",
   "main": "truffle.js",
   "directories": {
@@ -28,8 +28,8 @@
   "license": "MIT",
   "homepage": "https://github.com/hCaptcha/hmt-escrow#readme",
   "dependencies": {
-    "truffle": "5.1.12",
-    "truffle-hdwallet-provider": "0.0.5"
+    "truffle": "5.1.32",
+    "truffle-hdwallet-provider": "1.0.17"
   },
   "devDependencies": {
     "dotenv": "^6.0.0",
@@ -40,6 +40,6 @@
     "eslint-plugin-mocha": "4.11.0",
     "eslint-plugin-node": "5.1.0",
     "eslint-plugin-react": "7.5.1",
-    "solidity-coverage": "0.7.1"
+    "solidity-coverage": "*"
   }
 }

@@ -3,19 +3,17 @@ import logging
 import codecs
 import hashlib
 import json
-import ipfshttpclient
 
 from typing import Dict, Tuple
 from eth_keys import keys
 from p2p import ecies
-from ipfshttpclient import Client
 
 import boto3
 from botocore.client import Config
 
 SHARED_MAC_DATA = os.getenv(
-    "SHARED_MAC",
-    b'9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350')
+    "SHARED_MAC", b"9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350"
+)
 
 logging.getLogger("boto").setLevel(logging.INFO)
 logging.getLogger("botocore").setLevel(logging.INFO)
@@ -25,33 +23,22 @@ DEBUG = "true" in os.getenv("DEBUG", "false").lower()
 LOG = logging.getLogger("hmt_escrow.storage")
 LOG.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
-IPFS_HOST = os.getenv("IPFS_HOST", "localhost")
-IPFS_PORT = int(os.getenv("IPFS_PORT", 5001))
-
 ESCROW_BUCKETNAME = os.getenv("ESCROW_BUCKETNAME", "escrow-results")
 ESCROW_AWS_ACCESS_KEY_ID = os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio")
-ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY",
-                                         "minio123")
+ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY", "minio123")
 ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
 ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
 
 
-def _connect(host: str, port: int) -> Client:
-    try:
-        IPFS_CLIENT = ipfshttpclient.connect(f'/dns/{host}/tcp/{port}/http')
-        return IPFS_CLIENT
-    except Exception as e:
-        LOG.error("Connection with IPFS failed because of: {}".format(e))
-        raise e
-
-
 def _connect_s3():
     try:
-        return boto3.client("s3",
-                            aws_access_key_id=ESCROW_AWS_ACCESS_KEY_ID,
-                            aws_secret_access_key=ESCROW_AWS_SECRET_ACCESS_KEY,
-                            endpoint_url=ESCROW_ENDPOINT_URL,
-                            region_name=ESCROW_AWS_REGION)
+        return boto3.client(
+            "s3",
+            aws_access_key_id=ESCROW_AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=ESCROW_AWS_SECRET_ACCESS_KEY,
+            endpoint_url=ESCROW_ENDPOINT_URL,
+            region_name=ESCROW_AWS_REGION,
+        )
     except Exception as e:
         LOG.error(f"Connection with S3 failed because of: {e}")
         raise e
@@ -64,6 +51,8 @@ def download(key: str, private_key: bytes) -> Dict:
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
+    >>> from test_manifest import manifest
+    >>> from job import Job
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
     >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
@@ -72,7 +61,7 @@ def download(key: str, private_key: bytes) -> Dict:
     True
 
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, True)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
     >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
@@ -85,42 +74,32 @@ def download(key: str, private_key: bytes) -> Dict:
         Dict: returns the contents of the filename which was previously uploaded.
 
     Raises:
-        Exception: if reading from IPFS fails.
+        Exception: if reading from fails.
 
     """
-    if key.startswith("s3"):
-        try:
-            LOG.debug("Downloading s3 key: {}".format(key))
-            BOTO3_CLIENT = _connect_s3()
-            response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME,
-                                               Key=key)
-            ciphertext = response['Body'].read()
-            msg = _decrypt(private_key, ciphertext)
-        except Exception as e:
-            LOG.warning(
-                "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}"
-                .format(key, private_key, e))
-            raise e
-        return json.loads(msg)
-    else:
-        try:
-            IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
-            LOG.debug("Downloading key: {}".format(key))
-            ciphertext = IPFS_CLIENT.cat(key, timeout=30)
-            msg = _decrypt(private_key, ciphertext)
-        except Exception as e:
-            LOG.warning(
-                "Reading the key {!r} with private key {!r} with IPFS failed because of: {!r}"
-                .format(key, private_key, e))
-            raise e
-        return json.loads(msg)
+    try:
+        LOG.debug("Downloading s3 key: {}".format(key))
+        BOTO3_CLIENT = _connect_s3()
+        response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
+        ciphertext = response["Body"].read()
+        msg = _decrypt(private_key, ciphertext)
+    except Exception as e:
+        LOG.warning(
+            "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}".format(
+                key, private_key, e
+            )
+        )
+        raise e
+    return json.loads(msg)
 
 
-def upload(msg: Dict, public_key: bytes, s3: bool = False) -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
 
+    >>> from test_manifest import manifest
+    >>> from job import Job
     >>> credentials = {
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -133,7 +112,7 @@ def upload(msg: Dict, public_key: bytes, s3: bool = False) -> Tuple[str, str]:
     True
     
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key, True)
+    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
     >>> manifest_url.startswith('s3')
     True
     >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
@@ -148,7 +127,7 @@ def upload(msg: Dict, public_key: bytes, s3: bool = False) -> Tuple[str, str]:
         Tuple[str, str]: returns the contents of the filename which was previously uploaded.
 
     Raises:
-        Exception: if adding bytes with IPFS fails.
+        Exception: if adding bytes fails.
 
     """
     try:
@@ -157,36 +136,21 @@ def upload(msg: Dict, public_key: bytes, s3: bool = False) -> Tuple[str, str]:
         LOG.error("Can't extract the json from the dict")
         raise e
 
-    hash_ = hashlib.sha1(manifest_.encode('utf-8')).hexdigest()
+    hash_ = hashlib.sha1(manifest_.encode("utf-8")).hexdigest()
 
-    if not s3:
-        try:
-            IPFS_CLIENT = _connect(IPFS_HOST, IPFS_PORT)
-            encrypted_msg = _encrypt(public_key, manifest_)
-            key = IPFS_CLIENT.add_bytes(encrypted_msg)
-            LOG.debug(f"Uploaded to IPFS, key: {key}")
-            return hash_, key
-        except Exception as e:
-            LOG.warning(
-                "Adding bytes with IPFS failed because of: {}".format(e))
-            raise e
-
-    try:
-        BOTO3_CLIENT = _connect_s3()
-        encrypted_msg = _encrypt(public_key, manifest_)
-        key = f"s3{hash_}"
-        BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
-                                Key=key,
-                                Body=encrypted_msg)
-        LOG.debug(f"Uploaded to S3, key: {key}")
-    except Exception as e:
-        LOG.warning(f"Uploading with S3 failed with key {key} because of: {e}")
+    BOTO3_CLIENT = _connect_s3()
+    encrypted_msg = _encrypt(public_key, manifest_)
+    key = f"s3{hash_}"
+    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME, Key=key, Body=encrypted_msg)
+    LOG.debug(f"Uploaded to S3, key: {key}")
     return hash_, key
 
 
 def _decrypt(private_key: bytes, msg: bytes) -> str:
     """Use ECIES to decrypt a message with a given private key and an optional MAC.
 
+    >>> from test_manifest import manifest
+    >>> from job import Job
     >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> msg = "test"
@@ -207,14 +171,15 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
         str: returns the plaintext equivalent to the originally encrypted one.
 
     """
-    priv_key = keys.PrivateKey(codecs.decode(private_key, 'hex'))
+    priv_key = keys.PrivateKey(codecs.decode(private_key, "hex"))
     e = ecies.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
-    return e.decode('utf-8')
+    return e.decode("utf-8")
 
 
 def _encrypt(public_key: bytes, msg: str) -> bytes:
     """Use ECIES to encrypt a message with a given public key and optional MAC.
-
+    >>> from test_manifest import manifest
+    >>> from job import Job
     >>> priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
     >>> msg = "test"
@@ -229,13 +194,12 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
         bytes: returns the cryptotext encrypted with the public key.
 
     """
-    pub_key = keys.PublicKey(codecs.decode(public_key, 'hex'))
-    msg_bytes = msg.encode('utf-8')
+    pub_key = keys.PublicKey(codecs.decode(public_key, "hex"))
+    msg_bytes = msg.encode("utf-8")
     return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
 if __name__ == "__main__":
     import doctest
-    from test_manifest import manifest
-    from job import Job
+
     doctest.testmod(raise_on_error=True)

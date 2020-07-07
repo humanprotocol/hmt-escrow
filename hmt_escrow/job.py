@@ -12,24 +12,30 @@ from web3.contract import Contract
 from eth_keys import keys
 from eth_utils import decode_hex
 
-from hmt_escrow.eth_bridge import get_hmtoken, get_contract_interface, get_escrow, get_factory, deploy_factory, get_w3, handle_transaction
+from hmt_escrow.eth_bridge import (
+    get_hmtoken,
+    get_contract_interface,
+    get_escrow,
+    get_factory,
+    deploy_factory,
+    get_w3,
+    handle_transaction,
+)
 from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 # Explicit env variable that will use s3 for storing results.
-USE_ESCROW_S3_STORAGE = bool(os.getenv("USE_ESCROW_S3_STORAGE", False))
 
 LOG = logging.getLogger("hmt_escrow.job")
-Status = Enum('Status', 'Launched Pending Partial Paid Complete Cancelled')
+Status = Enum("Status", "Launched Pending Partial Paid Complete Cancelled")
 
 
-def status(escrow_contract: Contract,
-           gas_payer: str,
-           gas: int = GAS_LIMIT) -> Enum:
+def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> Enum:
     """Returns the status of the Job.
 
+    >>> from test_manifest import manifest
     >>> credentials = {
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -38,6 +44,7 @@ def status(escrow_contract: Contract,
     >>> job = Job(credentials, manifest)
 
     After deployment status is "Launched".
+
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> status(job.job_contract, job.gas_payer)
@@ -52,18 +59,18 @@ def status(escrow_contract: Contract,
         Enum: returns the status as an enumeration.
 
     """
-    status_ = escrow_contract.functions.getStatus().call({
-        'from': gas_payer,
-        'gas': gas
-    })
+    status_ = escrow_contract.functions.getStatus().call(
+        {"from": gas_payer, "gas": gas}
+    )
     return Status(status_ + 1)
 
 
-def manifest_url(escrow_contract: Contract,
-                 gas_payer: str,
-                 gas: int = GAS_LIMIT) -> str:
+def manifest_url(
+    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
+) -> str:
     """Retrieves the deployed manifest url uploaded on Job initialization.
 
+    >>> from test_manifest import manifest
     >>> credentials = {
     ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -86,15 +93,14 @@ def manifest_url(escrow_contract: Contract,
         str: returns the manifest url of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getManifestUrl().call({
-        'from': gas_payer,
-        'gas': gas
-    })
+    return escrow_contract.functions.getManifestUrl().call(
+        {"from": gas_payer, "gas": gas}
+    )
 
 
-def manifest_hash(escrow_contract: Contract,
-                  gas_payer: str,
-                  gas: int = GAS_LIMIT) -> str:
+def manifest_hash(
+    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
+) -> str:
     """Retrieves the deployed manifest hash uploaded on Job initialization.
 
     >>> credentials = {
@@ -102,6 +108,7 @@ def manifest_hash(escrow_contract: Contract,
     ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
     ... }
     >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> from test_manifest import manifest
     >>> job = Job(credentials, manifest)
     >>> job.launch(rep_oracle_pub_key)
     True
@@ -119,15 +126,14 @@ def manifest_hash(escrow_contract: Contract,
         str: returns the manifest hash of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getManifestHash().call({
-        'from': gas_payer,
-        'gas': gas
-    })
+    return escrow_contract.functions.getManifestHash().call(
+        {"from": gas_payer, "gas": gas}
+    )
 
 
-def intermediate_url(escrow_contract: Contract,
-                     gas_payer: str,
-                     gas: int = GAS_LIMIT) -> str:
+def intermediate_url(
+    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
+) -> str:
     """Retrieves the deployed intermediate results url uploaded on Job initialization.
 
     Args:
@@ -139,17 +145,14 @@ def intermediate_url(escrow_contract: Contract,
         str: returns the intermediate results url of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getIntermediateResultsUrl().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
+    return escrow_contract.functions.getIntermediateResultsUrl().call(
+        {"from": gas_payer, "gas": gas}
+    )
 
 
-def intermediate_hash(escrow_contract: Contract,
-                      gas_payer: str,
-                      gas: int = GAS_LIMIT) -> str:
+def intermediate_hash(
+    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
+) -> str:
     """Retrieves the deployed intermediate results hash uploaded on Job initialization.
 
     Args:
@@ -161,29 +164,20 @@ def intermediate_hash(escrow_contract: Contract,
         str: returns the intermediate results hash of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getIntermediateResultsHash().call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
+    return escrow_contract.functions.getIntermediateResultsHash().call(
+        {"from": gas_payer, "gas": gas}
+    )
 
 
-def is_trusted_handler(escrow_contract: Contract,
-                       handler_addr: str,
-                       gas_payer: str,
-                       gas: int = GAS_LIMIT) -> bool:
-    return escrow_contract.functions.isTrustedHandler(handler_addr).call({
-        'from':
-        gas_payer,
-        'gas':
-        gas
-    })
+def is_trusted_handler(
+    escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
+) -> bool:
+    return escrow_contract.functions.isTrustedHandler(handler_addr).call(
+        {"from": gas_payer, "gas": gas}
+    )
 
 
-def launcher(escrow_contract: Contract,
-             gas_payer: str,
-             gas: int = GAS_LIMIT) -> str:
+def launcher(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> str:
     """Retrieves the details on what eth wallet launched the job
 
     Args:
@@ -195,10 +189,7 @@ def launcher(escrow_contract: Contract,
         str: returns the address of who launched the job.
 
     """
-    return escrow_contract.functions.getLauncher().call({
-        'from': gas_payer,
-        'gas': gas
-    })
+    return escrow_contract.functions.getLauncher().call({"from": gas_payer, "gas": gas})
 
 
 class Job:
@@ -223,12 +214,15 @@ class Job:
         manifest_hash (str): SHA-1 hashed version of the serialized manifest.
 
     """
-    def __init__(self,
-                 credentials: Dict[str, str],
-                 escrow_manifest: Manifest = None,
-                 factory_addr: str = None,
-                 escrow_addr: str = None,
-                 multi_credentials: List[Tuple] = []):
+
+    def __init__(
+        self,
+        credentials: Dict[str, str],
+        escrow_manifest: Manifest = None,
+        factory_addr: str = None,
+        escrow_addr: str = None,
+        multi_credentials: List[Tuple] = [],
+    ):
         """Initializes a Job instance with values from a Manifest class and
         checks that the provided credentials are valid. An optional factory
         address is used to initialize the factory of the Job. Alternatively
@@ -239,6 +233,7 @@ class Job:
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
+        >>> from test_manifest import manifest
         >>> job = Job(credentials, manifest)
         >>> job.gas_payer == credentials["gas_payer"]
         True
@@ -304,21 +299,18 @@ class Job:
 
         """
         main_credentials_valid = self._validate_credentials(
-            multi_credentials, **credentials)
+            multi_credentials, **credentials
+        )
         if not main_credentials_valid:
-            raise ValueError(
-                "Given private key doesn't match the ethereum address.")
+            raise ValueError("Given private key doesn't match the ethereum address.")
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
-        self.multi_credentials = self._validate_multi_credentials(
-            multi_credentials)
-        self.use_s3_storage = USE_ESCROW_S3_STORAGE
+        self.multi_credentials = self._validate_multi_credentials(multi_credentials)
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
-            self.factory_contract = self._init_factory(factory_addr,
-                                                       credentials)
+            self.factory_contract = self._init_factory(factory_addr, credentials)
             self._init_job(escrow_manifest)
 
         # Access an existing Job.
@@ -331,14 +323,14 @@ class Job:
 
         # Handle incorrect usage
         else:
-            raise ValueError(
-                "Job instantiation wrong, double-check arguments.")
+            raise ValueError("Job instantiation wrong, double-check arguments.")
 
     def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
         to IPFS with the public key of the Reputation Oracle and stores
         the IPFS url to the escrow contract.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -347,6 +339,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         Deploying a new Job to the ethereum network succeeds.
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.status()
@@ -356,6 +349,7 @@ class Job:
         >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
 
         Inject wrong credentials on purpose to test out raffling
+
         >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
         >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job.launch(rep_oracle_pub_key)
@@ -364,6 +358,7 @@ class Job:
         <Status.Launched: 1>
 
         Make sure we launched with raffled credentials
+
         >>> job.gas_payer
         '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809'
         >>> job.gas_payer_priv
@@ -385,9 +380,7 @@ class Job:
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
         self.job_contract = get_escrow(job_addr)
 
-        # Upload the manifest to IPFS / S3.
-        (hash_, manifest_url) = upload(self.serialized_manifest, pub_key,
-                                       self.use_s3_storage)
+        (hash_, manifest_url) = upload(self.serialized_manifest, pub_key)
         self.manifest_url = manifest_url
         self.manifest_hash = hash_
         return self.status() == Status.Launched and self.balance() == 0
@@ -396,6 +389,7 @@ class Job:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -404,6 +398,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         A Job can't be setup without deploying it first.
+
         >>> job.setup()
         False
 
@@ -424,19 +419,19 @@ class Job:
 
         """
 
-        if not hasattr(self, 'job_contract'):
+        if not hasattr(self, "job_contract"):
             return False
 
         # Prepare setup arguments for the escrow contract.
         reputation_oracle_stake = int(
-            Decimal(self.serialized_manifest["oracle_stake"]) * 100)
+            Decimal(self.serialized_manifest["oracle_stake"]) * 100
+        )
         recording_oracle_stake = int(
-            Decimal(self.serialized_manifest["oracle_stake"]) * 100)
-        reputation_oracle = str(
-            self.serialized_manifest["reputation_oracle_addr"])
-        recording_oracle = str(
-            self.serialized_manifest["recording_oracle_addr"])
-        hmt_amount = int(self.amount * 10**18)
+            Decimal(self.serialized_manifest["oracle_stake"]) * 100
+        )
+        reputation_oracle = str(self.serialized_manifest["reputation_oracle_addr"])
+        recording_oracle = str(self.serialized_manifest["recording_oracle_addr"])
+        hmt_amount = int(self.amount * 10 ** 18)
         hmtoken_contract = get_hmtoken()
 
         hmt_transferred = False
@@ -446,7 +441,7 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
         txn_func = hmtoken_contract.functions.transfer
         func_args = [self.job_contract.address, hmt_amount]
@@ -460,8 +455,9 @@ class Job:
             )
 
         if not hmt_transferred:
-            hmt_transferred = self._raffle_txn(self.multi_credentials,
-                                               txn_func, func_args, txn_event)
+            hmt_transferred = self._raffle_txn(
+                self.multi_credentials, txn_func, func_args, txn_event
+            )
 
         if not hmt_transferred:
             LOG.exception(
@@ -472,8 +468,12 @@ class Job:
         txn_event = "Setup"
         txn_func = self.job_contract.functions.setup
         func_args = [
-            reputation_oracle, recording_oracle, reputation_oracle_stake,
-            recording_oracle_stake, self.manifest_url, self.manifest_hash
+            reputation_oracle,
+            recording_oracle,
+            reputation_oracle_stake,
+            recording_oracle_stake,
+            self.manifest_url,
+            self.manifest_hash,
         ]
 
         try:
@@ -485,20 +485,19 @@ class Job:
             )
 
         if not contract_is_setup:
-            contract_is_setup = self._raffle_txn(self.multi_credentials,
-                                                 txn_func, func_args,
-                                                 txn_event)
+            contract_is_setup = self._raffle_txn(
+                self.multi_credentials, txn_func, func_args, txn_event
+            )
 
         if not contract_is_setup:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
         return self.status() == Status.Pending and self.balance() == hmt_amount
 
-    def add_trusted_handlers(self,
-                             handlers: List[str],
-                             gas: int = GAS_LIMIT) -> bool:
+    def add_trusted_handlers(self, handlers: List[str], gas: int = GAS_LIMIT) -> bool:
         """Add trusted handlers that can freely transact with the contract and perform aborts and cancels for example.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -509,6 +508,7 @@ class Job:
         True
 
         Make sure we se set our gas payer as a trusted handler by default.
+
         >>> is_trusted_handler(job.job_contract, job.gas_payer, job.gas_payer)
         True
 
@@ -532,7 +532,7 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
         func_args = [handlers]
 
@@ -543,24 +543,27 @@ class Job:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
-        trusted_handlers_added = self._raffle_txn(self.multi_credentials,
-                                                  txn_func, func_args,
-                                                  txn_event)
+        trusted_handlers_added = self._raffle_txn(
+            self.multi_credentials, txn_func, func_args, txn_event
+        )
 
         if not trusted_handlers_added:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
         return trusted_handlers_added
 
-    def bulk_payout(self,
-                    payouts: List[Tuple[str, Decimal]],
-                    results: Dict,
-                    pub_key: bytes,
-                    gas: int = GAS_LIMIT) -> bool:
+    def bulk_payout(
+        self,
+        payouts: List[Tuple[str, Decimal]],
+        results: Dict,
+        pub_key: bytes,
+        gas: int = GAS_LIMIT,
+    ) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
         depending on contract's balance.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -576,17 +579,20 @@ class Job:
         True
 
         The escrow contract is still in Partial state as there's still balance left.
+
         >>> job.balance()
         30000000000000000000
         >>> job.status()
         <Status.Partial: 3>
 
         Trying to pay more than the contract balance results in failure.
+
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('40.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         False
 
         Paying the remaining amount empties the escrow and updates the status correctly.
+
         >>> payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
@@ -619,12 +625,12 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
 
-        (hash_, url) = upload(results, pub_key, self.use_s3_storage)
+        (hash_, url) = upload(results, pub_key)
         eth_addrs = [eth_addr for eth_addr, amount in payouts]
-        hmt_amounts = [int(amount * 10**18) for eth_addr, amount in payouts]
+        hmt_amounts = [int(amount * 10 ** 18) for eth_addr, amount in payouts]
 
         func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
         try:
@@ -635,8 +641,9 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        bulk_paid = self._raffle_txn(self.multi_credentials, txn_func,
-                                     func_args, txn_event)
+        bulk_paid = self._raffle_txn(
+            self.multi_credentials, txn_func, func_args, txn_event
+        )
 
         if not bulk_paid:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -655,10 +662,15 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        
+
 
         The escrow contract is in Partial state after a partial bulk payout so it can be aborted.
+
+        >>> from test_manifest import manifest
         >>> job = Job(credentials, manifest)
+
+        The escrow contract is in Pending state after setup so it can be aborted.
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -669,11 +681,15 @@ class Job:
         >>> job.abort()
         True
 
+        The escrow contract is in Partial state after the first payout and it can't be aborted.
+
 
         The escrow contract is in Paid state after the a full bulk payout and it can't be aborted.
+
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
+
         >>> job.setup()
         True
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
@@ -686,6 +702,7 @@ class Job:
 
 
         Trusted handler should be able to abort an existing contract
+
         >>> trusted_handler = "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809"
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
@@ -714,25 +731,24 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
 
         try:
             handle_transaction(txn_func, *[], **txn_info)
             # After abort the contract should be destroyed
-            return w3.eth.getCode(self.job_contract.address) == b''
+            return w3.eth.getCode(self.job_contract.address) == b""
         except Exception as e:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_aborted = self._raffle_txn(self.multi_credentials, txn_func, [],
-                                       txn_event)
+        job_aborted = self._raffle_txn(self.multi_credentials, txn_func, [], txn_event)
 
         if not job_aborted:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
-        return w3.eth.getCode(self.job_contract.address) == b''
+        return w3.eth.getCode(self.job_contract.address) == b""
 
     def cancel(self, gas: int = GAS_LIMIT) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
@@ -742,9 +758,11 @@ class Job:
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         ... }
         >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        >>> from test_manifest import manifest
         >>> job = Job(credentials, manifest)
 
         The escrow contract is in Pending state after setup so it can be cancelled.
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.setup()
@@ -753,12 +771,14 @@ class Job:
         True
 
         Contract balance is zero and status is "Cancelled".
+
         >>> job.balance()
         0
         >>> job.status()
         <Status.Cancelled: 6>
 
         The escrow contract is in Partial state after the first payout and it can't be cancelled.
+
         >>> job = Job(credentials, manifest)
         >>> job.launch(rep_oracle_pub_key)
         True
@@ -771,6 +791,7 @@ class Job:
         <Status.Partial: 3>
 
         The escrow contract is in Paid state after the second payout and it can't be cancelled.
+
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
         >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
         True
@@ -788,7 +809,7 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
 
         try:
@@ -799,21 +820,22 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_cancelled = self._raffle_txn(self.multi_credentials, txn_func, [],
-                                         txn_event)
+        job_cancelled = self._raffle_txn(
+            self.multi_credentials, txn_func, [], txn_event
+        )
 
         if not job_cancelled:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
         return self.status() == Status.Cancelled
 
-    def store_intermediate_results(self,
-                                   results: Dict,
-                                   pub_key: bytes,
-                                   gas: int = GAS_LIMIT) -> bool:
+    def store_intermediate_results(
+        self, results: Dict, pub_key: bytes, gas: int = GAS_LIMIT
+    ) -> bool:
         """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
         and updates the contract's state.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -826,13 +848,14 @@ class Job:
         True
 
         Storing intermediate results uploads and updates results url correctly.
+
         >>> results = {"results": True}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
         >>> rep_oracle_priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         >>> job.intermediate_results(rep_oracle_priv_key)
         {'results': True}
-        
+
         >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
         >>> job.launch(rep_oracle_pub_key)
@@ -851,6 +874,7 @@ class Job:
         >>> results = {"results": False}
 
         Inject wrong credentials on purpose to test out raffling
+
         >>> job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
         >>> job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
@@ -869,9 +893,9 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
-        (hash_, url) = upload(results, pub_key, self.use_s3_storage)
+        (hash_, url) = upload(results, pub_key)
         func_args = [url, hash_]
 
         try:
@@ -882,8 +906,9 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        results_stored = self._raffle_txn(self.multi_credentials, txn_func,
-                                          func_args, txn_event)
+        results_stored = self._raffle_txn(
+            self.multi_credentials, txn_func, func_args, txn_event
+        )
 
         if not results_stored:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -893,6 +918,7 @@ class Job:
     def complete(self, gas: int = GAS_LIMIT) -> bool:
         """Completes the Job if it has been paid.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -908,12 +934,14 @@ class Job:
         True
 
         A Job can't be completed when it is still in partially paid state.
+
         >>> job.status()
         <Status.Partial: 3>
         >>> job.complete()
         False
 
         Job completes in paid state correctly.
+
         >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('80.0'))]
         >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
         True
@@ -931,7 +959,7 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
 
         try:
@@ -942,8 +970,9 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_completed = self._raffle_txn(self.multi_credentials, txn_func, [],
-                                         txn_event)
+        job_completed = self._raffle_txn(
+            self.multi_credentials, txn_func, [], txn_event
+        )
 
         if not job_completed:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -953,6 +982,7 @@ class Job:
     def status(self, gas: int = GAS_LIMIT) -> Enum:
         """Returns the status of the Job.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -961,6 +991,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         After deployment status is "Launched".
+
         >>> job.launch(rep_oracle_pub_key)
         True
         >>> job.status()
@@ -975,6 +1006,7 @@ class Job:
     def balance(self, gas: int = GAS_LIMIT) -> int:
         """Retrieve the balance of a Job in HMT.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -997,14 +1029,14 @@ class Job:
             int: returns the balance of the contract in HMT.
 
         """
-        return self.job_contract.functions.getBalance().call({
-            'from': self.gas_payer,
-            'gas': gas
-        })
+        return self.job_contract.functions.getBalance().call(
+            {"from": self.gas_payer, "gas": gas}
+        )
 
     def manifest(self, priv_key: bytes) -> Dict:
         """Retrieves the initial manifest used to setup a Job.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1030,11 +1062,10 @@ class Job:
         """
         return download(self.manifest_url, priv_key)
 
-    def intermediate_results(self,
-                             priv_key: bytes,
-                             gas: int = GAS_LIMIT) -> Dict:
+    def intermediate_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Reputation Oracle retrieves the intermediate results stored by the Recording Oracle.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1047,6 +1078,7 @@ class Job:
         True
 
         Trying to download the results with the wrong key fails.
+
         >>> results = {"results": True}
         >>> job.store_intermediate_results(results, rep_oracle_pub_key)
         True
@@ -1062,13 +1094,13 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        intermediate_results_url = intermediate_url(self.job_contract,
-                                                    self.gas_payer)
+        intermediate_results_url = intermediate_url(self.job_contract, self.gas_payer)
         return download(intermediate_results_url, priv_key)
 
     def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results stored by the Reputation Oracle.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1081,6 +1113,7 @@ class Job:
         True
 
         Getting final results succeeds after payout.
+
         >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
         >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
         True
@@ -1095,11 +1128,9 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        final_results_url = self.job_contract.functions.getFinalResultsUrl(
-        ).call({
-            'from': self.gas_payer,
-            'gas': gas
-        })
+        final_results_url = self.job_contract.functions.getFinalResultsUrl().call(
+            {"from": self.gas_payer, "gas": gas}
+        )
         return download(final_results_url, priv_key)
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
@@ -1132,8 +1163,8 @@ class Job:
 
         """
         serialized_manifest = dict(manifest.serialize())
-        per_job_cost = Decimal(serialized_manifest['task_bid_price'])
-        number_of_answers = int(serialized_manifest['job_total_tasks'])
+        per_job_cost = Decimal(serialized_manifest["task_bid_price"])
+        number_of_answers = int(serialized_manifest["job_total_tasks"])
         self.serialized_manifest = serialized_manifest
         self.amount = Decimal(per_job_cost * number_of_answers)
 
@@ -1144,11 +1175,13 @@ class Job:
         return Web3.toChecksumAddress(addr) == calculated_addr
 
     def _validate_multi_credentials(
-            self, multi_credentials: List[Tuple]) -> List[Tuple[Any, Any]]:
+        self, multi_credentials: List[Tuple]
+    ) -> List[Tuple[Any, Any]]:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1181,13 +1214,15 @@ class Job:
             valid_credentials.append((gas_payer, gas_payer_priv))
         return valid_credentials
 
-    def _validate_credentials(self, multi_credentials: List[Tuple],
-                              **credentials) -> bool:
+    def _validate_credentials(
+        self, multi_credentials: List[Tuple], **credentials
+    ) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
         to the given address.
 
         Validating right credentials succeeds.
+        >>> from test_manifest import manifest
         >>> credentials = {
         ...     "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1195,7 +1230,7 @@ class Job:
         >>> job = Job(credentials, manifest)
 
         >>> multi_credentials = [("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x1413862C2B7054CDbfdc181B83962CB0FC11fD92", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5")]
-        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)        
+        >>> job = Job(credentials, manifest, multi_credentials=multi_credentials)
 
         Validating falsy credentials fails.
         >>> credentials = {
@@ -1220,12 +1255,12 @@ class Job:
 
         return self._eth_addr_valid(gas_payer_addr, gas_payer_priv)
 
-    def _factory_contains_escrow(self,
-                                 escrow_addr: str,
-                                 factory_addr: str,
-                                 gas: int = GAS_LIMIT) -> bool:
+    def _factory_contains_escrow(
+        self, escrow_addr: str, factory_addr: str, gas: int = GAS_LIMIT
+    ) -> bool:
         """Checks whether a given factory address contains a given escrow address.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
@@ -1256,21 +1291,21 @@ class Job:
 
         """
         factory_contract = get_factory(factory_addr)
-        return factory_contract.functions.hasEscrow(escrow_addr).call({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas
-        })
+        return factory_contract.functions.hasEscrow(escrow_addr).call(
+            {"from": self.gas_payer, "gas": gas}
+        )
 
-    def _init_factory(self,
-                      factory_addr: Optional[str],
-                      credentials: Dict[str, str],
-                      gas: int = GAS_LIMIT) -> Contract:
+    def _init_factory(
+        self,
+        factory_addr: Optional[str],
+        credentials: Dict[str, str],
+        gas: int = GAS_LIMIT,
+    ) -> Contract:
         """Takes an optional factory address and returns its contract representation. Alternatively
         a new factory is created.
 
         Initializing a new Job instance without a factory address succeeds.
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1310,6 +1345,7 @@ class Job:
     def _bulk_paid(self, gas: int = GAS_LIMIT) -> int:
         """Checks if the last bulk payment has succeeded.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1339,14 +1375,14 @@ class Job:
             returns True if the last bulk payout has succeeded.
 
         """
-        return self.job_contract.functions.getBulkPaid().call({
-            'from': self.gas_payer,
-            'gas': gas
-        })
+        return self.job_contract.functions.getBulkPaid().call(
+            {"from": self.gas_payer, "gas": gas}
+        )
 
     def _last_escrow_addr(self, gas: int = GAS_LIMIT) -> str:
         """Gets the last deployed escrow contract address of the initialized factory contract.
 
+        >>> from test_manifest import manifest
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1366,18 +1402,14 @@ class Job:
             str: returns an escrow contract address.
 
         """
-        return self.factory_contract.functions.getLastEscrow().call({
-            'from':
-            self.gas_payer,
-            'gas':
-            gas
-        })
+        return self.factory_contract.functions.getLastEscrow().call(
+            {"from": self.gas_payer, "gas": gas}
+        )
 
-    def _create_escrow(self,
-                       trusted_handlers=[],
-                       gas: int = GAS_LIMIT) -> bool:
+    def _create_escrow(self, trusted_handlers=[], gas: int = GAS_LIMIT) -> bool:
         """Launches a new escrow contract to the ethereum network.
 
+        >>> from test_manifest import manifest
         >>> multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
         >>> trusted_handlers = [addr for addr, priv_key in multi_credentials]
         >>> credentials = {
@@ -1411,7 +1443,7 @@ class Job:
         txn_info = {
             "gas_payer": self.gas_payer,
             "gas_payer_priv": self.gas_payer_priv,
-            "gas": gas
+            "gas": gas,
         }
         func_args = [trusted_handlers]
 
@@ -1423,20 +1455,18 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        escrow_created = self._raffle_txn(self.multi_credentials, txn_func,
-                                          func_args, txn_event)
+        escrow_created = self._raffle_txn(
+            self.multi_credentials, txn_func, func_args, txn_event
+        )
 
         if not escrow_created:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
         return escrow_created
 
-    def _raffle_txn(self,
-                    multi_creds,
-                    txn_func,
-                    txn_args,
-                    txn_event,
-                    gas: int = GAS_LIMIT):
+    def _raffle_txn(
+        self, multi_creds, txn_func, txn_args, txn_event, gas: int = GAS_LIMIT
+    ):
         """Takes in multiple credentials, loops through each and performs the given transaction.
 
         Args:
@@ -1456,7 +1486,7 @@ class Job:
             txn_info = {
                 "gas_payer": gas_payer,
                 "gas_payer_priv": gas_payer_priv,
-                "gas": gas
+                "gas": gas,
             }
             try:
                 handle_transaction(txn_func, *txn_args, **txn_info)
@@ -1474,7 +1504,6 @@ class Job:
 
 if __name__ == "__main__":
     import doctest
-    from test_manifest import manifest
 
     # IMPORTANT, don't modify this so CI catches the doctest errors.
-    doctest.testmod(raise_on_error=True)
+    doctest.testmod()

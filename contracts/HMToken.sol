@@ -1,9 +1,22 @@
-pragma solidity 0.4.24;
+pragma solidity 0.6.2;
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 
 contract HMToken is HMTokenInterface {
     using SafeMath for uint256;
+
+    /* This is a slight change to the ERC20 base standard.
+    function totalSupply() constant returns (uint256 supply);
+    is replaced with:
+    uint256 public totalSupply;
+    This automatically creates a getter function for the totalSupply.
+    This is moved to the base contract since public getter functions are not
+    currently recognised as an implementation of the matching abstract
+    function by the compiler.
+    */
+    /// total amount of tokens
+    uint256 public totalSupply;
+
     uint256 private constant MAX_UINT256 = 2**256 - 1;
     uint256 private constant BULK_MAX_VALUE = 1000000000 * (10 ** 18);
     uint32  private constant BULK_MAX_COUNT = 100;
@@ -18,7 +31,7 @@ contract HMToken is HMTokenInterface {
     uint8 public decimals;
     string public symbol;
 
-    constructor(uint256 _totalSupply, string _name, uint8 _decimals, string _symbol) public {
+    constructor(uint256 _totalSupply, string memory _name, uint8 _decimals, string memory _symbol) public {
         totalSupply = _totalSupply * (10 ** uint256(_decimals));
         name = _name;
         decimals = _decimals;
@@ -26,13 +39,13 @@ contract HMToken is HMTokenInterface {
         balances[msg.sender] = totalSupply;
     }
 
-    function transfer(address _to, uint256 _value) public returns (bool success) {
+    function transfer(address _to, uint256 _value) public override returns (bool success) {
         success = transferQuiet(_to, _value);
         require(success, "Transfer didn't succeed");
         return success;
     }
 
-    function transferFrom(address _spender, address _to, uint256 _value) public returns (bool success) {
+    function transferFrom(address _spender, address _to, uint256 _value) public override returns (bool success) {
         uint256 _allowance = allowed[_spender][msg.sender];
         require(balances[_spender] >= _value && _allowance >= _value, "Spender balance or allowance too low");
         require(_to != address(0), "Can't send tokens to uninitialized address");
@@ -48,11 +61,11 @@ contract HMToken is HMTokenInterface {
         return true;
     }
 
-    function balanceOf(address _owner) public view returns (uint256 balance) {
+    function balanceOf(address _owner) public view override returns (uint256 balance) {
         return balances[_owner];
     }
 
-    function approve(address _spender, uint256 _value) public returns (bool success) {
+    function approve(address _spender, uint256 _value) public override returns (bool success) {
         require(_spender != address(0), "Token spender is an uninitialized address");
 
         allowed[msg.sender][_spender] = _value;
@@ -86,11 +99,11 @@ contract HMToken is HMTokenInterface {
         return true;
     }
 
-    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+    function allowance(address _owner, address _spender) public view override returns (uint256 remaining) {
         return allowed[_owner][_spender];
     }
 
-    function transferBulk(address[] _tos, uint256[] _values, uint256 _txId) public returns (uint256 _bulkCount) {
+    function transferBulk(address[] memory _tos, uint256[] memory _values, uint256 _txId) public override returns (uint256 _bulkCount) {
         require(_tos.length == _values.length, "Amount of recipients and values don't match");
         require(_tos.length < BULK_MAX_COUNT, "Too many recipients");
 
@@ -112,7 +125,7 @@ contract HMToken is HMTokenInterface {
         return _bulkCount;
     }
 
-    function approveBulk(address[] _spenders, uint256[] _values, uint256 _txId) public returns (uint256 _bulkCount) {
+    function approveBulk(address[] memory _spenders, uint256[] memory _values, uint256 _txId) public returns (uint256 _bulkCount) {
         require(_spenders.length == _values.length, "Amount of spenders and values don't match");
         require(_spenders.length < BULK_MAX_COUNT, "Too many spenders");
 
