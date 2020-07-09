@@ -136,6 +136,20 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
 def get_escrow(escrow_addr: str) -> Contract:
     """Retrieve the Escrow contract from a given address.
 
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+
+    Deploying a new Job to the ethereum network succeeds.
+    
+    >>> job.launch(rep_oracle_pub_key)
+    True
+    >>> type(get_escrow(job.job_contract.address))
+    <class 'web3.utils.datatypes.Contract'>
+
     Args:
         escrow_addr (str): an ethereum address of the escrow contract.
 
@@ -154,6 +168,14 @@ def get_escrow(escrow_addr: str) -> Contract:
 
 def get_factory(factory_addr: Optional[str]) -> Contract:
     """Retrieve the EscrowFactory contract from a given address.
+
+    >>> credentials = {
+    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    ... }
+    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
+    >>> type(get_factory(job.factory_contract.address))
+    <class 'web3.utils.datatypes.Contract'>
 
     Args:
         factory_addr (str): the ethereum address of the Escrow contract.
@@ -216,6 +238,25 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     Returns:
         bytes: the public key in bytes form
 
+    >>> import os
+    >>> from web3 import Web3
+    >>> get_pub_key_from_addr('badaddress')
+    Traceback (most recent call last):
+      File "/usr/lib/python3.6/doctest.py", line 1330, in __run
+        compileflags, 1), test.globs)
+      File "<doctest __main__.get_pub_key_from_addr[2]>", line 1, in <module>
+        get_pub_key_from_addr('blah')
+      File "hmt_escrow/eth_bridge.py", line 268, in get_pub_key_from_addr
+        raise ValueError('environment variable GAS_PAYER required')
+    ValueError: environment variable GAS_PAYER required
+    >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> set_pub_key_at_addr(pub_key)  #doctest: +ELLIPSIS
+    AttributeDict({'transactionHash': ...})
+    >>> get_pub_key_from_addr(os.environ['GAS_PAYER'])
+    b'2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d'
+
     """
     # TODO: Should we try to get the checksum address here instead of assuming user will do that?
     GAS_PAYER = os.getenv("GAS_PAYER")
@@ -246,6 +287,15 @@ def set_pub_key_at_addr(pub_key: str) -> Dict[str, Any]:
 
     Returns:
         AttributeDict: receipt of the set transaction on the blockchain
+
+
+    >>> from web3 import Web3
+    >>> import os
+    >>> os.environ['GAS_PAYER'] = "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92"
+    >>> os.environ['GAS_PAYER_PRIV'] = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+    >>> pub_key_to_set = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+    >>> set_pub_key_at_addr(pub_key_to_set)  #doctest: +ELLIPSIS
+    AttributeDict({'transactionHash': ...})
 
     """
     GAS_PAYER = os.getenv("GAS_PAYER")
@@ -322,9 +372,4 @@ class EthBridgeTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import doctest
-    from test_manifest import manifest
-    from job import Job
-
-    doctest.testmod(raise_on_error=True)
     unittest.main(exit=False)
