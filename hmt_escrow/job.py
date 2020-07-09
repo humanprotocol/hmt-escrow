@@ -1321,12 +1321,12 @@ class Job:
 
         return txn_succeeded
 
-class JobTestCase(unittest.TestCase):
 
+class JobTestCase(unittest.TestCase):
     def setUp(self):
         self.credentials = {
-             	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-             	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+            "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+            "gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
         }
         self.rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         self.job = Job(self.credentials, manifest)
@@ -1338,15 +1338,18 @@ class JobTestCase(unittest.TestCase):
     def test_manifest_url(self):
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
-        self.assertEqual(manifest_hash(self.job.job_contract, self.job.gas_payer), self.job.manifest_hash)
+        self.assertEqual(
+            manifest_hash(self.job.job_contract, self.job.gas_payer),
+            self.job.manifest_hash,
+        )
 
     def test_job_init(self):
 
         # Creating a new Job instance initializes the critical attributes correctly.
         self.assertEqual(self.job.gas_payer, self.credentials["gas_payer"])
         self.assertEqual(self.job.gas_payer_priv, self.credentials["gas_payer_priv"])
-        self.assertEqual(self.job.serialized_manifest["oracle_stake"], '0.05')
-        self.assertEqual(self.job.amount, Decimal('100.0'))
+        self.assertEqual(self.job.serialized_manifest["oracle_stake"], "0.05")
+        self.assertEqual(self.job.amount, Decimal("100.0"))
 
         # Initializing a new Job instance with a factory address succeeds.
         factory_addr = deploy_factory(**(self.credentials))
@@ -1354,14 +1357,23 @@ class JobTestCase(unittest.TestCase):
         self.assertTrue(self.job.factory_contract.address, factory_addr)
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
-        self.assertTrue(launcher(self.job.job_contract, self.credentials['gas_payer']).lower(), self.job.factory_contract.address.lower())
+        self.assertTrue(
+            launcher(self.job.job_contract, self.credentials["gas_payer"]).lower(),
+            self.job.factory_contract.address.lower(),
+        )
 
         # Initializing an existing Job instance with a factory and escrow address succeeds.
-        self.credentials["rep_oracle_priv_key"] = b'28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5'
+        self.credentials[
+            "rep_oracle_priv_key"
+        ] = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
         escrow_addr = self.job.job_contract.address
         factory_addr = self.job.factory_contract.address
         manifest_url = self.job.manifest_url
-        new_job = Job(credentials=self.credentials, factory_addr=factory_addr, escrow_addr=escrow_addr)
+        new_job = Job(
+            credentials=self.credentials,
+            factory_addr=factory_addr,
+            escrow_addr=escrow_addr,
+        )
         self.assertEqual(new_job.manifest_url, manifest_url)
         self.assertEqual(new_job.job_contract.address, escrow_addr)
         self.assertEqual(new_job.factory_contract.address, factory_addr)
@@ -1371,48 +1383,104 @@ class JobTestCase(unittest.TestCase):
     def test_job_launch(self):
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertEqual(self.job.status(), Status(1))
-        multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        multi_credentials = [
+            (
+                "0x61F9F0B31eacB420553da8BCC59DC617279731Ac",
+                "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e",
+            ),
+            (
+                "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
+                "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+            ),
+        ]
         self.job = Job(self.credentials, manifest, multi_credentials=multi_credentials)
 
         # Inject wrong credentials on purpose to test out raffling
 
-        self.job.gas_payer_priv = "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
-        self.job.multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        self.job.gas_payer_priv = (
+            "657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8"
+        )
+        self.job.multi_credentials = [
+            (
+                "0x61F9F0B31eacB420553da8BCC59DC617279731Ac",
+                "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+            ),
+            (
+                "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
+                "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+            ),
+        ]
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertEqual(self.job.status(), Status(1))
 
         # Make sure we launched with raffled credentials
 
-        self.assertEqual(self.job.gas_payer, '0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809')
-        self.assertEqual(self.job.gas_payer_priv, 'f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1')
+        self.assertEqual(
+            self.job.gas_payer, "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809"
+        )
+        self.assertEqual(
+            self.job.gas_payer_priv,
+            "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+        )
 
     def test_setup(self):
 
         # A Job can't be setup without deploying it first.
 
         self.assertFalse(self.job.setup())
-        multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        multi_credentials = [
+            (
+                "0x61F9F0B31eacB420553da8BCC59DC617279731Ac",
+                "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+            ),
+            (
+                "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
+                "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+            ),
+        ]
         self.job = Job(self.credentials, manifest, multi_credentials=multi_credentials)
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
 
     def test_add_trusted_handlers(self):
-        
+
         # Make sure we se set our gas payer as a trusted handler by default.
-        
+
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
-        self.assertTrue(is_trusted_handler(self.job.job_contract, self.job.gas_payer, self.job.gas_payer))
-        trusted_handlers = ['0x61F9F0B31eacB420553da8BCC59DC617279731Ac', '0xD979105297fB0eee83F7433fC09279cb5B94fFC6']
+        self.assertTrue(
+            is_trusted_handler(
+                self.job.job_contract, self.job.gas_payer, self.job.gas_payer
+            )
+        )
+        trusted_handlers = [
+            "0x61F9F0B31eacB420553da8BCC59DC617279731Ac",
+            "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+        ]
         self.assertTrue(self.job.add_trusted_handlers(trusted_handlers))
-        self.assertTrue(is_trusted_handler(self.job.job_contract, '0x61F9F0B31eacB420553da8BCC59DC617279731Ac', self.job.gas_payer))
-        self.assertTrue(is_trusted_handler(self.job.job_contract, '0xD979105297fB0eee83F7433fC09279cb5B94fFC6', self.job.gas_payer))
+        self.assertTrue(
+            is_trusted_handler(
+                self.job.job_contract,
+                "0x61F9F0B31eacB420553da8BCC59DC617279731Ac",
+                self.job.gas_payer,
+            )
+        )
+        self.assertTrue(
+            is_trusted_handler(
+                self.job.job_contract,
+                "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+                self.job.gas_payer,
+            )
+        )
 
     def test_bulk_payout(self):
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
-        payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
+        payouts = [
+            ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal("20.0")),
+            ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("50.0")),
+        ]
         self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
-        
+
         # The escrow contract is still in Partial state as there's still balance left.
 
         self.assertEqual(self.job.balance(), 30000000000000000000)
@@ -1420,27 +1488,40 @@ class JobTestCase(unittest.TestCase):
 
         # Trying to pay more than the contract balance results in failure.
 
-        payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('40.0'))]
+        payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal("40.0"))]
         self.assertFalse(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
         # Paying the remaining amount empties the escrow and updates the status correctly.
 
-        payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal('30.0'))]
+        payouts = [("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal("30.0"))]
         self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
         self.assertEqual(self.job.balance(), 0)
         self.assertEqual(self.job.status(), Status(4))
 
-        multi_credentials = [("0x61F9F0B31eacB420553da8BCC59DC617279731Ac", "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e"), ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1")]
+        multi_credentials = [
+            (
+                "0x61F9F0B31eacB420553da8BCC59DC617279731Ac",
+                "486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e",
+            ),
+            (
+                "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
+                "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+            ),
+        ]
         self.job = Job(self.credentials, manifest, multi_credentials=multi_credentials)
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
-        payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0')), ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('50.0'))]
+        payouts = [
+            ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal("20.0")),
+            ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("50.0")),
+        ]
         self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
 
 if __name__ == "__main__":
     import doctest
     from test_manifest import manifest
+
     # IMPORTANT, don't modify this so CI catches the doctest errors.
     doctest.testmod()
     unittest.main(exit=False)
