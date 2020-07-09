@@ -502,46 +502,6 @@ class Job:
         >>> job.abort()
         True
 
-        The escrow contract is in Partial state after the first payout and it can't be aborted.
-
-
-        The escrow contract is in Paid state after the a full bulk payout and it can't be aborted.
-
-        >>> job = Job(credentials, manifest)
-        >>> job.launch(rep_oracle_pub_key)
-        True
-
-        >>> job.setup()
-        True
-        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('100.0'))]
-        >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
-        True
-        >>> job.abort()
-        False
-        >>> job.status()
-        <Status.Paid: 4>
-
-
-        Trusted handler should be able to abort an existing contract
-
-        >>> trusted_handler = "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809"
-        >>> job = Job(credentials, manifest)
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job.setup()
-        True
-        >>> job.add_trusted_handlers([trusted_handler])
-        True
-
-        >>> handler_credentials = {
-        ... 	"gas_payer": "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
-        ... 	"gas_payer_priv": "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
-        ...     "rep_oracle_priv_key": b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        ... }
-        >>> access_job = Job(credentials=handler_credentials, factory_addr=job.factory_contract.address, escrow_addr=job.job_contract.address)
-        >>> access_job.abort()
-        True
-
         Returns:
             bool: returns True if contract has been destroyed successfully.
 
@@ -597,29 +557,6 @@ class Job:
         0
         >>> job.status()
         <Status.Cancelled: 6>
-
-        The escrow contract is in Partial state after the first payout and it can't be cancelled.
-
-        >>> job = Job(credentials, manifest)
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job.setup()
-        True
-        >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0'))]
-        >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
-        True
-        >>> job.status()
-        <Status.Partial: 3>
-
-        The escrow contract is in Paid state after the second payout and it can't be cancelled.
-
-        >>> payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal('80.0'))]
-        >>> job.bulk_payout(payouts, {'results': 0}, rep_oracle_pub_key)
-        True
-        >>> job.cancel()
-        False
-        >>> job.status()
-        <Status.Paid: 4>
 
         Returns:
             bool: returns True if gas payer has been paid back and contract is in "Cancelled" state.
@@ -803,21 +740,6 @@ class Job:
     def status(self, gas: int = GAS_LIMIT) -> Enum:
         """Returns the status of the Job.
 
-        >>> from test_manifest import manifest
-        >>> credentials = {
-        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        ... }
-        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
-
-        After deployment status is "Launched".
-
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job.status()
-        <Status.Launched: 1>
-
         Returns:
             Enum: returns the status as an enumeration.
 
@@ -826,20 +748,6 @@ class Job:
 
     def balance(self, gas: int = GAS_LIMIT) -> int:
         """Retrieve the balance of a Job in HMT.
-
-        >>> from test_manifest import manifest
-        >>> credentials = {
-        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        ... }
-        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> job = Job(credentials, manifest)
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job.setup()
-        True
-        >>> job.balance()
-        100000000000000000000
 
         Args:
             escrow_contract (Contract): the contract to be read.
@@ -1423,7 +1331,7 @@ class JobTestCase(unittest.TestCase):
             "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
         )
 
-    def test_setup(self):
+    def test_job_setup(self):
 
         # A Job can't be setup without deploying it first.
 
@@ -1442,7 +1350,7 @@ class JobTestCase(unittest.TestCase):
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
 
-    def test_add_trusted_handlers(self):
+    def test_job_add_trusted_handlers(self):
 
         # Make sure we se set our gas payer as a trusted handler by default.
 
@@ -1472,7 +1380,7 @@ class JobTestCase(unittest.TestCase):
             )
         )
 
-    def test_bulk_payout(self):
+    def test_job_bulk_payout(self):
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
         payouts = [
@@ -1516,6 +1424,64 @@ class JobTestCase(unittest.TestCase):
             ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("50.0")),
         ]
         self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
+
+    def test_job_abort(self):
+
+        # The escrow contract is in Paid state after the a full bulk payout and it can't be aborted.
+
+        self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
+        self.assertTrue(self.job.setup())
+        payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("100.0"))]
+        self.assertTrue(
+            self.job.bulk_payout(payouts, {"results": 0}, self.rep_oracle_pub_key)
+        )
+        self.assertFalse(self.job.abort())
+        self.assertEqual(self.job.status(), Status(4))
+
+        # Trusted handler should be able to abort an existing contract
+
+        self.job = Job(self.credentials, manifest)
+        self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
+        self.assertTrue(self.job.setup())
+        trusted_handler = "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809"
+        self.assertTrue(self.job.add_trusted_handlers([trusted_handler]))
+
+        handler_credentials = {
+            "gas_payer": "0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809",
+            "gas_payer_priv": "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
+            "rep_oracle_priv_key": b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+        }
+        access_job = Job(
+            credentials=handler_credentials,
+            factory_addr=self.job.factory_contract.address,
+            escrow_addr=self.job.job_contract.address,
+        )
+        self.assertTrue(access_job.abort())
+
+    def test_job_cancel(self):
+        self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
+        self.assertTrue(self.job.setup())
+        payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal("20.0"))]
+        self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
+        self.assertEqual(self.job.status(), Status(3))
+
+        # The escrow contract is in Paid state after the second payout and it can't be cancelled.
+
+        payouts = [("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("80.0"))]
+        self.assertTrue(
+            self.job.bulk_payout(payouts, {"results": 0}, self.rep_oracle_pub_key)
+        )
+        self.assertFalse(self.job.cancel())
+        self.assertEqual(self.job.status(), Status(4))
+
+    def test_job_status(self):
+        self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
+        self.assertEqual(self.job.status(), Status(1))
+
+    def test_job_balance(self):
+        self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
+        self.assertTrue(self.job.setup())
+        self.assertEqual(self.job.balance(), 100000000000000000000)
 
 
 if __name__ == "__main__":
