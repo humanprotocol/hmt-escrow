@@ -3,6 +3,7 @@ import logging
 import codecs
 import hashlib
 import json
+import unittest
 
 from typing import Dict, Tuple
 from eth_keys import keys
