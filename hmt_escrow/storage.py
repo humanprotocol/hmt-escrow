@@ -254,4 +254,7 @@ class StorageTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    from test_manifest import manifest
+    from job import Job
+
     unittest.main(exit=False)

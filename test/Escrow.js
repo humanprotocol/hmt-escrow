@@ -213,11 +213,10 @@ contract('Escrow', (accounts) => {
     it('succeeds if status is pending', async () => {
       try {
         await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
-        await Escrow.storeResults(url, hash, { from: recordingOracle });
-        const IntermediateResultsUrl = await Escrow.getIntermediateResultsUrl.call();
-        const IntermediateResultsHash = await Escrow.getIntermediateResultsHash.call();
-        assert.equal(IntermediateResultsUrl, url);
-        assert.equal(IntermediateResultsHash, hash);
+        tx = await Escrow.storeResults(url, hash, { from: recordingOracle });
+        assert.equal(tx.logs[0].event, 'IntermediateStorage');
+        assert.equal(tx.logs[0].args._url, url);
+        assert.equal(tx.logs[0].args._hash, hash);
       } catch (ex) {
         assert(false);
       }
