@@ -26,6 +26,7 @@ contract('EscrowFactory', (accounts) => {
     it('creates new escrow contract', async () => {
       try {
         const escrow = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        console.log("CreateEscrow costs: " + escrow.receipt.gasUsed + " wei.");
         assert(escrow);
       } catch (ex) {
         assert(false);
@@ -37,12 +38,14 @@ contract('EscrowFactory', (accounts) => {
         const initialCounter = await EscrowFactory.getCounter();
         assert.equal(initialCounter.toNumber(), 0);
 
-        await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        tx1 = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        console.log("CreateEscrow1 costs: " + tx1.receipt.gasUsed + " wei.");
 
         const counterAfterFirstEscrow = await EscrowFactory.getCounter();
         assert.equal(counterAfterFirstEscrow.toNumber(), 1);
 
-        await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        tx2 = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        console.log("CreateEscrow2 costs: " + tx2.receipt.gasUsed + " wei.");
 
         const counterAfterSecondEscrow = await EscrowFactory.getCounter();
         assert.equal(counterAfterSecondEscrow.toNumber(), 2);
@@ -56,7 +59,8 @@ contract('EscrowFactory', (accounts) => {
         const initialCounter = await EscrowFactory.getCounter();
         assert.equal(initialCounter.toNumber(), 0);
 
-        await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        tx = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
+        console.log("CreateEscrow costs: " + tx.receipt.gasUsed + " wei.");
         const escrowAddress = await EscrowFactory.getLastEscrow();
         const hasEscrow = await EscrowFactory.hasEscrow(escrowAddress);
         assert.equal(hasEscrow, true);
