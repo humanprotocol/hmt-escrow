@@ -3,6 +3,7 @@ import logging
 import codecs
 import hashlib
 import json
+import unittest
 
 from typing import Dict, Tuple
 from eth_keys import keys
@@ -199,7 +200,58 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
     return ecies.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
-if __name__ == "__main__":
-    import doctest
+class StorageTest(unittest.TestCase):
+    def test_download(self):
+        credentials = {
+            "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+            "gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+        }
+        pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        job = Job(credentials=credentials, escrow_manifest=manifest)
+        (_, manifest_url) = upload(job.serialized_manifest, pub_key)
+        manifest_dict = download(manifest_url, job.gas_payer_priv)
+        self.assertEqual(manifest_dict, job.serialized_manifest)
 
-    doctest.testmod(raise_on_error=True)
+        job = Job(credentials=credentials, escrow_manifest=manifest)
+        (_, manifest_url) = upload(job.serialized_manifest, pub_key)
+        manifest_dict = download(manifest_url, job.gas_payer_priv)
+        self.assertEqual(manifest_dict, job.serialized_manifest)
+
+    def test_upload(self):
+        credentials = {
+            "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+            "gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
+        }
+        pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        job = Job(credentials=credentials, escrow_manifest=manifest)
+        (_, manifest_url) = upload(job.serialized_manifest, pub_key)
+        manifest_dict = download(manifest_url, job.gas_payer_priv)
+        self.assertEqual(manifest_dict, job.serialized_manifest)
+
+        job = Job(credentials=credentials, escrow_manifest=manifest)
+        (_, manifest_url) = upload(job.serialized_manifest, pub_key)
+        self.assertTrue(manifest_url.startswith("s3"))
+        manifest_dict = download(manifest_url, job.gas_payer_priv)
+        self.assertEqual(manifest_dict, job.serialized_manifest)
+
+    def test_decrypt(self):
+        from p2p.exceptions import DecryptionError
+
+        priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        msg = "test"
+        self.assertEqual(_decrypt(priv_key, _encrypt(pub_key, msg)), msg)
+        # Using a wrong public key to decrypt a message results in failure.
+        false_pub_key = b"74c81fe41b30f741b31185052664a10c3256e2f08bcfb20c8f54e733bef58972adcf84e4f5d70a979681fd39d7f7847d2c0d3b5d4aead806c4fec4d8534be114"
+        with self.assertRaises(DecryptionError):
+            _decrypt(priv_key, _encrypt(false_pub_key, msg)) == msg
+
+    def test_encrypt(self):
+        priv_key = "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+        pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        msg = "test"
+        self.assertEqual(_decrypt(priv_key, _encrypt(pub_key, msg)), msg)
+
+
+if __name__ == "__main__":
+    unittest.main(exit=False)
