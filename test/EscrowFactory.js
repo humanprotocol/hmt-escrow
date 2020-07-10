@@ -49,6 +49,9 @@ contract('EscrowFactory', (accounts) => {
 
         const counterAfterSecondEscrow = await EscrowFactory.getCounter();
         assert.equal(counterAfterSecondEscrow.toNumber(), 2);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed;
+        assert(totalGas <= 10000000, "Too much gas used: " + totalGas + ". Should have used less than: " + 10000000);
       } catch (ex) {
         assert(false);
       }

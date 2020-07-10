@@ -224,6 +224,9 @@ contract('Escrow', (accounts) => {
         tx2 = await Escrow.storeResults('url', 'hash', { from: recordingOracle });
         console.log("StoreResults costs: " + tx2.receipt.gasUsed + " wei.");
         assert(false);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed;
+        assert(totalGas <= 500000, "Too much gas used: " + totalGas + ". Should have used less than: " + 500000);
       } catch (ex) {
         assert(true);
       }
@@ -348,6 +351,9 @@ contract('Escrow', (accounts) => {
         console.log("Complete costs: " + tx3.receipt.gasUsed + " wei.");
         const completeStatus = await Escrow.getStatus.call();
         assert.equal(completeStatus, 4);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed + tx3.receipt.gasUsed;
+        assert(totalGas <= 1000000, "Too much gas used: " + totalGas + ". Should have used less than: " + 1000000);
       } catch (ex) {
         assert(false);
       }
@@ -379,6 +385,9 @@ contract('Escrow', (accounts) => {
         console.log("Complete costs: " + tx3.receipt.gasUsed + " wei.");
         const completeStatus = await Escrow.getStatus.call();
         assert.equal(completeStatus, 4);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed + tx3.receipt.gasUsed;
+        assert(totalGas <= 1000000, "Too much gas used: " + totalGas + ". Should have used less than: " + 1000000);
       } catch (ex) {
         assert(false);
       }
