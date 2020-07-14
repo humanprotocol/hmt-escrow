@@ -132,44 +132,6 @@ def manifest_hash(
     )
 
 
-def intermediate_url(
-    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
-) -> str:
-    """Retrieves the deployed intermediate results url uploaded on Job initialization.
-
-    Args:
-        escrow_contract (Contract): the escrow contract of the Job.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-
-    Returns:
-        str: returns the intermediate results url of Job's escrow contract.
-
-    """
-    return escrow_contract.functions.getIntermediateResultsUrl().call(
-        {"from": gas_payer, "gas": gas}
-    )
-
-
-def intermediate_hash(
-    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
-) -> str:
-    """Retrieves the deployed intermediate results hash uploaded on Job initialization.
-
-    Args:
-        escrow_contract (Contract): the escrow contract of the Job.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-
-    Returns:
-        str: returns the intermediate results hash of Job's escrow contract.
-
-    """
-    return escrow_contract.functions.getIntermediateResultsHash().call(
-        {"from": gas_payer, "gas": gas}
-    )
-
-
 def is_trusted_handler(
     escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
 ) -> bool:
@@ -328,8 +290,8 @@ class Job:
 
     def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
-        to IPFS with the public key of the Reputation Oracle and stores
-        the IPFS url to the escrow contract.
+        to S3 with the public key of the Reputation Oracle and stores
+        the S3 url to the escrow contract.
 
         >>> from test_manifest import manifest
         >>> credentials = {
@@ -833,7 +795,7 @@ class Job:
     def store_intermediate_results(
         self, results: Dict, pub_key: bytes, gas: int = GAS_LIMIT
     ) -> bool:
-        """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
+        """Recording Oracle stores intermediate results with Reputation Oracle's public key to S3
         and updates the contract's state.
 
         >>> from test_manifest import manifest
@@ -913,6 +875,9 @@ class Job:
 
         if not results_stored:
             LOG.exception(f"{txn_event} failed with all credentials.")
+        else:
+            self.intermediate_manifest_hash = hash_
+            self.intermediate_manifest_url = url
 
         return results_stored
 
@@ -1095,8 +1060,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        intermediate_results_url = intermediate_url(self.job_contract, self.gas_payer)
-        return download(intermediate_results_url, priv_key)
+        return download(self.intermediate_manifest_url, priv_key)
 
     def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results stored by the Reputation Oracle.
@@ -1757,4 +1721,6 @@ class JobTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    from test_manifest import manifest
+
     unittest.main(exit=False)

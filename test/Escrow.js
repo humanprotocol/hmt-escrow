@@ -70,7 +70,8 @@ contract('Escrow', (accounts) => {
   describe('calling abort', () => {
     it('succeeds when aborting with same address', async () => {
       try {
-        await Escrow.abort({ from: canceler });
+        tx = await Escrow.abort({ from: canceler });
+        console.log("Abort costs: " + tx.receipt.gasUsed + " wei.");
         assert(true);
       } catch (ex) {
         assert(false);
@@ -79,7 +80,8 @@ contract('Escrow', (accounts) => {
 
     it('fails when aborting with different address', async () => {
       try {
-        await Escrow.abort({ from: externalAddress });
+        tx = await Escrow.abort({ from: externalAddress });
+        console.log("Abort costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -88,8 +90,10 @@ contract('Escrow', (accounts) => {
 
     it('succeeds if caller is a trusted handler', async () => {
       try {
-        await Escrow.addTrustedHandlers([reputationOracle])
-        await Escrow.abort({ from: reputationOracle });
+        tx1 = await Escrow.addTrustedHandlers([reputationOracle])
+        console.log("AddTrustedHandlers costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.abort({ from: reputationOracle });
+        console.log("Abort costs: " + tx2.receipt.gasUsed + " wei.");
         assert(true);
       } catch (ex) {
         assert(false);
@@ -100,9 +104,12 @@ contract('Escrow', (accounts) => {
   describe('calling addTrustedHandlers', async () => {
     it('succeeds when the contract launcher adds trusted handlers and a trusted handler stores results', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
-        await Escrow.addTrustedHandlers([externalAddress], { from: canceler });
-        await Escrow.storeResults(url, hash, { from: externalAddress });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.addTrustedHandlers([externalAddress], { from: canceler });
+        console.log("AddTrustedHandlers costs: " + tx2.receipt.gasUsed + " wei.");
+        tx3 = await Escrow.storeResults(url, hash, { from: externalAddress });
+        console.log("StoreResults costs: " + tx3.receipt.gasUsed + " wei.");
         assert(true);
       } catch (ex) {
         assert(false);
@@ -111,8 +118,10 @@ contract('Escrow', (accounts) => {
 
     it('fails if an external address, not a trusted handler stores results', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
-        await Escrow.storeResults(url, hash, { from: externalAddress });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.storeResults(url, hash, { from: externalAddress });
+        console.log("StoreResults costs: " + tx2.receipt.gasUsed + " wei.");
         assert(false)
       } catch (ex) {
         assert(true);
@@ -123,7 +132,8 @@ contract('Escrow', (accounts) => {
   describe('calling setup', () => {
     it('fails when calling with different address than the contract was created with', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: externalAddress });
+        tx = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: externalAddress });
+        console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -132,7 +142,8 @@ contract('Escrow', (accounts) => {
 
     it('fails if reputation oracle or recording oracle stake is too high', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 500, 500, url, hash, { from: canceler });
+        tx = await Escrow.setup(reputationOracle, recordingOracle, 500, 500, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -141,7 +152,8 @@ contract('Escrow', (accounts) => {
 
     it('fails if reputation oracle or recording oracle stake is too low', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 0, 0, url, hash, { from: canceler });
+        tx = await Escrow.setup(reputationOracle, recordingOracle, 0, 0, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -150,7 +162,8 @@ contract('Escrow', (accounts) => {
 
     it('sets parameters correctly', async () => {
       await HMT.transfer(Escrow.address, 100, { from: canceler });
-      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+      tx = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+      console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
       const contractReputationOracle = await Escrow.getReputationOracle.call();
       const contractRecordingOracle = await Escrow.getRecordingOracle.call();
       const contractManifestUrl = await Escrow.getManifestUrl.call();
@@ -164,7 +177,8 @@ contract('Escrow', (accounts) => {
 
     it('sets status to pending', async () => {
       await HMT.transfer(Escrow.address, 100, { from: canceler });
-      await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+      tx = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+      console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
       const status = await Escrow.getStatus.call();
       assert.equal(1, status);
     });
@@ -173,7 +187,8 @@ contract('Escrow', (accounts) => {
   describe('calling complete', () => {
     it('fails if trying to complete with other than reputation oracle address', async () => {
       try {
-        await Escrow.complete({ from: canceler });
+        tx = await Escrow.complete({ from: canceler });
+        console.log("Complete costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -182,7 +197,8 @@ contract('Escrow', (accounts) => {
 
     it('fails if escrow status is not complete or paid', async () => {
       try {
-        await Escrow.complete({ from: reputationOracle });
+        tx = await Escrow.complete({ from: reputationOracle });
+        console.log("Complete costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -193,7 +209,8 @@ contract('Escrow', (accounts) => {
   describe('calling storeResults', () => {
     it('fails if calling address is not recording oracle', async () => {
       try {
-        await Escrow.storeResults('url', 'hash', { from: canceler });
+        tx = await Escrow.storeResults('url', 'hash', { from: canceler });
+        console.log("StoreResults costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -202,9 +219,14 @@ contract('Escrow', (accounts) => {
 
     it('fails if status is other than pending or partial', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 0, url, hash, { from: canceler });
-        await Escrow.storeResults('url', 'hash', { from: recordingOracle });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, 0, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.storeResults('url', 'hash', { from: recordingOracle });
+        console.log("StoreResults costs: " + tx2.receipt.gasUsed + " wei.");
         assert(false);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed;
+        assert(totalGas <= 500000, "Too much gas used: " + totalGas + ". Should have used less than: " + 500000);
       } catch (ex) {
         assert(true);
       }
@@ -212,12 +234,13 @@ contract('Escrow', (accounts) => {
 
     it('succeeds if status is pending', async () => {
       try {
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
-        await Escrow.storeResults(url, hash, { from: recordingOracle });
-        const IntermediateResultsUrl = await Escrow.getIntermediateResultsUrl.call();
-        const IntermediateResultsHash = await Escrow.getIntermediateResultsHash.call();
-        assert.equal(IntermediateResultsUrl, url);
-        assert.equal(IntermediateResultsHash, hash);
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.storeResults(url, hash, { from: recordingOracle });
+        console.log("StoreResults costs: " + tx2.receipt.gasUsed + " wei.");
+        assert.equal(tx2.logs[0].event, 'IntermediateStorage');
+        assert.equal(tx2.logs[0].args._url, url);
+        assert.equal(tx2.logs[0].args._hash, hash);
       } catch (ex) {
         assert(false);
       }
@@ -227,7 +250,8 @@ contract('Escrow', (accounts) => {
   describe('calling cancel', () => {
     it('fails if caller is not contract canceler', async () => {
       try {
-        await Escrow.cancel({ from: launcher });
+        tx = await Escrow.cancel({ from: launcher });
+        console.log("Cancel costs: " + tx.receipt.gasUsed + " wei.");
         assert(false);
       } catch (ex) {
         assert(true);
@@ -238,8 +262,10 @@ contract('Escrow', (accounts) => {
       try {
         const initialAccountBalance = await Escrow.getAddressBalance.call(canceler);
         await HMT.transfer(Escrow.address, 100, { from: canceler });
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
-        await Escrow.cancel({ from: canceler });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.cancel({ from: canceler });
+        console.log("Cancel costs: " + tx2.receipt.gasUsed + " wei.");
         const accountBalance = await Escrow.getAddressBalance.call(canceler);
         assert.equal(accountBalance.toNumber(), initialAccountBalance.toNumber());
       } catch (ex) {
@@ -250,8 +276,10 @@ contract('Escrow', (accounts) => {
     it('sets status to canceled if succesful', async () => {
       try {
         await HMT.transfer(Escrow.address, 100, { from: canceler });
-        await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
-        await Escrow.cancel({ from: canceler });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
+        tx2 = await Escrow.cancel({ from: canceler });
+        console.log("Cancel costs: " + tx2.receipt.gasUsed + " wei.");
         const contractStatus = await Escrow.getStatus.call();
         assert.equal(contractStatus, 5);
       } catch (ex) {
@@ -264,14 +292,16 @@ contract('Escrow', (accounts) => {
     it('pays each recipient their corresponding amount', async () => {
       try {
         await HMT.transfer(Escrow.address, 100, { from: canceler });
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
         const initialAccount3Balance = await Escrow.getAddressBalance.call(accounts[6]);
         const initialAccount4Balance = await Escrow.getAddressBalance.call(accounts[7]);
         const initialAccount5Balance = await Escrow.getAddressBalance.call(accounts[8]);
         const initialRecordingOracleBalance = await Escrow.getAddressBalance.call(recordingOracle);
         const initialReputationOracleBalance = await Escrow.getAddressBalance.call(reputationOracle);
 
-        await Escrow.bulkPayOut([accounts[6], accounts[7], accounts[8]], [10, 20, 30], url, hash, '000', { from: reputationOracle });
+        tx2 = await Escrow.bulkPayOut([accounts[6], accounts[7], accounts[8]], [10, 20, 30], url, hash, '000', { from: reputationOracle });
+        console.log("BulkPayOut costs: " + tx2.receipt.gasUsed + " wei.");
 
         const account3Balance = await Escrow.getAddressBalance.call(accounts[6]);
         const account4Balance = await Escrow.getAddressBalance.call(accounts[7]);
@@ -305,19 +335,25 @@ contract('Escrow', (accounts) => {
         await HMT.transfer(Escrow.address, 100, { from: canceler });
 
         // Setup escrow
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
         const setupStatus = await Escrow.getStatus.call();
         assert.equal(setupStatus, 1);
 
         const amountToPay = [100];
-        await Escrow.bulkPayOut(toAddress, amountToPay, url, hash, '000', { from: reputationOracle });
+        tx2 = await Escrow.bulkPayOut(toAddress, amountToPay, url, hash, '000', { from: reputationOracle });
+        console.log("BulkPayOut costs: " + tx2.receipt.gasUsed + " wei.");
         const paidStatus = await Escrow.getStatus.call();
         assert.equal(paidStatus, 3);
 
         // Complete escrow
-        await Escrow.complete({ from: reputationOracle });
+        tx3 = await Escrow.complete({ from: reputationOracle });
+        console.log("Complete costs: " + tx3.receipt.gasUsed + " wei.");
         const completeStatus = await Escrow.getStatus.call();
         assert.equal(completeStatus, 4);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed + tx3.receipt.gasUsed;
+        assert(totalGas <= 1000000, "Too much gas used: " + totalGas + ". Should have used less than: " + 1000000);
       } catch (ex) {
         assert(false);
       }
@@ -333,19 +369,25 @@ contract('Escrow', (accounts) => {
         await HMT.transfer(Escrow.address, 100, { from: canceler });
 
         // Setup escrow
-        await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
         const setupStatus = await Escrow.getStatus.call();
         assert.equal(setupStatus, 1);
 
         const amountsToPay = [50, 50];
-        await Escrow.bulkPayOut(toAddresses, amountsToPay, url, hash, '000', { from: reputationOracle });
+        tx2 = await Escrow.bulkPayOut(toAddresses, amountsToPay, url, hash, '000', { from: reputationOracle });
+        console.log("BulkPayOut costs: " + tx2.receipt.gasUsed + " wei.");
         const paidStatus = await Escrow.getStatus.call();
         assert.equal(paidStatus, 3);
 
         // Complete escrow
-        await Escrow.complete({ from: reputationOracle });
+        tx3 = await Escrow.complete({ from: reputationOracle });
+        console.log("Complete costs: " + tx3.receipt.gasUsed + " wei.");
         const completeStatus = await Escrow.getStatus.call();
         assert.equal(completeStatus, 4);
+
+        const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed + tx3.receipt.gasUsed;
+        assert(totalGas <= 1000000, "Too much gas used: " + totalGas + ". Should have used less than: " + 1000000);
       } catch (ex) {
         assert(false);
       }

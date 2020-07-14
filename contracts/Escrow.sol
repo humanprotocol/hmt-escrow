@@ -1,4 +1,5 @@
 pragma solidity 0.6.2;
+
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 
@@ -21,9 +22,6 @@ contract Escrow {
 
     string private manifestUrl;
     string private manifestHash;
-
-    string private intermediateResultsUrl;
-    string private intermediateResultsHash;
 
     string private finalResultsUrl;
     string private finalResultsHash;
@@ -96,14 +94,6 @@ contract Escrow {
         return manifestUrl;
     }
 
-    function getIntermediateResultsUrl() public view returns (string memory) {
-        return intermediateResultsUrl;
-    }
-
-    function getIntermediateResultsHash() public view returns (string memory) {
-        return intermediateResultsHash;
-    }
-
     function getFinalResultsUrl() public view returns (string memory) {
         return finalResultsUrl;
     }
@@ -136,7 +126,8 @@ contract Escrow {
         uint256 _recordingOracleStake,
         string memory _url,
         string memory _hash
-    ) public {
+    ) public
+    {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
@@ -219,8 +210,6 @@ contract Escrow {
                 status == EscrowStatuses.Partial,
             "Escrow not in Pending or Partial status state"
         );
-        intermediateResultsUrl = _url;
-        intermediateResultsHash = _hash;
         emit IntermediateStorage(_url, _hash);
     }
 
@@ -230,7 +219,8 @@ contract Escrow {
         string memory _url,
         string memory _hash,
         uint256 _txId
-    ) public returns (bool) {
+    ) public returns (bool)
+    {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         uint256 balance = getBalance();
@@ -254,9 +244,9 @@ contract Escrow {
 
         bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
         if (writeOnchain) {
-          // Be sure they are both zero if one of them is
-          finalResultsUrl = _url;
-          finalResultsHash = _hash;
+            // Be sure they are both zero if one of them is
+            finalResultsUrl = _url;
+            finalResultsHash = _hash;
         }
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
