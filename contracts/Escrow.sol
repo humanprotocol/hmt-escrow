@@ -193,8 +193,8 @@ contract Escrow {
     function complete() public {
         require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(
-            msg.sender == reputationOracle,
-            "Address calling not the reputation oracle"
+            msg.sender == reputationOracle || trustedHandlers[msg.sender].isTrusted,
+            "Address calling is not trusted"
         );
 
         if (status == EscrowStatuses.Paid) {
