@@ -7,7 +7,7 @@ from solcx import compile_files
 from web3 import Web3, HTTPProvider, EthereumTesterProvider
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
-from web3.utils.transactions import wait_for_transaction_receipt
+from web3._utils.transactions import wait_for_transaction_receipt
 from hmt_escrow.kvstore_abi import abi as kvstore_abi
 from typing import Dict, List, Tuple, Optional, Any
 
