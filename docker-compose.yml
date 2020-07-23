@@ -10,6 +10,8 @@ services:
       - GAS_LIMIT=6700000
       - IPFS_HOST=ipfs
       - IPFS_PORT=5001
+      - ETH_HOST=ganache
+      - ETH_PORT=8545
       - ESCROW_BUCKETNAME=escrow-results
       - ESCROW_AWS_ACCESS_KEY_ID=minio
       - ESCROW_AWS_SECRET_ACCESS_KEY=minio123
@@ -17,16 +19,14 @@ services:
       - ESCROW_AWS_DEFAULT_REGION=us-west-2
       - DEBUG=true
       - USE_ESCROW_S3_STORAGE=True
-    command: /work/bin/wait_then_run
+    command: sh -c "rm /deployed-hmtoken/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; npm install; npm run compile; /work/bin/wait_then_run"
     depends_on:
       - minio
     links:
       - ganache
       - ipfs
-      - hmt
       - kvstore
     volumes:
-      - hmt_token_addr:/deployed-hmtoken
       - eth_kvstore_addr:/deployed-kvstore
       - ./minio:/data
       - .:/work
@@ -45,17 +45,6 @@ services:
     command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
     ports:
       - 8545:8545
-
-  hmt:
-    image: hcaptcha/hmt-token
-    links:
-      - ganache
-    environment:
-      - ETH_HOST=ganache
-      - ETH_PORT=8545
-    command: sh -c "rm /deployed/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545 && npm run compile && python -m SimpleHTTPServer"
-    volumes:
-      - hmt_token_addr:/deployed
 
   kvstore:
     image: hcaptcha/eth-kvstore
@@ -88,5 +77,4 @@ services:
       - ./minio:/data
 
 volumes:
-  hmt_token_addr:
   eth_kvstore_addr:

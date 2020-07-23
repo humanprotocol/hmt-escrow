@@ -21,5 +21,3 @@ ENV SOLC_BINARY="/root/.py-solc-x/solc-${SOLC_VERSION}/bin/solc"
 
 # Necessary files for smart contract compilation, migration and testing
 COPY . /work/
-
-RUN ./bin/test

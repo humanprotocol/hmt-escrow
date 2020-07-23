@@ -3,7 +3,7 @@ set -exu
 ./bin/stop
 docker-compose build
 docker-compose run --no-deps -e CI=true job './bin/lint'
-docker-compose run -w /work job bash -c "./bin/wait_then_run $*"
+docker-compose run -w /work job
 docker-compose run -w /work contracts
 ./bin/stop
 ./bin/generate-docs
