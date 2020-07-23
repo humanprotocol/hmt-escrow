@@ -1,5 +1,0 @@
-#!/bin/bash
-echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin docker.io
-docker build -t docker.io/hcaptcha/hmt-escrow:0.8.1 .
-docker tag docker.io/hcaptcha/hmt-escrow:0.8.1 docker.io/hcaptcha/hmt-escrow:latest
-docker push docker.io/hcaptcha/hmt-escrow:latest
