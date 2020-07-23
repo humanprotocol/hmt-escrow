@@ -2,8 +2,8 @@ version: '2'
 services:
 
   job:
-    stdin_open: true
-    tty: true
+    image: hcaptcha/hmt-escrow:latest
+    build: .
     environment:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
@@ -18,8 +18,6 @@ services:
       - DEBUG=true
       - USE_ESCROW_S3_STORAGE=True
     command: /work/bin/wait_then_run
-    build: .
-    image: hmtcentral.azurecr.io/contracts:latest
     depends_on:
       - minio
     links:
@@ -38,7 +36,7 @@ services:
       - ETH_HOST=ganache
       - ETH_PORT=8545
     command: sh -c "npm install; npm run test"
-    image: hmtcentral.azurecr.io/contracts:latest
+    image: hcaptcha/hmt-escrow:latest
     links:
       - ganache
 
