@@ -47,7 +47,7 @@ services:
       - 8545:8545
 
   hmt:
-    image: hcaptcha/hmt-token
+    image: hcaptcha/hmt-escrow:latest
     links:
       - ganache
     environment:
