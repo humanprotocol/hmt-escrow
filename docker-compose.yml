@@ -19,9 +19,9 @@ services:
       - ESCROW_AWS_DEFAULT_REGION=us-west-2
       - DEBUG=true
       - USE_ESCROW_S3_STORAGE=True
-    command: sh -c "rm /deployed-hmtoken/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; npm install; npm run compile; /work/bin/wait_then_run"
     depends_on:
       - minio
+      - ganache
     links:
       - ganache
       - ipfs
@@ -30,18 +30,10 @@ services:
       - eth_kvstore_addr:/deployed-kvstore
       - ./minio:/data
       - .:/work
-
-  contracts:
-    environment:
-      - ETH_HOST=ganache
-      - ETH_PORT=8545
-    command: sh -c "npm install; npm run test"
-    image: hcaptcha/hmt-escrow:latest
-    links:
-      - ganache
+    command: sh -c "rm /deployed-hmtoken/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; npm run test; /work/bin/wait_then_run"
 
   ganache:
-    image: trufflesuite/ganache-cli:v6.9.1
+    image: trufflesuite/ganache-cli:latest
     command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
     ports:
       - 8545:8545
