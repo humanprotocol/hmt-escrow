@@ -14,5 +14,5 @@ setuptools.setup(
         "Programming Language :: Python",
     ],
     packages=setuptools.find_packages() + ["contracts", "migrations"],
-    install_requires=["py-solc-x", "web3", "hmt-basemodels", "boto3"],
+    install_requires=["py-solc-x", "trinity", "hmt-basemodels", "boto3", "sphinx"],
 )
