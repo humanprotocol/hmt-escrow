@@ -11,7 +11,7 @@ RUN apt-get update -y && \
 
 ENV PYTHONPATH "/usr/lib/python3.8/:/usr/local/lib/python3.8/dist-packages/:/work:/work/banhammer:/work/hmt-servers"
 
-COPY package.json /work/
+COPY package.json package-lock.json /work/
 RUN cd /work && npm install
 ENV PATH="/work/node_modules/.bin/:${PATH}"
 
