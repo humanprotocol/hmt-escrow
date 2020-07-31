@@ -4,6 +4,5 @@ set -exu
 docker-compose build
 docker-compose run --no-deps -e CI=true job './bin/lint'
 docker-compose run -w /work job
-docker-compose run -w /work contracts
 ./bin/stop
 ./bin/generate-docs

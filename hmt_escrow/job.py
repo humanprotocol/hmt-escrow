@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 from web3 import Web3
 from web3.contract import Contract
+from web3.types import Wei
 from eth_keys import keys
 from eth_utils import decode_hex
 
@@ -61,7 +62,7 @@ def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> E
 
     """
     status_ = escrow_contract.functions.getStatus().call(
-        {"from": gas_payer, "gas": gas}
+        {"from": gas_payer, "gas": Wei(gas)}
     )
     return Status(status_ + 1)
 
@@ -95,7 +96,7 @@ def manifest_url(
 
     """
     return escrow_contract.functions.getManifestUrl().call(
-        {"from": gas_payer, "gas": gas}
+        {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
@@ -128,7 +129,7 @@ def manifest_hash(
 
     """
     return escrow_contract.functions.getManifestHash().call(
-        {"from": gas_payer, "gas": gas}
+        {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
@@ -136,7 +137,7 @@ def is_trusted_handler(
     escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
 ) -> bool:
     return escrow_contract.functions.isTrustedHandler(handler_addr).call(
-        {"from": gas_payer, "gas": gas}
+        {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
@@ -152,7 +153,9 @@ def launcher(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) ->
         str: returns the address of who launched the job.
 
     """
-    return escrow_contract.functions.getLauncher().call({"from": gas_payer, "gas": gas})
+    return escrow_contract.functions.getLauncher().call(
+        {"from": gas_payer, "gas": Wei(gas)}
+    )
 
 
 class Job:
@@ -996,7 +999,7 @@ class Job:
 
         """
         return self.job_contract.functions.getBalance().call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def manifest(self, priv_key: bytes) -> Dict:
@@ -1094,7 +1097,7 @@ class Job:
 
         """
         final_results_url = self.job_contract.functions.getFinalResultsUrl().call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
         return download(final_results_url, priv_key)
 
@@ -1256,7 +1259,7 @@ class Job:
         """
         factory_contract = get_factory(factory_addr)
         return factory_contract.functions.hasEscrow(escrow_addr).call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def _init_factory(
@@ -1276,7 +1279,7 @@ class Job:
         ... }
         >>> job = Job(credentials, manifest)
         >>> type(job.factory_contract)
-        <class 'web3.utils.datatypes.Contract'>
+        <class 'web3._utils.datatypes.Contract'>
 
         Initializing a new Job instance with a factory address succeeds.
         >>> factory_addr = deploy_factory(**credentials)
@@ -1303,7 +1306,7 @@ class Job:
                 raise Exception("Unable to get address from factory")
 
         if not factory:
-            factory = get_factory(factory_addr)
+            factory = get_factory(str(factory_addr))
         return factory
 
     def _bulk_paid(self, gas: int = GAS_LIMIT) -> int:
@@ -1340,7 +1343,7 @@ class Job:
 
         """
         return self.job_contract.functions.getBulkPaid().call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def _last_escrow_addr(self, gas: int = GAS_LIMIT) -> str:
@@ -1367,7 +1370,7 @@ class Job:
 
         """
         return self.factory_contract.functions.getLastEscrow().call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def _create_escrow(self, trusted_handlers=[], gas: int = GAS_LIMIT) -> bool:

@@ -12,7 +12,7 @@
     "lint:js": "eslint test/** migrations/**",
     "lint": "npm run lint:js",
     "publish": "truffle publish",
-    "test": "truffle test",
+    "test": "npx truffle test",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
