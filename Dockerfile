@@ -13,7 +13,7 @@ ENV PYTHONPATH "/usr/lib/python3.8/:/usr/local/lib/python3.8/dist-packages/:/wor
 
 COPY package.json /work/
 RUN cd /work && npm install
-ENV PATH="/work/node_modules/.bin:${PATH}"
+ENV PATH="/work/node_modules/.bin/:${PATH}"
 
 # Pin to specific version that's guaranteed to work
 RUN pip3 install pipenv
