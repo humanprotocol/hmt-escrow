@@ -14,5 +14,11 @@ setuptools.setup(
         "Programming Language :: Python",
     ],
     packages=setuptools.find_packages() + ["contracts", "migrations"],
-    install_requires=["http://github.com/iamdefinitelyahuman/py-solc-x/tarball/master#egg=py-solc-x", "http://github.com/ethereum/trinity/tarball/master#egg=trinty", "hmt-basemodels", "boto3", "https://github.com/sphinx-doc/sphinx/tarball/master#egg=sphinx"],
+    install_requires=[
+        "http://github.com/iamdefinitelyahuman/py-solc-x/tarball/master#egg=py-solc-x",
+        "http://github.com/ethereum/trinity/tarball/master#egg=trinty",
+        "hmt-basemodels",
+        "boto3",
+        "https://github.com/sphinx-doc/sphinx/tarball/master#egg=sphinx",
+    ],
 )
