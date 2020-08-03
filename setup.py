@@ -16,7 +16,7 @@ setuptools.setup(
     packages=setuptools.find_packages() + ["contracts", "migrations"],
     install_requires=[
         "py-solc-x @ https://github.com/iamdefinitelyahuman/py-solc-x@master#egg=py-solc-x",
-        "trinity @ https://github.com/ethereum/trinity@master#egg=trinty",
+        "trinity @ https://github.com/ethereum/trinity@master#egg=trinity",
         "hmt-basemodels",
         "boto3",
         "sphinx @ https://github.com/sphinx-doc/sphinx@master#egg=sphinx",
