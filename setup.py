@@ -19,6 +19,6 @@ setuptools.setup(
         "http://github.com/ethereum/trinity/tarball/master#egg=trinty",
         "hmt-basemodels",
         "boto3",
-        "https://github.com/sphinx-doc/sphinx/tarball/master#egg=sphinx",
+        "http://github.com/sphinx-doc/sphinx/tarball/master#egg=sphinx",
     ],
 )
