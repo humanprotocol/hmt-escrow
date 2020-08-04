@@ -25,6 +25,10 @@ We'd recommend you checking out the dockerfile for an explanation of what applic
 After that the following command should install the package successfully:
 
 ```
+pip install git+https://github.com/iamdefinitelyahuman/py-solc-x@master#egg=py-solc-x \
+            git+https://github.com/ethereum/trinity@master#egg=trinity \
+            git+https://github.com/sphinx-doc/sphinx@master#egg=sphinx
+
 pip install hmt-escrow
 ```
 ### Docker
