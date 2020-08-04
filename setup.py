@@ -14,8 +14,5 @@ setuptools.setup(
         "Programming Language :: Python",
     ],
     packages=setuptools.find_packages() + ["contracts", "migrations"],
-    install_requires=[
-        "hmt-basemodels",
-        "boto3",
-    ],
+    install_requires=["hmt-basemodels", "boto3",],
 )
