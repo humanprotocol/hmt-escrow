@@ -4,6 +4,11 @@
 
 HCaptcha’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
 
+Reward sizes are guided by the rules below and payable in USD via PayPal. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
+
+    - Larger or Critical: $100 - $500
+    - Small: up to $100
+
 ## Installation
 
 ### Manual
