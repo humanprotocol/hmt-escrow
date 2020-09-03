@@ -21,7 +21,7 @@ GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
 LOG = logging.getLogger("hmt_escrow.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
-    os.getenv("HMTOKEN_ADDR", "0x9b0ff099c4e8df24ec077e0ccd46571f915afb25")
+    os.getenv("HMTOKEN_ADDR", "0x4C18A2E51edC5043e9c4B6b0757990A4Ac13797f")
 )
 
 CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contracts")
