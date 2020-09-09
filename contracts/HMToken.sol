@@ -17,7 +17,7 @@ contract HMToken is HMTokenInterface {
     /// total amount of tokens
     uint256 public totalSupply;
 
-    uint256 private constant MAX_UINT256 = 2**256 - 1;
+    uint256 private constant MAX_UINT256 = ~uint256(0);
     uint256 private constant BULK_MAX_VALUE = 1000000000 * (10 ** 18);
     uint32  private constant BULK_MAX_COUNT = 100;
 
@@ -47,13 +47,13 @@ contract HMToken is HMTokenInterface {
 
     function transferFrom(address _spender, address _to, uint256 _value) public override returns (bool success) {
         uint256 _allowance = allowed[_spender][msg.sender];
-        require(balances[_spender] >= _value && _allowance >= _value, "Spender balance or allowance too low");
+        require(_allowance >= _value, "Spender allowance too low");
         require(_to != address(0), "Can't send tokens to uninitialized address");
 
-        balances[_spender] = balances[_spender].sub(_value);
+        balances[_spender] = balances[_spender].sub(_value, "Spender balance too low");
         balances[_to] = balances[_to].add(_value);
 
-        if (_allowance < MAX_UINT256) { // Special case to approve unlimited transfers
+        if (_allowance != MAX_UINT256) { // Special case to approve unlimited transfers
             allowed[_spender][msg.sender] = allowed[_spender][msg.sender].sub(_value);
         }
 
@@ -113,7 +113,6 @@ contract HMToken is HMTokenInterface {
         }
         require(_bulkValue < BULK_MAX_VALUE, "Bulk value too high");
 
-        _bulkCount = 0;
         bool _success;
         for (uint i = 0; i < _tos.length; ++i) {
             _success = transferQuiet(_tos[i], _values[i]);
@@ -135,7 +134,6 @@ contract HMToken is HMTokenInterface {
         }
         require(_bulkValue < BULK_MAX_VALUE, "Bulk value too high");
 
-        _bulkCount = 0;
         bool _success;
         for (uint i = 0; i < _spenders.length; ++i) {
             _success = increaseApproval(_spenders[i], _values[i]);
@@ -153,7 +151,7 @@ contract HMToken is HMTokenInterface {
         if (_to == address(this)) return false; // Preclude sending tokens to the contract.
         if (balances[msg.sender] < _value) return false;
 
-        balances[msg.sender] = balances[msg.sender].sub(_value);
+        balances[msg.sender] = balances[msg.sender] - _value;
         balances[_to] = balances[_to].add(_value);
 
         emit Transfer(msg.sender, _to, _value);

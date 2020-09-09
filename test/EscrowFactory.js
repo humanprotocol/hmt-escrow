@@ -16,7 +16,7 @@ contract('EscrowFactory', (accounts) => {
 
   it('sets eip20 address given to constructor', async () => {
     try {
-      const address = await EscrowFactory.getEIP20.call();
+      const address = await EscrowFactory.eip20.call();
       assert.equal(address, HMT.address);
     } catch (ex) {
       assert(false);
@@ -35,19 +35,19 @@ contract('EscrowFactory', (accounts) => {
 
     it('increases counter after new escrow is created', async () => {
       try {
-        const initialCounter = await EscrowFactory.getCounter();
+        const initialCounter = await EscrowFactory.counter();
         assert.equal(initialCounter.toNumber(), 0);
 
         tx1 = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
         console.log("CreateEscrow1 costs: " + tx1.receipt.gasUsed + " wei.");
 
-        const counterAfterFirstEscrow = await EscrowFactory.getCounter();
+        const counterAfterFirstEscrow = await EscrowFactory.counter();
         assert.equal(counterAfterFirstEscrow.toNumber(), 1);
 
         tx2 = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
         console.log("CreateEscrow2 costs: " + tx2.receipt.gasUsed + " wei.");
 
-        const counterAfterSecondEscrow = await EscrowFactory.getCounter();
+        const counterAfterSecondEscrow = await EscrowFactory.counter();
         assert.equal(counterAfterSecondEscrow.toNumber(), 2);
 
         const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed;
@@ -59,12 +59,12 @@ contract('EscrowFactory', (accounts) => {
 
     it('finds the newly created escrow from deployed escrow', async () => {
       try {
-        const initialCounter = await EscrowFactory.getCounter();
+        const initialCounter = await EscrowFactory.counter();
         assert.equal(initialCounter.toNumber(), 0);
 
         tx = await EscrowFactory.createEscrow(trustedHandlers, { from: accounts[0] });
         console.log("CreateEscrow costs: " + tx.receipt.gasUsed + " wei.");
-        const escrowAddress = await EscrowFactory.getLastEscrow();
+        const escrowAddress = await EscrowFactory.lastEscrow();
         const hasEscrow = await EscrowFactory.hasEscrow(escrowAddress);
         assert.equal(hasEscrow, true);
       } catch (ex) {

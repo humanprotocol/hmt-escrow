@@ -61,7 +61,7 @@ def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> E
         Enum: returns the status as an enumeration.
 
     """
-    status_ = escrow_contract.functions.getStatus().call(
+    status_ = escrow_contract.functions.status().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
     return Status(status_ + 1)
@@ -95,7 +95,7 @@ def manifest_url(
         str: returns the manifest url of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getManifestUrl().call(
+    return escrow_contract.functions.manifestUrl().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
 
@@ -128,7 +128,7 @@ def manifest_hash(
         str: returns the manifest hash of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getManifestHash().call(
+    return escrow_contract.functions.manifestHash().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
 
@@ -153,7 +153,7 @@ def launcher(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) ->
         str: returns the address of who launched the job.
 
     """
-    return escrow_contract.functions.getLauncher().call(
+    return escrow_contract.functions.launcher().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
 
@@ -1096,7 +1096,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        final_results_url = self.job_contract.functions.getFinalResultsUrl().call(
+        final_results_url = self.job_contract.functions.finalResultsUrl().call(
             {"from": self.gas_payer, "gas": Wei(gas)}
         )
         return download(final_results_url, priv_key)
@@ -1342,7 +1342,7 @@ class Job:
             returns True if the last bulk payout has succeeded.
 
         """
-        return self.job_contract.functions.getBulkPaid().call(
+        return self.job_contract.functions.bulkPaid().call(
             {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
@@ -1369,7 +1369,7 @@ class Job:
             str: returns an escrow contract address.
 
         """
-        return self.factory_contract.functions.getLastEscrow().call(
+        return self.factory_contract.functions.lastEscrow().call(
             {"from": self.gas_payer, "gas": Wei(gas)}
         )
 

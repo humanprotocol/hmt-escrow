@@ -20,10 +20,10 @@ contract('Escrow', (accounts) => {
     Escrow = await EscrowAbstraction.new(HMT.address, canceler, 5, trustedHandlers, { from: launcher });
   });
 
-  describe('calling getTokenAddress', () => {
+  describe('calling eip20', () => {
     it('returns correct token address', async () => {
       try {
-        const address = await Escrow.getTokenAddress.call();
+        const address = await Escrow.eip20.call();
         assert.equal(address, HMT.address);
       } catch (ex) {
         assert(false);
@@ -34,7 +34,7 @@ contract('Escrow', (accounts) => {
   describe('initial', () => {
     it('status is launched', async () => {
       try {
-        const initialStatus = await Escrow.getStatus.call();
+        const initialStatus = await Escrow.status.call();
         assert.equal(0, initialStatus);
       } catch (ex) {
         assert(false);
@@ -51,7 +51,7 @@ contract('Escrow', (accounts) => {
     });
 
     it('launcher is 0', async () => {
-      const launcher = await Escrow.getLauncher.call();
+      const launcher = await Escrow.launcher.call();
       assert.equal(launcher, '0x61F9F0B31eacB420553da8BCC59DC617279731Ac');
     });
 
@@ -164,10 +164,10 @@ contract('Escrow', (accounts) => {
       await HMT.transfer(Escrow.address, 100, { from: canceler });
       tx = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
       console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
-      const contractReputationOracle = await Escrow.getReputationOracle.call();
-      const contractRecordingOracle = await Escrow.getRecordingOracle.call();
-      const contractManifestUrl = await Escrow.getManifestUrl.call();
-      const contractManifestHash = await Escrow.getManifestHash.call();
+      const contractReputationOracle = await Escrow.reputationOracle.call();
+      const contractRecordingOracle = await Escrow.recordingOracle.call();
+      const contractManifestUrl = await Escrow.manifestUrl.call();
+      const contractManifestHash = await Escrow.manifestHash.call();
 
       assert.equal(contractReputationOracle, reputationOracle);
       assert.equal(contractRecordingOracle, recordingOracle);
@@ -179,7 +179,7 @@ contract('Escrow', (accounts) => {
       await HMT.transfer(Escrow.address, 100, { from: canceler });
       tx = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
       console.log("Setup costs: " + tx.receipt.gasUsed + " wei.");
-      const status = await Escrow.getStatus.call();
+      const status = await Escrow.status.call();
       assert.equal(1, status);
     });
   });
@@ -280,7 +280,7 @@ contract('Escrow', (accounts) => {
         console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
         tx2 = await Escrow.cancel({ from: canceler });
         console.log("Cancel costs: " + tx2.receipt.gasUsed + " wei.");
-        const contractStatus = await Escrow.getStatus.call();
+        const contractStatus = await Escrow.status.call();
         assert.equal(contractStatus, 5);
       } catch (ex) {
         assert(false);
@@ -328,7 +328,7 @@ contract('Escrow', (accounts) => {
     it('runs from setup to bulkPayOut to complete correctly', async () => {
       try {
         const toAddress = [externalAddress];
-        const initialStatus = await Escrow.getStatus.call();
+        const initialStatus = await Escrow.status.call();
         assert.equal(initialStatus, 0);
 
         // Transer funds to escrow
@@ -337,19 +337,19 @@ contract('Escrow', (accounts) => {
         // Setup escrow
         tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
         console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
-        const setupStatus = await Escrow.getStatus.call();
+        const setupStatus = await Escrow.status.call();
         assert.equal(setupStatus, 1);
 
         const amountToPay = [100];
         tx2 = await Escrow.bulkPayOut(toAddress, amountToPay, url, hash, '000', { from: reputationOracle });
         console.log("BulkPayOut costs: " + tx2.receipt.gasUsed + " wei.");
-        const paidStatus = await Escrow.getStatus.call();
+        const paidStatus = await Escrow.status.call();
         assert.equal(paidStatus, 3);
 
         // Complete escrow
         tx3 = await Escrow.complete({ from: reputationOracle });
         console.log("Complete costs: " + tx3.receipt.gasUsed + " wei.");
-        const completeStatus = await Escrow.getStatus.call();
+        const completeStatus = await Escrow.status.call();
         assert.equal(completeStatus, 4);
 
         const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed + tx3.receipt.gasUsed;
@@ -362,7 +362,7 @@ contract('Escrow', (accounts) => {
     it('runs from setup to bulkPayOut to complete correctly with multiple addresses', async () => {
       try {
         const toAddresses = [externalAddress, launcher];
-        const initialStatus = await Escrow.getStatus.call();
+        const initialStatus = await Escrow.status.call();
         assert.equal(initialStatus, 0);
 
         // Transer funds to escrow
@@ -371,19 +371,19 @@ contract('Escrow', (accounts) => {
         // Setup escrow
         tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
         console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
-        const setupStatus = await Escrow.getStatus.call();
+        const setupStatus = await Escrow.status.call();
         assert.equal(setupStatus, 1);
 
         const amountsToPay = [50, 50];
         tx2 = await Escrow.bulkPayOut(toAddresses, amountsToPay, url, hash, '000', { from: reputationOracle });
         console.log("BulkPayOut costs: " + tx2.receipt.gasUsed + " wei.");
-        const paidStatus = await Escrow.getStatus.call();
+        const paidStatus = await Escrow.status.call();
         assert.equal(paidStatus, 3);
 
         // Complete escrow
         tx3 = await Escrow.complete({ from: reputationOracle });
         console.log("Complete costs: " + tx3.receipt.gasUsed + " wei.");
-        const completeStatus = await Escrow.getStatus.call();
+        const completeStatus = await Escrow.status.call();
         assert.equal(completeStatus, 4);
 
         const totalGas = tx1.receipt.gasUsed + tx2.receipt.gasUsed + tx3.receipt.gasUsed;
