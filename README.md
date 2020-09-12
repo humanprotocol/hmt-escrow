@@ -186,3 +186,9 @@ The escrow factory and related code are under active development, and escrow fac
 Although all code goes through internal reviews before being committed, you should assume the current code in master has not been externally audited to the same degree as the token contract. 
 
 When a stable 1.0 version of the escrow factory contract is released, this section of the README will be updated with a link to audit results for that githash.
+
+## Note to bug hunters and those deploying to production
+
+The docker-compose.yml references a default minio username and password for development. minio as used here is an internal cache for low-privilege, publicly readable, encrypted data. Including these default credentials for development is intentional. 
+
+When deploying to a production environment you are expected to set your own credentials based on the rules applied to minio access within your cluster.
