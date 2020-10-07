@@ -23,15 +23,15 @@ class ETHInterface {
   }
 
   async send_txn(txn, pub_key, priv_key) {
-  let gas = await txn.estimateGas({from: pub_key})
-    let options = {
-      from: pub_key,
-      data: txn.encodeABI(),
-      gas : gas,
-      nonce: this.web3Instance.utils.toHex(this.web3Instance.eth.getTransactionCount(pub_key))
-    }
-  let signedTransaction = await this.web3Instance.eth.accounts.signTransaction(options, priv_key)
-  return await this.web3Instance.eth.sendSignedTransaction(signedTransaction.rawTransaction)
+    let gas = await txn.estimateGas({from: pub_key})
+      let options = {
+        from: pub_key,
+        data: txn.encodeABI(),
+        gas : gas,
+        nonce: this.web3Instance.utils.toHex(this.web3Instance.eth.getTransactionCount(pub_key))
+      }
+    let signedTransaction = await this.web3Instance.eth.accounts.signTransaction(options, priv_key)
+    return await this.web3Instance.eth.sendSignedTransaction(signedTransaction.rawTransaction)
   } 
 
   get_factory(factory_addr) {
