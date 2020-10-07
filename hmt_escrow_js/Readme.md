@@ -34,10 +34,9 @@ Use the module directly (launch new job):
                         rep_oracle_pub_key, 
                         manifest_url)
     job.launch()
-    res.send({message: "Pending Verification & Upload"})
+    console.log("Pending Verification & Upload")
   }
   catch(e) { 
     console.log(e)
-    return res.status(500).send({error: "Something went wrong"})
   }
 ```
