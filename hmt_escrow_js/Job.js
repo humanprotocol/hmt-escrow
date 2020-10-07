@@ -13,7 +13,7 @@ class Job {
     this._rep_oracle_pub_key = rep_oracle_pub_key
     this._manifest_url = manifest_url
 
-    this.serialized_manifest = this._download_manifest(manifest_json)
+    this.serialized_manifest = this._download_manifest()
     this.amount = null
 
     // Validate manifest
@@ -27,7 +27,9 @@ class Job {
     this._process_manifest()
   }
 
-  _download_manifest(link) {
+  _download_manifest() {
+    // Download manifest if URL
+    // Support for future stuff too like s3, direct upload etc.
     request(this._manifest_url, function (error, response, body) {
       if (!error && response.statusCode == 200) {
         return JSON.parse(body);
@@ -52,6 +54,11 @@ class Job {
     }
   }
 
+  _process_manifest() {
+    this.amount = Math.round(this.serialized_manifest.task_bid_price * this.serialized_manifest.job_total_tasks)
+  }
+
+  
   async launch() {
     // Only handling launch case where fresh factory is created for each escrow, in future, expand this to mimic python lib
     // Create Factory
@@ -85,12 +92,6 @@ class Job {
                                   "") 
   }
 
-  _process_manifest() {
-    // Download manifest if URL
-    // Support for future stuff too like s3, direct upload etc.
-    // Download & Parse Manifest if URL
-    this.amount = Math.round(this.serialized_manifest.task_bid_price * this.serialized_manifest.job_total_tasks)
-  }
 }
 
 module.exports = Job
