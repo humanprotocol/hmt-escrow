@@ -8,21 +8,26 @@ MNEMONIC=
 NETWORK="rinkeby"
 ```
 
+
 Install Dependencies:
 
 ```bash
 yarn install
 ```
 
-Either run this as a http-server:
-```
-npm run start
+To generate pydantic schema,
+do:
+```python
+from basemodels.pydantic.manifest import Manifest
+js_model = Manifest.schema_json(indent=2)
+with open('manifest-schema-pydantic.json', 'w', encoding='utf-8') as f:
+    json.dump(js_model, f, ensure_ascii=False)
 ```
 
-or use the module directly (launch new job):
+Use the module directly (launch new job):
 
 ```js
-  const Job = require('./Job')
+  const { Job } = require('hmt_escrow_js')
   try {
     const job = new Job(gas_payer, 
                         gas_payer_priv, 

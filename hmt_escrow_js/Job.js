@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const keythereum = require("keythereum")
 const ETHInterface = require('./ETHInterface')
 const Ajv = require('ajv')

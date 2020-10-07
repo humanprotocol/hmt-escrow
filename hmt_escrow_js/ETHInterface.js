@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const EscrowABI= require('./ABIs/Escrow')
 const EscrowFactoryABI = require('./ABIs/EscrowFactory')
 const HMTTokenInterfaceABI = require('./ABIs/HMTTokenInterface')

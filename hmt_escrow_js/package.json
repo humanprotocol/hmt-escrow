@@ -2,13 +2,11 @@
   "name": "hmt-escrow-form-js",
   "version": "1.0.0",
   "description": "JS File for HMT-ESCROW-FORM",
-  "main": "server.js",
+  "main": "index.js",
   "author": "Harjyot Singh",
   "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "babel-node server.js",
-    "start:dev": "nodemon --exec babel-node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@babel/cli": "^7.11.6",
