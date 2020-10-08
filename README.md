@@ -192,3 +192,4 @@ When a stable 1.0 version of the escrow factory contract is released, this secti
 The docker-compose.yml references a default minio username and password for development. minio as used here is an internal cache for low-privilege, publicly readable, encrypted data. Including these default credentials for development is intentional. 
 
 When deploying to a production environment you are expected to set your own credentials based on the rules applied to minio access within your cluster.
+
