@@ -7,11 +7,12 @@ const manifestSchema = require('./manifest-schema-pydantic')
 const request = require('request');
 
 class Job {
-  constructor(gas_payer, gas_payer_priv, rep_oracle_pub_key, manifest_url) {
+  constructor(gas_payer, gas_payer_priv, rep_oracle_pub_key, manifest_url, factory_addr=null) {
     this._gas_payer = gas_payer
     this._gas_payer_priv = gas_payer_priv
     this._rep_oracle_pub_key = rep_oracle_pub_key
     this._manifest_url = manifest_url
+    this._factory_addr = factory_addr
 
     this.serialized_manifest = this._download_manifest()
     this.amount = null
@@ -60,17 +61,16 @@ class Job {
 
   
   async launch() {
-    // Only handling launch case where fresh factory is created for each escrow, in future, expand this to mimic python lib
-    // Create Factory
-    const factory_addr = await ETHInterface.init_factory(this._gas_payer, this._gas_payer_priv)
-    if(!factory_addr) {
-      throw Error('Could not deploy factory')
+    // Create Factory if no factory address provided
+    if (!this._factory_addr) {
+      this._factory_addr = await ETHInterface.init_factory(this._gas_payer, this._gas_payer_priv)
     }
-    const factory = await ETHInterface.get_factory(factory_addr)
+
+    const factory = await ETHInterface.get_factory(this.factory_addr)
 
     const trusted_handler = [this._gas_payer]
-    // Initialise Escrow, given a particular factory address
-    const escrow_addr = await ETHInterface.init_escrow(factory, this._gas_payer, this._gas_payer_priv)
+    // Initialise Escrow, given a particular factory
+    const escrow_addr = await ETHInterface.init_escrow(factory, trusted_handler, this._gas_payer, this._gas_payer_priv)
     const escrow = await ETHInterface.get_escrow(escrow_addr)
 
     // Setup job (eq. job.setup())
@@ -89,9 +89,11 @@ class Job {
                                   Math.round(this.serialized_manifest.oracle_stake * 100),
                                   Math.round(this.serialized_manifest.oracle_stake * 100),
                                   this._manifest_url,
-                                  "") 
+                                  "",
+                                  this._gas_payer,
+                                  this._gas_payer_priv)
+                               
   }
-
 }
 
 module.exports = Job
