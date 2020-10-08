@@ -11,8 +11,6 @@ matrix:
   include:
     - language: python
       python: 3.8
-      before_script:
-        - cd backend/tests
       script: "./bin/ci"
       deploy:
         - provider: pypi
@@ -28,7 +26,7 @@ matrix:
     - language: node_js
       node_js: 12
       before_script:
-        - cd ./hmt_escrow_js && yarn install
+        - (cd ./hmt_escrow_js && yarn install)
       script: ./hmt_escrow_js/bin/ci
       deploy:
         - provider: npm
