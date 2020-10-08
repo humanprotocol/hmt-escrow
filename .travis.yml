@@ -26,7 +26,10 @@ matrix:
 
     - language: node_js
       node_js: 12
-      script: ./hmt_escrow_js/bin/ci
+      script:
+        - yarn install
+        - npm run abis
+        - ./hmt_escrow_js/bin/ci
       deploy:
         - provider: npm
           edge: true # opt in to dpl v2
@@ -34,7 +37,7 @@ matrix:
           access: public
           tag: alpha
           on:
-            branch: master
+            branch: npm-publish-js
 
 
 notifications:
