@@ -1,14 +1,13 @@
 require('dotenv').config()
 
-const EscrowABI= require('./ABIs/Escrow')
-const EscrowFactoryABI = require('./ABIs/EscrowFactory')
-const HMTTokenInterfaceABI = require('./ABIs/HMTTokenInterface')
 
 const HDWalletProvider = require("truffle-hdwallet-provider")
 const web3 = require('web3')
 const isUrl = require('is-url')
 
-let HMTOKEN_ADDR = process.env.HMTOKEN_ADDR || "0x4C18A2E51edC5043e9c4B6b0757990A4Ac13797f"
+const Contracts = require('./Contracts')
+
+let HMTOKEN_ADDR = process.env.HMTOKEN_ADDR || "0x4dCf5ac4509888714dd43A5cCc46d7ab389D9c23"
 
 class ETHInterface {
   constructor(MNEMONIC, INFURA_KEY, NETWORK) {
@@ -35,24 +34,24 @@ class ETHInterface {
   } 
 
   get_factory(factory_addr) {
-    return new this.web3Instance.eth.Contract(EscrowFactoryABI.abi, factory_addr)
+    return new this.web3Instance.eth.Contract(Contracts.get_contract_abi('EscrowFactory'), factory_addr)
   }
 
   get_escrow(escrow_addr) {
-    return new this.web3Instance.eth.Contract(EscrowABI.abi, escrow_addr)
+    return new this.web3Instance.eth.Contract(Contracts.get_contract_abi('Escrow'), escrow_addr)
   }
 
   get_hmt_token() {
-    return new this.web3Instance.eth.Contract(HMTTokenInterfaceABI.abi, HMTOKEN_ADDR)
+    return new this.web3Instance.eth.Contract(Contracts.get_contract_abi('HMTokenInterface'), HMTOKEN_ADDR)
   }
 
   async init_factory(pub_key, priv_key) {
-    const factory = new this.web3Instance.eth.Contract(EscrowFactoryABI.abi)
+    const factory = new this.web3Instance.eth.Contract(Contracts.get_contract_abi('EscrowFactory'))
 
     try {
       let handle = await this.send_txn(
         factory.deploy({
-          data: '0x' + EscrowFactoryABI.bytecode,
+          data: '0x' + Contracts.get_contract_bytecode('EscrowFactory'),
           arguments: [HMTOKEN_ADDR]
         }),
         pub_key, 

@@ -2,11 +2,6 @@ const path = require('path')
 const fs = require('fs')
 const solc = require('solc')
 
-function get_contract_interface(contract_name) {
-  // Just Contract name without the '.sol'
-  return compiledContracts[`${ contract_name }.sol`]
-}
-
 class Contracts {
   constructor(contractPath='../contracts') {
     const contractsPath = path.resolve(__dirname, contractPath)
@@ -54,4 +49,4 @@ class Contracts {
   }
 }
 
-module.exports = Contracts
+module.exports = new Contracts()
