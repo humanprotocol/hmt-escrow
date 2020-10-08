@@ -1,6 +1,6 @@
 {
   "name": "@hcaptcha/hmt-escrow-js",
-  "version": "1.0.0-a1",
+  "version": "1.0.0-alpha.1",
   "description": "Hmt-escrow JS library",
   "main": "index.js",
   "author": "Harjyot Singh",

@@ -31,6 +31,8 @@ matrix:
           edge: true # opt in to dpl v2
           src: ./hmt_escrow_js
           access: public
+          tags: [alpha]
+          cleanup: false
           api_token:
             secure: "oy91VGV8b0o36dfrrE2+NlFTBBRGb0gUd0f24CcrDV9W66eNPYxkZDzpWvXsPr4b4NSY9QgN8h3RYsuWIKNCby/DgME+/bgw/VmxbG0OlPcR3CaaOqdqd+o7+hpkcvs1LQYuKJjXcz5vqLB5Ch5Xg3V+hnkL4z1l1Hku0hpdKLx/kuLAmfWa2cOb2EET3LHGSIIvouwAtty4zVnBFXUNKEuC7uMcVwkXlFLjgd/7xgsfgd2Gmx/A//rhbmOeiZr8NgEFa2r6YFmyZ0HxSmeiXKmgM2/01A4qxbZ/bewiZFIFk07VVptovwPuXvbl8ed2SC95FCm/nYOU2GrDPvofV6/0GgKmIkFtfUqjICTyB+qU3nlRNIOd1SJH5q2gi4HgpbY66Rc3A3W3ISdvi/2PZ2OB/P+APkWFBxIYviYXJqiNggIgM431nM5QXOBnVGXGRY6ajEpA+EtlFH8WZKLnnYajGlqnmzpzgGkmYoXvkhhycDMgV5LJTthqOzvEA9/V4Fj8+DcPeyrZLLyJeBgN2UihHerGrcljkFyUg7UcsEdfeEbR9yU98mL/Gd9WfXo83aKQT5lLvk8+AIWhikEPogu8iO7wxkF8rume262a0OBMP73EBqYnzDCldzvWymbyfl47P0boZGxDeN1aHFp11fatvbBPUcfy7Gc8OsqOEgI="
           on:
