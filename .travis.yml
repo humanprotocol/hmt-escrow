@@ -34,7 +34,7 @@ matrix:
           access: public
           tag: alpha
           on:
-            branch: npm-publish-js
+            branch: master
 
 
 notifications:
