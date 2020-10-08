@@ -1,7 +1,7 @@
 {
-  "name": "hmt-escrow-form-js",
+  "name": "hmt-escrow-js",
   "version": "1.0.0",
-  "description": "JS File for HMT-ESCROW-FORM",
+  "description": "Hmt-escrow JS library",
   "main": "index.js",
   "author": "Harjyot Singh",
   "license": "MIT",
