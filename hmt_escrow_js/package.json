@@ -23,6 +23,7 @@
     "keythereum": "^1.2.0",
     "nodemon": "^2.0.4",
     "request": "^2.88.2",
+    "solc": "0.6.2",
     "truffle-hdwallet-provider": "^1.0.17",
     "web3": "2.0.0-alpha.1"
   }
