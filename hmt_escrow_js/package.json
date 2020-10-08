@@ -1,6 +1,6 @@
 {
   "name": "@hcaptcha/hmt-escrow-js",
-  "version": "1.0.0a1",
+  "version": "1.0.0-a1",
   "description": "Hmt-escrow JS library",
   "main": "index.js",
   "author": "Harjyot Singh",
@@ -26,5 +26,13 @@
     "solc": "0.6.2",
     "truffle-hdwallet-provider": "^1.0.17",
     "web3": "2.0.0-alpha.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hCaptcha/hmt-escrow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hCaptcha/hmt-escrow/issues"
+  },
+  "homepage": "https://github.com/hCaptcha/hmt-escrow#readme"
 }
