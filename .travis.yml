@@ -36,8 +36,10 @@ matrix:
           edge: true # opt in to dpl v2
           access: public
           tag: alpha
-          on:
-            branch: npm-publish-js
+          # To deploy a new js lib version, increase the package.json version in hmt_escrow_js
+          # and uncomment the below with your branch name
+          # on:
+          #   branch: npm-publish-js
 
 
 notifications:
