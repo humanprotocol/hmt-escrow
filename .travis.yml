@@ -29,7 +29,6 @@ matrix:
       script:
         - cd hmt_escrow_js
         - yarn install
-        - npm run abis
         - npm run copy-contracts
         - ./hmt_escrow_js/bin/ci
       deploy:
