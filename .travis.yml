@@ -27,8 +27,10 @@ matrix:
     - language: node_js
       node_js: 12
       script:
+        - cd hmt_escrow_js
         - yarn install
         - npm run abis
+        - npm run copy-contracts
         - ./hmt_escrow_js/bin/ci
       deploy:
         - provider: npm
