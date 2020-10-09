@@ -34,7 +34,6 @@ matrix:
       deploy:
         - provider: npm
           edge: true # opt in to dpl v2
-          src: ./hmt_escrow_js
           access: public
           tag: alpha
           on:
