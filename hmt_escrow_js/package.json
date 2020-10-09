@@ -34,5 +34,7 @@
     "url": "https://github.com/hCaptcha/hmt-escrow/issues"
   },
   "homepage": "https://github.com/hCaptcha/hmt-escrow#readme",
-  "devDependencies": {}
+  "devDependencies": {
+    "eslint": "^7.10.0"
+  }
 }

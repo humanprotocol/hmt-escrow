@@ -14,7 +14,7 @@ class Job {
     this._manifest_url = manifest_url
     this._factory_addr = factory_addr
 
-    this.serialized_manifest = this._download_manifest()
+    this._serialized_manifest = this._download_manifest()
     this.amount = null
 
     // Validate manifest
@@ -50,13 +50,13 @@ class Job {
   _validate_manifest() {
     const ajv = new Ajv()
     const validate = ajv.compile(manifestSchema)
-    if(!validate(this.serialized_manifest)) {
+    if(!validate(this._serialized_manifest)) {
       throw new Error("Manifest invalid")
     }
   }
 
   _process_manifest() {
-    this.amount = Math.round(this.serialized_manifest.task_bid_price * this.serialized_manifest.job_total_tasks)
+    this.amount = Math.round(this._serialized_manifest.task_bid_price * this._serialized_manifest.job_total_tasks)
   }
 
   
@@ -66,7 +66,7 @@ class Job {
       this._factory_addr = await ETHInterface.init_factory(this._gas_payer, this._gas_payer_priv)
     }
 
-    const factory = await ETHInterface.get_factory(this.factory_addr)
+    const factory = await ETHInterface.get_factory(this._factory_addr)
 
     const trusted_handler = [this._gas_payer]
     // Initialise Escrow, given a particular factory
@@ -80,14 +80,14 @@ class Job {
     await ETHInterface.transfer_hmt(hmttoken_contract, 
                                     escrow_addr,
                                     Math.round(Math.pow(this.amount * 10, 100)),
-                                    this.gas_payer, 
+                                    this._gas_payer, 
                                     this._gas_payer_priv)
     // Setup Job
     await ETHInterface.setup_job(escrow,
-                                  this.serialized_manifest.reputation_oracle_addr,
-                                  this.serialized_manifest.recording_oracle_addr,
-                                  Math.round(this.serialized_manifest.oracle_stake * 100),
-                                  Math.round(this.serialized_manifest.oracle_stake * 100),
+                                  this._serialized_manifest.reputation_oracle_addr,
+                                  this._serialized_manifest.recording_oracle_addr,
+                                  Math.round(this._serialized_manifest.oracle_stake * 100),
+                                  Math.round(this._serialized_manifest.oracle_stake * 100),
                                   this._manifest_url,
                                   "",
                                   this._gas_payer,
