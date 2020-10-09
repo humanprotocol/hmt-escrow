@@ -19,10 +19,10 @@ To start using this, you'll need to install it into your project via one of the 
 
 ```bash
 # with Yarn
-yarn install hmt-escrow-js
+yarn install @hcaptcha/hmt-escrow-js@1.0.0-alpha.5
 
 # Using NPM
-npm yarn install --save hmt-escrow-js
+npm yarn install --save @hcaptcha/hmt-escrow-js@1.0.0-alpha.5
 ```
 
 
@@ -43,6 +43,20 @@ npm yarn install --save hmt-escrow-js
   }
 ```
 
+# Deploying this lib
+
+Right now we have auto deployments disabled while we're in a test phase, until we have testing, better docs, etc.
+
+To do this manually, go into the root `.travis.yaml` file and uncomment:
+
+```yaml
+  # on:
+  #   branch: npm-publish-js
+```
+
+And specify your branch name.  We will make this better in the near future when we have tests in this repo and can bump versions in both python and js to the same version based on the git tag.
+
+
 # Contributing / Development
 
 ### Generating JSON schema from basemodels
@@ -53,4 +67,3 @@ js_model = Manifest.schema_json(indent=2)
 with open('manifest-schema-pydantic.json', 'w', encoding='utf-8') as f:
     json.dump(js_model, f, ensure_ascii=False)
 ```
-
