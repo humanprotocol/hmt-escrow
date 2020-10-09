@@ -3,8 +3,14 @@ const fs = require('fs')
 const solc = require('solc')
 
 class Contracts {
-  constructor(contractPath='../contracts') {
-    const contractsPath = path.resolve(__dirname, contractPath)
+  constructor(contractFolderPath='../contracts') {
+    let contractsPath = null
+
+    contractsPath = path.resolve(__dirname, contractFolderPath)
+    if(!fs.existsSync(contractsPath)) {
+      // Hack for package
+      contractsPath = path.resolve(__dirname, 'contracts')
+    }
     const fileNames = fs.readdirSync(contractsPath)
 
     const contractSources = fileNames.reduce(
