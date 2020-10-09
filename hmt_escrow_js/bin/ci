@@ -1,0 +1,10 @@
+#!/bin/bash
+
+cd $(dirname $0)/..
+
+IMAGE=hmt_escrow_js
+
+docker build -t $IMAGE .
+
+# TODO: add tests
+# docker run $IMAGE ./bin/test

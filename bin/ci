@@ -1,8 +1,12 @@
 #!/bin/bash
 set -exu
+
 ./bin/stop
+
 docker-compose build
 docker-compose run --no-deps -e CI=true job './bin/lint'
 docker-compose run -w /work job
+
 ./bin/stop
+
 ./bin/generate-docs

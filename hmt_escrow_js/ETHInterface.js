@@ -30,7 +30,7 @@ class ETHInterface {
         nonce: this.web3Instance.utils.toHex(this.web3Instance.eth.getTransactionCount(pub_key))
       }
     let signedTransaction = await this.web3Instance.eth.accounts.signTransaction(options, priv_key)
-    return await this.web3Instance.eth.sendSignedTransaction(signedTransaction.rawTransaction)
+    return this.web3Instance.eth.sendSignedTransaction(signedTransaction.rawTransaction)
   } 
 
   get_factory(factory_addr) {
@@ -59,37 +59,37 @@ class ETHInterface {
       
       return handle.contractAddress
     }
-    catch {
-      throw new Error("Factory Creation Failled")
+    catch (e) {
+      throw new Error("Factory creation failled due to: " + e.message)
     }
     
   }
 
   async init_escrow(factory_contract, trusted_handlers, pub_key, priv_key) {
     try {
-      let handle = await this.send_txn(
+      await this.send_txn(
         factory_contract.methods.createEscrow(trusted_handlers),
         pub_key,
         priv_key
       )
       return await factory_contract.methods.lastEscrow.call({from: pub_key})
     }
-    catch {
-      throw new Error("Escrow creation Failed")
-    }
+    catch (e) {
+      throw new Error("Escrow creation failed due to: " + e.message)
+  }
   }
 
 
   async transfer_hmt(hmt_contract, escrow_addr, hmt_amount, pub_key, priv_key) {
     try {
-      let handle = await this.send_txn(
+      await this.send_txn(
         hmt_contract.methods.transfer(escrow_addr, hmt_amount),
         pub_key,
         priv_key
       )
     }
-    catch {
-      throw new Error("Failed to deposit HMT")
+    catch (e) {
+      throw new Error("Failed to deposit HMT due to: " + e.message)
     }
   }
 
@@ -103,7 +103,7 @@ class ETHInterface {
                   pub_key,
                   priv_key) {
     try {
-      let handle = await this.send_txn(
+        await this.send_txn(
         escrow_contract.methods.setup(rep_oracle,
                                       rec_oracle,
                                       rep_oracle_stake,
@@ -114,8 +114,8 @@ class ETHInterface {
         priv_key
       )
     }
-    catch {
-      throw new Error("Failed to Setup Job")
+    catch (e) {
+      throw new Error("Failed to setup job due to: " + e.message)
     }
   }
 

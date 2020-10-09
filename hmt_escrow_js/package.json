@@ -1,12 +1,13 @@
 {
-  "name": "hmt-escrow-form-js",
-  "version": "1.0.0",
-  "description": "JS File for HMT-ESCROW-FORM",
+  "name": "@hcaptcha/hmt-escrow-js",
+  "version": "1.0.0-alpha.5",
+  "description": "Hmt-escrow JS library",
   "main": "index.js",
   "author": "Harjyot Singh",
   "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "copy-contracts": "cp -r ../contracts ."
   },
   "dependencies": {
     "@babel/cli": "^7.11.6",
@@ -18,13 +19,22 @@
     "ajv": "^6.12.5",
     "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
     "is-url": "^1.2.4",
     "keythereum": "^1.2.0",
-    "nodemon": "^2.0.4",
     "request": "^2.88.2",
-    "solc": "0.6.2",
+    "solc": "^0.7.3",
     "truffle-hdwallet-provider": "^1.0.17",
     "web3": "2.0.0-alpha.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/hCaptcha/hmt-escrow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hCaptcha/hmt-escrow/issues"
+  },
+  "homepage": "https://github.com/hCaptcha/hmt-escrow#readme",
+  "devDependencies": {
+    "eslint": "^7.10.0"
   }
 }
