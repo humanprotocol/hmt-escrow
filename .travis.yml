@@ -30,7 +30,7 @@ matrix:
         - cd hmt_escrow_js
         - yarn install
         - npm run copy-contracts
-        - ./hmt_escrow_js/bin/ci
+        - ./bin/ci
       deploy:
         - provider: npm
           edge: true # opt in to dpl v2
