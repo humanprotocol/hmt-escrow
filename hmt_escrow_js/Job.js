@@ -15,7 +15,7 @@ class Job {
     this._factory_addr = factory_addr
 
     this._serialized_manifest = this._download_manifest()
-    this.amount = null
+    this._amount = null
 
     // Validate manifest
     this._validate_manifest()
@@ -56,7 +56,7 @@ class Job {
   }
 
   _process_manifest() {
-    this.amount = Math.round(this._serialized_manifest.task_bid_price * this._serialized_manifest.job_total_tasks)
+    this._amount = Math.round(this._serialized_manifest.task_bid_price * this._serialized_manifest.job_total_tasks)
   }
 
   
@@ -79,7 +79,7 @@ class Job {
     // Transfer HMT
     await ETHInterface.transfer_hmt(hmttoken_contract, 
                                     escrow_addr,
-                                    Math.round(Math.pow(this.amount * 10, 100)),
+                                    Math.round(Math.pow(this._amount * 10, 100)),
                                     this._gas_payer, 
                                     this._gas_payer_priv)
     // Setup Job
