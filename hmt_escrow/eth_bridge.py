@@ -52,12 +52,13 @@ def get_w3() -> Web3:
     >>> type(w3.provider)
     <class 'web3.providers.rpc.HTTPProvider'>
 
-    >>> os.environ['HMT_ETH_SERVER'] = "wss://localhost:8546"
+    >>> os.environ["HMT_ETH_SERVER"] = "wss://localhost:8546"
     >>> w3 = get_w3()
     >>> type(w3)
     <class 'web3.main.Web3'>
     >>> type(w3.provider)
     <class 'web3.providers.websocket.WebsocketProvider'>
+    >>> del os.environ["HMT_ETH_SERVER"]
 
     Returns:
         Web3: returns the web3 provider.
