@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eux
 
 # this script edits the sources allowing the autodoc to import them, runs the generation, then reverts the changes.
 
