@@ -8,7 +8,7 @@ from web3 import Web3
 from web3.providers.auto import load_provider_from_uri
 from web3.providers.eth_tester import EthereumTesterProvider
 from web3.types import TxReceipt
-from eth_typing import Address, ChecksumAddress, HexAddress, HexStr
+from eth_typing import Address, ChecksumAddress, HexAddress, HexStr, URI
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
 from web3._utils.transactions import wait_for_transaction_receipt
@@ -68,8 +68,10 @@ def get_w3() -> Web3:
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
 
-    provider = load_provider_from_uri(endpoint) if endpoint else EthereumTesterProvider()
-    
+    provider = (
+        load_provider_from_uri(URI(endpoint)) if endpoint else EthereumTesterProvider()
+    )
+
     w3 = Web3(provider)
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
     return w3
@@ -160,7 +162,7 @@ def get_escrow(escrow_addr: str) -> Contract:
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
 
     Deploying a new Job to the ethereum network succeeds.
-    
+
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> type(get_escrow(job.job_contract.address))
