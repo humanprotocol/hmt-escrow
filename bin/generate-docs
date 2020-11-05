@@ -9,7 +9,7 @@ if [ $# -eq 1 ] ; then
 fi
 
 mv hmt_escrow/eth_bridge.py hmt_escrow/eth_bridge.py.backup
-python sphinx-documentation/escape_code.py eth_bridge
+python3 sphinx-documentation/escape_code.py eth_bridge
 
 cd sphinx-documentation
 make $format
