@@ -24,24 +24,6 @@ matrix:
           on:
             tags: true
 
-    - language: node_js
-      node_js: 12
-      script:
-        - cd hmt_escrow_js
-        - yarn install
-        - npm run copy-contracts
-        - ./bin/ci
-      deploy:
-        - provider: npm
-          edge: true # opt in to dpl v2
-          access: public
-          tag: alpha
-          # To deploy a new js lib version, increase the package.json version in hmt_escrow_js
-          # and uncomment the below with your branch name
-          # on:
-          #   branch: npm-publish-js
-
-
 notifications:
   slack:
     secure: dZRSuoImcjxOKrsMDhVJo2CfbkVwp77P9tlOLmRhbSVBytdcMCPx39pZHKM87PTSAkyep5UnTQfZUiscwMF4UZMNB4pgFL8tnLYX0iM90mMbUFZFhrCX7dsgqT5rdMvulMb/MC55AGrU6BDOoheOAho0xtr5gZtlkfsHBS+FPIlY1NvPse8/4srzt34fMQef9GZYkZDs4xDUvO7dnoBnuiTMGErLdoSn6Qp8C9Q2v0CB4V6w9Tv2Ox8gKhyB5QYXBptprAvUiZ3hRCkNKaByd1GZXbtZNv4GPcsnMSlef4g4EK8ZgPicsXAi6Sxg+UG3mXlTIDZq0XqhJT8GBPoW0b0hLsgyyaGSD85SOf25z9JnrUZWp1iBM2Ydjp9Dd4RBwmC036BQOhjgVzYX5BH31YpIm4tjlTKWoAi2Pz2/F+L8NdqQR1bdDTb98uQzqFQtcf64alZz++KIFAWPaH0DCsGtskilx52Kr9TiTKeTim4IaHe/fpvwmNYX2kAzMQKDMuh5rU9iUUu4pKXipuJPKHgbi2bnGDLJ0Bt2YpAiRtz2Z9ZSdlNMiIHIRxH+PGD2jEMJpblWxIH432gJCX8rKvL7FelMBLWxNAzzsT1ox7q87SyXdLb/lI8xRwpJXcr9zzUoB8zY0UlJO/UkwrWC5RjB18UfDkbUEwHRrckwAGY=
