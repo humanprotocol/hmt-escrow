@@ -5,10 +5,10 @@ import unittest
 
 from solcx import compile_files
 from web3 import Web3
-from web3.providers import HTTPProvider
+from web3.providers.auto import load_provider_from_uri
 from web3.providers.eth_tester import EthereumTesterProvider
 from web3.types import TxReceipt
-from eth_typing import Address, ChecksumAddress, HexAddress, HexStr
+from eth_typing import Address, ChecksumAddress, HexAddress, HexStr, URI
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
 from web3._utils.transactions import wait_for_transaction_receipt
@@ -49,6 +49,16 @@ def get_w3() -> Web3:
     >>> w3 = get_w3()
     >>> type(w3)
     <class 'web3.main.Web3'>
+    >>> type(w3.provider)
+    <class 'web3.providers.rpc.HTTPProvider'>
+
+    >>> os.environ["HMT_ETH_SERVER"] = "wss://localhost:8546"
+    >>> w3 = get_w3()
+    >>> type(w3)
+    <class 'web3.main.Web3'>
+    >>> type(w3.provider)
+    <class 'web3.providers.websocket.WebsocketProvider'>
+    >>> del os.environ["HMT_ETH_SERVER"]
 
     Returns:
         Web3: returns the web3 provider.
@@ -57,7 +67,11 @@ def get_w3() -> Web3:
     endpoint = os.getenv("HMT_ETH_SERVER", "http://localhost:8545")
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
-    provider = HTTPProvider(endpoint) if endpoint else EthereumTesterProvider()
+
+    provider = (
+        load_provider_from_uri(URI(endpoint)) if endpoint else EthereumTesterProvider()
+    )
+
     w3 = Web3(provider)
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
     return w3
@@ -148,7 +162,7 @@ def get_escrow(escrow_addr: str) -> Contract:
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
 
     Deploying a new Job to the ethereum network succeeds.
-    
+
     >>> job.launch(rep_oracle_pub_key)
     True
     >>> type(get_escrow(job.job_contract.address))
