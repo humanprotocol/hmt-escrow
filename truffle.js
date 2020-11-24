@@ -1,7 +1,8 @@
 require('dotenv').config()
 
-const { INFURA_TOKEN, MNEMONIC, ETH_HOST, ETH_PORT } = process.env;
+const { INFURA_TOKEN, MNEMONIC, PRIV_KEY, ETH_HOST, ETH_PORT } = process.env;
 const HDWalletProvider = require('truffle-hdwallet-provider');
+const PrivateKeyProvider = require('./private-provider');
 
 module.exports = {
 
@@ -32,6 +33,10 @@ module.exports = {
       gas: 0x989680,
       gasPrice: 200000000000
     },
+    moonbase: {
+      provider: () => new PrivateKeyProvider(PRIV_KEY, 'https://rpc.testnet.moonbeam.network', 1287),
+      network_id: '1287',
+    }
   },
   compilers: {
     solc: {
