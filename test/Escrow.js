@@ -115,9 +115,9 @@ contract('Escrow', (accounts) => {
 
     it('succeeds when the contract launcher adds trusted handlers and a trusted handler stores results', async () => {
       try {
-        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
+        tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: launcher });
         console.log("Setup costs: " + tx1.receipt.gasUsed + " wei.");
-        tx2 = await Escrow.addTrustedHandlers([externalAddress], { from: canceler });
+        tx2 = await Escrow.addTrustedHandlers([externalAddress], { from: launcher });
         console.log("AddTrustedHandlers costs: " + tx2.receipt.gasUsed + " wei.");
         tx3 = await Escrow.storeResults(url, hash, { from: externalAddress });
         console.log("StoreResults costs: " + tx3.receipt.gasUsed + " wei.");
