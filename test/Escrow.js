@@ -50,9 +50,9 @@ contract('Escrow', (accounts) => {
       }
     });
 
-    it('launcher is 0', async () => {
-      const launcher = await Escrow.launcher.call();
-      assert.equal(launcher, '0x61F9F0B31eacB420553da8BCC59DC617279731Ac');
+    it('launcher returns the contract creator', async () => {
+      const launcher_val = await Escrow.launcher.call();
+      assert.equal(launcher, launcher_val);
     });
 
 
@@ -90,7 +90,7 @@ contract('Escrow', (accounts) => {
 
     it('succeeds if caller is a trusted handler', async () => {
       try {
-        tx1 = await Escrow.addTrustedHandlers([reputationOracle])
+        tx1 = await Escrow.addTrustedHandlers([reputationOracle], {from: launcher })
         console.log("AddTrustedHandlers costs: " + tx1.receipt.gasUsed + " wei.");
         tx2 = await Escrow.abort({ from: reputationOracle });
         console.log("Abort costs: " + tx2.receipt.gasUsed + " wei.");
@@ -98,10 +98,21 @@ contract('Escrow', (accounts) => {
       } catch (ex) {
         assert(false);
       }
-    })
+    });
   });
 
   describe('calling addTrustedHandlers', async () => {
+
+    it('fails if a non-contract creator tries to add trusted handler', async() => {
+      try {
+        tx1 = await Escrow.addTrustedHandlers([reputationOracle], {from: externalAddress })
+        console.log("AddTrustedHandlers costs: " + tx1.receipt.gasUsed + " wei.");
+        assert(false);
+      } catch (ex) {
+        assert(true);
+      }
+    });
+
     it('succeeds when the contract launcher adds trusted handlers and a trusted handler stores results', async () => {
       try {
         tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
