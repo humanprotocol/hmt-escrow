@@ -7,6 +7,8 @@ import "./SafeMath.sol";
 contract Escrow {
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
+    event Pending(string manifest, string hash);
+    
     enum EscrowStatuses {Launched, Pending, Partial, Paid, Complete, Cancelled}
     EscrowStatuses public status;
 
@@ -66,6 +68,7 @@ contract Escrow {
     }
 
     function addTrustedHandlers(address[] memory _handlers) public {
+        require(msg.sender == launcher, "Address calling cannot add trusted handllers");
         for (uint256 i = 0; i < _handlers.length; i++) {
             areTrustedHandlers[_handlers[i]] = true;
         }
@@ -223,7 +226,7 @@ contract Escrow {
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] memory _amounts) public returns (uint256, uint256) {
+    function finalizePayouts(uint256[] memory _amounts) internal returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {
@@ -246,6 +249,4 @@ contract Escrow {
         }
         return (reputationOracleFee, recordingOracleFee);
     }
-
-    event Pending(string manifest, string hash);
 }
