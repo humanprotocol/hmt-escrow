@@ -14,19 +14,19 @@ module.exports = {
       network_id: '*'
     },
     live: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://mainnet.infura.io/v3/${INFURA_TOKEN}`),
+      provider: () => new HDWalletProvider(MNEMONIC, `https://mainnet.infura.io/v3/${INFURA_TOKEN}`, 0, 10),
       network_id: '1',
     },
     kovan: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://kovan.infura.io/v3/${INFURA_TOKEN}`),
+      provider: () => new HDWalletProvider(MNEMONIC, `https://kovan.infura.io/v3/${INFURA_TOKEN}`, 0, 10),
       network_id: '2',
     },
     ropsten: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://ropsten.infura.io/v3/${INFURA_TOKEN}`),
+      provider: () => new HDWalletProvider(MNEMONIC, `https://ropsten.infura.io/v3/${INFURA_TOKEN}`, 0, 10),
       network_id: '3',
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://rinkeby.infura.io/v3/${INFURA_TOKEN}`),
+      provider: () => new HDWalletProvider(MNEMONIC, `https://rinkeby.infura.io/v3/${INFURA_TOKEN}`, 0, 10),
       network_id: '4',
       networkCheckTimeout: '100000',
       gas: 0x989680,
