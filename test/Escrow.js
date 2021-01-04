@@ -99,6 +99,18 @@ contract('Escrow', (accounts) => {
         assert(false);
       }
     });
+
+    it('transfer tokens to canceler if contract funded when abort is called', async () => {
+      try {
+        await HMT.transfer(Escrow.address, 100, { from: canceler });
+        assert.equal((await HMT.balanceOf.call(Escrow.address)).toNumber(), 100, "Escrow has not been properly funded.");
+        tx = await Escrow.abort({ from: canceler });
+        console.log(`Abort costs: ${tx.receipt.gasUsed} wei.`);
+        assert.equal((await HMT.balanceOf.call(Escrow.address)).toNumber(), 0, "Escrow has not been properly aborted.");
+      } catch (ex) {
+        assert(false);
+      }
+    });
   });
 
   describe('calling addTrustedHandlers', async () => {
@@ -270,13 +282,13 @@ contract('Escrow', (accounts) => {
 
     it('transfers all tokens back to canceler', async () => {
       try {
-        const initialAccountBalance = await Escrow.getAddressBalance.call(canceler);
+        const initialAccountBalance = await HMT.balanceOf.call(canceler);
         await HMT.transfer(Escrow.address, 100, { from: canceler });
         tx1 = await Escrow.setup(reputationOracle, recordingOracle, 1, 1, url, hash, { from: canceler });
         console.log(`Setup costs: ${tx1.receipt.gasUsed} wei.`);
         tx2 = await Escrow.cancel({ from: canceler });
         console.log(`Cancel costs: ${tx2.receipt.gasUsed} wei.`);
-        const accountBalance = await Escrow.getAddressBalance.call(canceler);
+        const accountBalance = await HMT.balanceOf.call(canceler);
         assert.equal(accountBalance.toNumber(), initialAccountBalance.toNumber());
       } catch (ex) {
         assert(false);
@@ -304,20 +316,20 @@ contract('Escrow', (accounts) => {
         await HMT.transfer(Escrow.address, 100, { from: canceler });
         tx1 = await Escrow.setup(reputationOracle, recordingOracle, 10, 10, url, hash, { from: canceler });
         console.log(`Setup costs: ${tx1.receipt.gasUsed} wei.`);
-        const initialAccount3Balance = await Escrow.getAddressBalance.call(accounts[6]);
-        const initialAccount4Balance = await Escrow.getAddressBalance.call(accounts[7]);
-        const initialAccount5Balance = await Escrow.getAddressBalance.call(accounts[8]);
-        const initialRecordingOracleBalance = await Escrow.getAddressBalance.call(recordingOracle);
-        const initialReputationOracleBalance = await Escrow.getAddressBalance.call(reputationOracle);
+        const initialAccount3Balance = await HMT.balanceOf.call(accounts[6]);
+        const initialAccount4Balance = await HMT.balanceOf.call(accounts[7]);
+        const initialAccount5Balance = await HMT.balanceOf.call(accounts[8]);
+        const initialRecordingOracleBalance = await HMT.balanceOf.call(recordingOracle);
+        const initialReputationOracleBalance = await HMT.balanceOf.call(reputationOracle);
 
         tx2 = await Escrow.bulkPayOut([accounts[6], accounts[7], accounts[8]], [10, 20, 30], url, hash, '000', { from: reputationOracle });
         console.log(`BulkPayOut costs: ${tx2.receipt.gasUsed} wei.`);
 
-        const account3Balance = await Escrow.getAddressBalance.call(accounts[6]);
-        const account4Balance = await Escrow.getAddressBalance.call(accounts[7]);
-        const account5Balance = await Escrow.getAddressBalance.call(accounts[8]);
-        const recordingOracleBalance = await Escrow.getAddressBalance.call(recordingOracle);
-        const reputationOracleBalance = await Escrow.getAddressBalance.call(reputationOracle);
+        const account3Balance = await HMT.balanceOf.call(accounts[6]);
+        const account4Balance = await HMT.balanceOf.call(accounts[7]);
+        const account5Balance = await HMT.balanceOf.call(accounts[8]);
+        const recordingOracleBalance = await HMT.balanceOf.call(recordingOracle);
+        const reputationOracleBalance = await HMT.balanceOf.call(reputationOracle);
 
         const amountOfPaidToAccountThree = account3Balance.toNumber() - initialAccount3Balance.toNumber();
         const amountOfPaidToAccountFour = account4Balance.toNumber() - initialAccount4Balance.toNumber();

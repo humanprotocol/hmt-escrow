@@ -55,18 +55,6 @@ contract Escrow {
         return HMTokenInterface(eip20).balanceOf(address(this));
     }
 
-    function getAddressBalance(address _address) public view returns (uint256) {
-        require(
-            _address != address(0),
-            "Token spender is an uninitialized address"
-        );
-        return HMTokenInterface(eip20).balanceOf(address(_address));
-    }
-
-    function isTrustedHandler(address _handler) public view returns (bool) {
-        return areTrustedHandlers[_handler];
-    }
-
     function addTrustedHandlers(address[] memory _handlers) public {
         require(msg.sender == launcher, "Address calling cannot add trusted handllers");
         for (uint256 i = 0; i < _handlers.length; i++) {
@@ -84,10 +72,8 @@ contract Escrow {
         uint256 _recordingOracleStake,
         string memory _url,
         string memory _hash
-    ) public
+    ) public trusted notExpired
     {
-        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             _reputationOracle != address(0),
             "Invalid or missing token spender"
@@ -120,47 +106,29 @@ contract Escrow {
         emit Pending(manifestUrl, manifestHash);
     }
 
-    function abort() public {
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
-        require(
-            status != EscrowStatuses.Complete,
-            "Escrow in Complete status state"
-        );
-        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+    function abort() trusted notComplete notPaid public {
+        if (getBalance() != 0) {
+            cancel();
+        }
         selfdestruct(canceler);
     }
 
-    function cancel() public returns (bool) {
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
-        require(
-            status != EscrowStatuses.Complete,
-            "Escrow in Complete status state"
-        );
-        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-        uint256 balance = getBalance();
-        require(balance != 0, "EIP20 contract out of funds");
-
-        HMTokenInterface token = HMTokenInterface(eip20);
-        bool success = token.transfer(canceler, balance);
+    function cancel() public trusted notBroke notComplete notPaid returns (bool) {
+        bool success = HMTokenInterface(eip20).transfer(canceler, getBalance());
         status = EscrowStatuses.Cancelled;
-
         return success;
     }
 
-    function complete() public {
-        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
+    function complete() public notExpired {
         require(
             msg.sender == reputationOracle || areTrustedHandlers[msg.sender],
             "Address calling is not trusted"
         );
-
         require (status == EscrowStatuses.Paid, "Escrow not in Paid state");
         status = EscrowStatuses.Complete;
     }
 
-    function storeResults(string memory _url, string memory _hash) public {
-        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
+    function storeResults(string memory _url, string memory _hash) public trusted notExpired {
         require(
             status == EscrowStatuses.Pending ||
                 status == EscrowStatuses.Partial,
@@ -175,18 +143,9 @@ contract Escrow {
         string memory _url,
         string memory _hash,
         uint256 _txId
-    ) public returns (bool)
+    ) public trusted notBroke notLaunched notPaid notExpired returns (bool)
     {
-        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
-        require(isTrustedHandler(msg.sender), "Address calling not trusted");
         uint256 balance = getBalance();
-        require(balance != 0, "EIP20 contract out of funds");
-        require(
-            status != EscrowStatuses.Launched,
-            "Escrow in Launched status state"
-        );
-        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
-
         bulkPaid = false;
         uint256 aggregatedBulkAmount = 0;
         for (uint256 i; i < _amounts.length; i++) {
@@ -248,5 +207,41 @@ contract Escrow {
             finalAmounts.push(amount);
         }
         return (reputationOracleFee, recordingOracleFee);
+    }
+
+    modifier trusted() {
+        require(areTrustedHandlers[msg.sender], "Address calling not trusted");
+        _;
+    }
+
+    modifier notBroke() {
+        require(getBalance() != 0, "EIP20 contract out of funds");
+        _;
+    }
+
+    modifier notComplete() {
+        require(
+            status != EscrowStatuses.Complete,
+            "Escrow in Complete status state"
+        );
+        _;
+    }
+
+    modifier notPaid() {
+        require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
+        _;
+    }
+
+    modifier notLaunched() {
+        require(
+            status != EscrowStatuses.Launched,
+            "Escrow in Launched status state"
+        );
+        _;
+    }
+
+    modifier notExpired() {
+        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
+        _;
     }
 }
