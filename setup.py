@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="hmt-escrow",
-    version="0.8.0",
+    version="0.8.11",
     author="HUMAN Protocol",
     description="A python library to launch escrow contracts to the HUMAN network.",
     url="https://github.com/hCaptcha/hmt-escrow",
@@ -14,5 +14,5 @@ setuptools.setup(
         "Programming Language :: Python",
     ],
     packages=setuptools.find_packages() + ["contracts", "migrations"],
-    install_requires=["py-solc-x", "web3", "hmt-basemodels", "boto3"],
+    install_requires=["hmt-basemodels", "boto3"],
 )

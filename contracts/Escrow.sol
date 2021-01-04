@@ -1,4 +1,5 @@
 pragma solidity 0.6.2;
+
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 
@@ -6,66 +7,48 @@ import "./SafeMath.sol";
 contract Escrow {
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
+    event Pending(string manifest, string hash);
+    
     enum EscrowStatuses {Launched, Pending, Partial, Paid, Complete, Cancelled}
-    EscrowStatuses private status;
+    EscrowStatuses public status;
 
-    address private reputationOracle;
-    address private recordingOracle;
-    address private launcher;
-    address payable canceler;
+    address public reputationOracle;
+    address public recordingOracle;
+    address public launcher;
+    address payable public canceler;
 
-    uint256 private reputationOracleStake;
-    uint256 private recordingOracleStake;
+    uint256 public reputationOracleStake;
+    uint256 public recordingOracleStake;
 
-    address private eip20;
+    address public eip20;
 
-    string private manifestUrl;
-    string private manifestHash;
+    string public manifestUrl;
+    string public manifestHash;
 
-    string private intermediateResultsUrl;
-    string private intermediateResultsHash;
+    string public finalResultsUrl;
+    string public finalResultsHash;
 
-    string private finalResultsUrl;
-    string private finalResultsHash;
+    uint256 public duration;
 
-    uint256 private expiration;
+    uint256[] public finalAmounts;
+    bool public bulkPaid;
 
-    uint256[] private finalAmounts;
-    bool private bulkPaid;
-
-    struct TrustedHandler {
-        address handlerAddress;
-        bool isTrusted;
-    }
-
-    mapping(address => TrustedHandler) public trustedHandlers;
+    mapping(address => bool) public areTrustedHandlers;
 
     constructor(
         address _eip20,
         address payable _canceler,
-        uint256 _expiration,
+        uint256 _duration,
         address[] memory _handlers
     ) public {
         eip20 = _eip20;
         status = EscrowStatuses.Launched;
-        expiration = _expiration.add(block.timestamp); // solhint-disable-line not-rely-on-time
+        duration = _duration.add(block.timestamp); // solhint-disable-line not-rely-on-time
         launcher = msg.sender;
         canceler = _canceler;
-        trustedHandlers[_canceler].isTrusted = true;
-        trustedHandlers[msg.sender].isTrusted = true;
+        areTrustedHandlers[_canceler] = true;
+        areTrustedHandlers[msg.sender] = true;
         addTrustedHandlers(_handlers);
-    }
-
-    function getLauncher() public view returns (address) {
-        return launcher;
-    }
-
-    function getStatus() public view returns (EscrowStatuses) {
-        return status;
-    }
-
-    function getTokenAddress() public view returns (address) {
-        return eip20;
     }
 
     function getBalance() public view returns (uint256) {
@@ -80,49 +63,14 @@ contract Escrow {
         return HMTokenInterface(eip20).balanceOf(address(_address));
     }
 
-    function getReputationOracle() public view returns (address) {
-        return reputationOracle;
-    }
-
-    function getRecordingOracle() public view returns (address) {
-        return recordingOracle;
-    }
-
-    function getManifestHash() public view returns (string memory) {
-        return manifestHash;
-    }
-
-    function getManifestUrl() public view returns (string memory) {
-        return manifestUrl;
-    }
-
-    function getIntermediateResultsUrl() public view returns (string memory) {
-        return intermediateResultsUrl;
-    }
-
-    function getIntermediateResultsHash() public view returns (string memory) {
-        return intermediateResultsHash;
-    }
-
-    function getFinalResultsUrl() public view returns (string memory) {
-        return finalResultsUrl;
-    }
-
-    function getFinalResultsHash() public view returns (string memory) {
-        return finalResultsHash;
-    }
-
-    function getBulkPaid() public view returns (bool) {
-        return bulkPaid;
-    }
-
     function isTrustedHandler(address _handler) public view returns (bool) {
-        return trustedHandlers[_handler].isTrusted;
+        return areTrustedHandlers[_handler];
     }
 
     function addTrustedHandlers(address[] memory _handlers) public {
+        require(msg.sender == launcher, "Address calling cannot add trusted handllers");
         for (uint256 i = 0; i < _handlers.length; i++) {
-            trustedHandlers[_handlers[i]].isTrusted = true;
+            areTrustedHandlers[_handlers[i]] = true;
         }
     }
 
@@ -136,20 +84,21 @@ contract Escrow {
         uint256 _recordingOracleStake,
         string memory _url,
         string memory _hash
-    ) public {
-        require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
+    ) public
+    {
+        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             _reputationOracle != address(0),
-            "Token spender is an uninitialized address"
+            "Invalid or missing token spender"
         );
         require(
             _recordingOracle != address(0),
-            "Token spender is an uninitialized address"
+            "Invalid or missing token spender"
         );
+        uint256 totalStake = _reputationOracleStake.add(_recordingOracleStake);
         require(
-            _reputationOracleStake.add(_recordingOracleStake) >= 0 &&
-                _reputationOracleStake.add(_recordingOracleStake) <= 100,
+            totalStake >= 0 && totalStake <= 100,
             "Stake out of bounds"
         );
         require(
@@ -159,12 +108,11 @@ contract Escrow {
 
         reputationOracle = _reputationOracle;
         recordingOracle = _recordingOracle;
-        trustedHandlers[reputationOracle].isTrusted = true;
-        trustedHandlers[recordingOracle].isTrusted = true;
+        areTrustedHandlers[reputationOracle] = true;
+        areTrustedHandlers[recordingOracle] = true;
 
         reputationOracleStake = _reputationOracleStake;
         recordingOracleStake = _recordingOracleStake;
-        bulkPaid = false;
 
         manifestUrl = _url;
         manifestHash = _hash;
@@ -190,7 +138,7 @@ contract Escrow {
         );
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
         uint256 balance = getBalance();
-        require(balance > 0, "EIP20 contract out of funds");
+        require(balance != 0, "EIP20 contract out of funds");
 
         HMTokenInterface token = HMTokenInterface(eip20);
         bool success = token.transfer(canceler, balance);
@@ -200,27 +148,24 @@ contract Escrow {
     }
 
     function complete() public {
-        require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
+        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(
-            msg.sender == reputationOracle,
-            "Address calling not the reputation oracle"
+            msg.sender == reputationOracle || areTrustedHandlers[msg.sender],
+            "Address calling is not trusted"
         );
 
-        if (status == EscrowStatuses.Paid) {
-            status = EscrowStatuses.Complete;
-        }
+        require (status == EscrowStatuses.Paid, "Escrow not in Paid state");
+        status = EscrowStatuses.Complete;
     }
 
     function storeResults(string memory _url, string memory _hash) public {
-        require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
+        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         require(
             status == EscrowStatuses.Pending ||
                 status == EscrowStatuses.Partial,
             "Escrow not in Pending or Partial status state"
         );
-        intermediateResultsUrl = _url;
-        intermediateResultsHash = _hash;
         emit IntermediateStorage(_url, _hash);
     }
 
@@ -230,11 +175,12 @@ contract Escrow {
         string memory _url,
         string memory _hash,
         uint256 _txId
-    ) public returns (bool) {
-        require(expiration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
+    ) public returns (bool)
+    {
+        require(duration > block.timestamp, "Contract expired"); // solhint-disable-line not-rely-on-time
         require(isTrustedHandler(msg.sender), "Address calling not trusted");
         uint256 balance = getBalance();
-        require(balance > 0, "EIP20 contract out of funds");
+        require(balance != 0, "EIP20 contract out of funds");
         require(
             status != EscrowStatuses.Launched,
             "Escrow in Launched status state"
@@ -242,7 +188,6 @@ contract Escrow {
         require(status != EscrowStatuses.Paid, "Escrow in Paid status state");
 
         bulkPaid = false;
-
         uint256 aggregatedBulkAmount = 0;
         for (uint256 i; i < _amounts.length; i++) {
             aggregatedBulkAmount += _amounts[i];
@@ -254,9 +199,9 @@ contract Escrow {
 
         bool writeOnchain = bytes(_hash).length != 0 || bytes(_url).length != 0;
         if (writeOnchain) {
-          // Be sure they are both zero if one of them is
-          finalResultsUrl = _url;
-          finalResultsHash = _hash;
+            // Be sure they are both zero if one of them is
+            finalResultsUrl = _url;
+            finalResultsHash = _hash;
         }
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
@@ -266,8 +211,7 @@ contract Escrow {
             _recipients.length
         ) {
             delete finalAmounts;
-            bulkPaid = token.transfer(reputationOracle, reputationOracleFee);
-            bulkPaid = token.transfer(recordingOracle, recordingOracleFee);
+            bulkPaid = token.transfer(reputationOracle, reputationOracleFee) && token.transfer(recordingOracle, recordingOracleFee);
         }
 
         balance = getBalance();
@@ -275,18 +219,14 @@ contract Escrow {
             if (status == EscrowStatuses.Pending) {
                 status = EscrowStatuses.Partial;
             }
-            if (
-                balance == 0 &&
-                (status == EscrowStatuses.Pending ||
-                    status == EscrowStatuses.Partial)
-            ) {
+            if (balance == 0 && status == EscrowStatuses.Partial) {
                 status = EscrowStatuses.Paid;
             }
         }
         return bulkPaid;
     }
 
-    function finalizePayouts(uint256[] memory _amounts) public returns (uint256, uint256) {
+    function finalizePayouts(uint256[] memory _amounts) internal returns (uint256, uint256) {
         uint256 reputationOracleFee = 0;
         uint256 recordingOracleFee = 0;
         for (uint256 j; j < _amounts.length; j++) {
@@ -309,6 +249,4 @@ contract Escrow {
         }
         return (reputationOracleFee, recordingOracleFee);
     }
-
-    event Pending(string manifest, string hash);
 }

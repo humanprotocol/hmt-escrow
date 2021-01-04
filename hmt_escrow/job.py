@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 from web3 import Web3
 from web3.contract import Contract
+from web3.types import Wei
 from eth_keys import keys
 from eth_utils import decode_hex
 
@@ -60,8 +61,8 @@ def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> E
         Enum: returns the status as an enumeration.
 
     """
-    status_ = escrow_contract.functions.getStatus().call(
-        {"from": gas_payer, "gas": gas}
+    status_ = escrow_contract.functions.status().call(
+        {"from": gas_payer, "gas": Wei(gas)}
     )
     return Status(status_ + 1)
 
@@ -94,8 +95,8 @@ def manifest_url(
         str: returns the manifest url of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getManifestUrl().call(
-        {"from": gas_payer, "gas": gas}
+    return escrow_contract.functions.manifestUrl().call(
+        {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
@@ -127,46 +128,8 @@ def manifest_hash(
         str: returns the manifest hash of Job's escrow contract.
 
     """
-    return escrow_contract.functions.getManifestHash().call(
-        {"from": gas_payer, "gas": gas}
-    )
-
-
-def intermediate_url(
-    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
-) -> str:
-    """Retrieves the deployed intermediate results url uploaded on Job initialization.
-
-    Args:
-        escrow_contract (Contract): the escrow contract of the Job.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-
-    Returns:
-        str: returns the intermediate results url of Job's escrow contract.
-
-    """
-    return escrow_contract.functions.getIntermediateResultsUrl().call(
-        {"from": gas_payer, "gas": gas}
-    )
-
-
-def intermediate_hash(
-    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
-) -> str:
-    """Retrieves the deployed intermediate results hash uploaded on Job initialization.
-
-    Args:
-        escrow_contract (Contract): the escrow contract of the Job.
-        gas_payer (str): an ethereum address paying for the gas costs.
-        gas (int): maximum amount of gas the caller is ready to pay.
-
-    Returns:
-        str: returns the intermediate results hash of Job's escrow contract.
-
-    """
-    return escrow_contract.functions.getIntermediateResultsHash().call(
-        {"from": gas_payer, "gas": gas}
+    return escrow_contract.functions.manifestHash().call(
+        {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
@@ -174,7 +137,7 @@ def is_trusted_handler(
     escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
 ) -> bool:
     return escrow_contract.functions.isTrustedHandler(handler_addr).call(
-        {"from": gas_payer, "gas": gas}
+        {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
@@ -190,7 +153,9 @@ def launcher(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) ->
         str: returns the address of who launched the job.
 
     """
-    return escrow_contract.functions.getLauncher().call({"from": gas_payer, "gas": gas})
+    return escrow_contract.functions.launcher().call(
+        {"from": gas_payer, "gas": Wei(gas)}
+    )
 
 
 class Job:
@@ -328,8 +293,8 @@ class Job:
 
     def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
-        to IPFS with the public key of the Reputation Oracle and stores
-        the IPFS url to the escrow contract.
+        to S3 with the public key of the Reputation Oracle and stores
+        the S3 url to the escrow contract.
 
         >>> from test_manifest import manifest
         >>> credentials = {
@@ -833,7 +798,7 @@ class Job:
     def store_intermediate_results(
         self, results: Dict, pub_key: bytes, gas: int = GAS_LIMIT
     ) -> bool:
-        """Recording Oracle stores intermediate results with Reputation Oracle's public key to IPFS
+        """Recording Oracle stores intermediate results with Reputation Oracle's public key to S3
         and updates the contract's state.
 
         >>> from test_manifest import manifest
@@ -913,6 +878,9 @@ class Job:
 
         if not results_stored:
             LOG.exception(f"{txn_event} failed with all credentials.")
+        else:
+            self.intermediate_manifest_hash = hash_
+            self.intermediate_manifest_url = url
 
         return results_stored
 
@@ -1031,7 +999,7 @@ class Job:
 
         """
         return self.job_contract.functions.getBalance().call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def manifest(self, priv_key: bytes) -> Dict:
@@ -1095,8 +1063,7 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        intermediate_results_url = intermediate_url(self.job_contract, self.gas_payer)
-        return download(intermediate_results_url, priv_key)
+        return download(self.intermediate_manifest_url, priv_key)
 
     def final_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Retrieves the final results stored by the Reputation Oracle.
@@ -1129,8 +1096,8 @@ class Job:
             bool: returns True if IPFS download with the private key succeeds.
 
         """
-        final_results_url = self.job_contract.functions.getFinalResultsUrl().call(
-            {"from": self.gas_payer, "gas": gas}
+        final_results_url = self.job_contract.functions.finalResultsUrl().call(
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
         return download(final_results_url, priv_key)
 
@@ -1292,7 +1259,7 @@ class Job:
         """
         factory_contract = get_factory(factory_addr)
         return factory_contract.functions.hasEscrow(escrow_addr).call(
-            {"from": self.gas_payer, "gas": gas}
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def _init_factory(
@@ -1312,7 +1279,7 @@ class Job:
         ... }
         >>> job = Job(credentials, manifest)
         >>> type(job.factory_contract)
-        <class 'web3.utils.datatypes.Contract'>
+        <class 'web3._utils.datatypes.Contract'>
 
         Initializing a new Job instance with a factory address succeeds.
         >>> factory_addr = deploy_factory(**credentials)
@@ -1339,7 +1306,7 @@ class Job:
                 raise Exception("Unable to get address from factory")
 
         if not factory:
-            factory = get_factory(factory_addr)
+            factory = get_factory(str(factory_addr))
         return factory
 
     def _bulk_paid(self, gas: int = GAS_LIMIT) -> int:
@@ -1375,8 +1342,8 @@ class Job:
             returns True if the last bulk payout has succeeded.
 
         """
-        return self.job_contract.functions.getBulkPaid().call(
-            {"from": self.gas_payer, "gas": gas}
+        return self.job_contract.functions.bulkPaid().call(
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def _last_escrow_addr(self, gas: int = GAS_LIMIT) -> str:
@@ -1402,8 +1369,8 @@ class Job:
             str: returns an escrow contract address.
 
         """
-        return self.factory_contract.functions.getLastEscrow().call(
-            {"from": self.gas_payer, "gas": gas}
+        return self.factory_contract.functions.lastEscrow().call(
+            {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
     def _create_escrow(self, trusted_handlers=[], gas: int = GAS_LIMIT) -> bool:
@@ -1757,4 +1724,6 @@ class JobTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    from test_manifest import manifest
+
     unittest.main(exit=False)

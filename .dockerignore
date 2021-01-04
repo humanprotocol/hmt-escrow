@@ -118,7 +118,6 @@ src
 .vscode
 docker-compose
 build/
-node_modules/
 coverage/
 coverage.json
 minio/

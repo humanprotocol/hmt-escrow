@@ -2,9 +2,12 @@
 
 # Help Wanted!
 
-Please read through this repo to contribute for cash and prizes.
+HCaptcha’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
 
-This repository contains a Python 3 library for launching and communicating with HMT Solidity contracts.
+Reward sizes are guided by the rules below and payable in USD via PayPal. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
+
+    - Larger or Critical: $100 - $500
+    - Small: up to $100
 
 ## Installation
 
@@ -25,6 +28,10 @@ We'd recommend you checking out the dockerfile for an explanation of what applic
 After that the following command should install the package successfully:
 
 ```
+pip install git+https://github.com/iamdefinitelyahuman/py-solc-x@master#egg=py-solc-x \
+            git+https://github.com/ethereum/trinity@master#egg=trinity \
+            git+https://github.com/sphinx-doc/sphinx@master#egg=sphinx
+
 pip install hmt-escrow
 ```
 ### Docker
@@ -179,3 +186,10 @@ The escrow factory and related code are under active development, and escrow fac
 Although all code goes through internal reviews before being committed, you should assume the current code in master has not been externally audited to the same degree as the token contract. 
 
 When a stable 1.0 version of the escrow factory contract is released, this section of the README will be updated with a link to audit results for that githash.
+
+## Note to bug hunters and those deploying to production
+
+The docker-compose.yml references a default minio username and password for development. minio as used here is an internal cache for low-privilege, publicly readable, encrypted data. Including these default credentials for development is intentional. 
+
+When deploying to a production environment you are expected to set your own credentials based on the rules applied to minio access within your cluster.
+
