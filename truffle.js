@@ -37,6 +37,10 @@ module.exports = {
       provider: () => new PrivateKeyProvider(PRIV_KEY, 'https://rpc.testnet.moonbeam.network', 1287),
       network_id: '1287',
     },
+    skale: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://humanprotocol-integration.skale.network', 0, 10),
+      network_id: '344435',
+    },
   },
   compilers: {
     solc: {
