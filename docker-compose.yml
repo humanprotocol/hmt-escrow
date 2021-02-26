@@ -2,7 +2,7 @@ version: '2'
 services:
 
   job:
-    image: hcaptcha/hmt-escrow:latest
+    image: humanprotocol/hmt-escrow:latest
     build: .
     environment:
       - HMT_ETH_SERVER=http://ganache:8545
