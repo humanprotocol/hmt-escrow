@@ -1726,4 +1726,4 @@ class JobTestCase(unittest.TestCase):
 if __name__ == "__main__":
     from test_manifest import manifest
 
-    unittest.main(exit=False)
+    unittest.main(exit=True)
