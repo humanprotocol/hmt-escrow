@@ -15,10 +15,10 @@ COPY package.json package-lock.json /work/
 RUN cd /work && npm install
 ENV PATH="/work/node_modules/.bin/:${PATH}"
 
-# Pin to specific version that's guaranteed to work
-RUN pip3 install pipenv
-COPY Pipfile Pipfile.lock /work/
-RUN pipenv install --system --deploy --pre
+RUN pip3 install poetry
+COPY pyproject.toml poetry.lock ./
+RUN poetry config virtualenvs.create false \
+  && poetry install --no-interaction --no-ansi
 
 ENV SOLC_VERSION="v0.6.2"
 RUN python3 -m solcx.install ${SOLC_VERSION}

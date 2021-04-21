@@ -19,11 +19,6 @@ done
 
 export KVSTORE_CONTRACT=$(cat $KVSTORE_ADDR_FILE | jq --raw-output '.address')
 
-until curl --silent ipfs:5001; do
-  echo "sleeping"
-  sleep 1
-done
-
 mkdir -p minio/escrow-results
 
 export PYTHONPATH=$(pwd)

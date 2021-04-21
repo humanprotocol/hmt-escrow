@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "hmt-escrow"
+version = "0.9.1"
+description = "A python library to launch escrow contracts to the HUMAN network."
+authors = ["HUMAN Protocol"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+trinity = {git = "https://github.com/ethereum/trinity", rev = "eth2/departure"}
+py-solc-x = "*"
+boto3 = "*"
+hmt-basemodels = "*"
+Sphinx = "*"
+setuptools = "*"
+honeycomb-beeline = "^2.16.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

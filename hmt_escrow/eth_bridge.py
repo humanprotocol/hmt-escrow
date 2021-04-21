@@ -41,6 +41,8 @@ KVSTORE_CONTRACT = Web3.toChecksumAddress(
 )
 WEB3_POLL_LATENCY = float(os.getenv("WEB3_POLL_LATENCY", 5))
 WEB3_TIMEOUT = int(os.getenv("WEB3_TIMEOUT", 240))
+HONEYCOMB_WRITEKEY = os.getenv("HONEYCOMB_WRITEKEY", "")
+HONEYCOMB_SERVICE = os.getenv("HONEYCOMB_SERVICE", "unidentified")
 
 
 def get_w3() -> Web3:
@@ -95,6 +97,17 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
     Raises:
         TimeoutError: if waiting for the transaction receipt times out.
     """
+    import requests
+    import beeline
+    from beeline.patch.requests import *
+
+    if HONEYCOMB_WRITEKEY:
+        beeline.init(
+            writekey=HONEYCOMB_WRITEKEY,
+            dataset="blockchain-requests",
+            service_name=HONEYCOMB_SERVICE
+        )
+
     gas_payer = kwargs["gas_payer"]
     gas_payer_priv = kwargs["gas_payer_priv"]
     gas = kwargs["gas"]
@@ -113,7 +126,7 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
         txn_receipt = wait_for_transaction_receipt(
             w3, txn_hash, timeout=WEB3_TIMEOUT, poll_latency=WEB3_POLL_LATENCY
         )
-    except TimeoutError as e:
+    except Exception as e:
         raise e
     return txn_receipt
 
