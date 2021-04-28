@@ -136,7 +136,7 @@ def manifest_hash(
 def is_trusted_handler(
     escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
 ) -> bool:
-    return escrow_contract.functions.isTrustedHandler(handler_addr).call(
+    return escrow_contract.functions.areTrustedHandlers(handler_addr).call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
 
@@ -1666,7 +1666,7 @@ class JobTestCase(unittest.TestCase):
 
     def test_job_abort(self):
 
-        # The escrow contract is in Paid state after the a full bulk payout and it can't be aborted.
+        # The escrow contract is in Paid state after the full bulk payout and it can't be aborted.
 
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
@@ -1726,4 +1726,4 @@ class JobTestCase(unittest.TestCase):
 if __name__ == "__main__":
     from test_manifest import manifest
 
-    unittest.main(exit=False)
+    unittest.main(exit=True)

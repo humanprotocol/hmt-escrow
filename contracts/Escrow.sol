@@ -56,7 +56,7 @@ contract Escrow {
     }
 
     function addTrustedHandlers(address[] memory _handlers) public {
-        require(msg.sender == launcher, "Address calling cannot add trusted handllers");
+        require(areTrustedHandlers[msg.sender], "Address calling cannot add trusted handlers");
         for (uint256 i = 0; i < _handlers.length; i++) {
             areTrustedHandlers[_handlers[i]] = true;
         }
