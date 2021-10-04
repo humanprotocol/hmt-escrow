@@ -8,7 +8,8 @@ logger = logging.getLogger("hmt_escrow.job")
 def with_retry(fn, retries=3, delay=5, backoff=2):
     """ Retry a function
 
-    Mainly for BC transactions. Uses expnential backoff.
+    Mainly used with handle_transaction to retry on case of failure. 
+    Uses expnential backoff.
 
      Args:
         fn: <Partial> to run with retry logic.
