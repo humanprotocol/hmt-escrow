@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 import unittest
-
+from functools import partial
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Tuple, Optional, Any
@@ -450,11 +450,6 @@ class Job:
             self.manifest_hash,
         ]
 
-        if not hmt_transferred and blocking:
-            fn = partial(handle_transaction, *func_args, **txn_info)
-            fn.__name__ = f"Job.setup.{handle_transaction.__name__}"  # type:ignore
-            hmt_transferred = utils.with_retry(fn, retries, delay, backoff)
-
         try:
             handle_transaction(txn_func, *func_args, **txn_info)
             contract_is_setup = True
@@ -462,6 +457,11 @@ class Job:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
+
+        if not contract_is_setup and blocking:
+            fn = partial(handle_transaction, *func_args, **txn_info)
+            fn.__name__ = f"Job.setup.{handle_transaction.__name__}"  # type:ignore
+            contract_is_setup = utils.with_retry(fn, retries, delay, backoff)
 
         if not contract_is_setup:
             contract_is_setup = self._raffle_txn(

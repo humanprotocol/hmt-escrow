@@ -7,7 +7,7 @@ WORKDIR /work
 
 RUN apt-get update -y && \
     apt-get install -y automake bash black build-essential curl git jq libffi-dev libgmp-dev libtool mypy nodejs npm \
-	pandoc pkg-config python3-boto python3-dev python3-pip libsnappy-dev
+	pandoc pkg-config python3-boto python3-dev python3-pip libsnappy-dev node-gyp
 
 ENV PYTHONPATH "/usr/lib/python3.8/:/usr/local/lib/python3.8/dist-packages/:/work:/work/banhammer:/work/hmt-servers"
 
