@@ -452,7 +452,7 @@ class Job:
 
         if not hmt_transferred and blocking:
             fn = partial(handle_transaction, *func_args, **txn_info)
-            fn.__name__ = hmt_transferred.__name__  # type:ignore
+            fn.__name__ = f"Job.setup.{handle_transaction.__name__}"  # type:ignore
             hmt_transferred = utils.with_retry(fn, retries, delay, backoff)
 
         try:
