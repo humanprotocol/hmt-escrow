@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 import unittest
-
+from functools import partial
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Tuple, Optional, Any
@@ -23,6 +23,7 @@ from hmt_escrow.eth_bridge import (
     get_w3,
     handle_transaction,
 )
+from hmt_escrow import utils
 from hmt_escrow.storage import download, upload
 from basemodels import Manifest
 
@@ -351,7 +352,14 @@ class Job:
         self.manifest_hash = hash_
         return self.status() == Status.Launched and self.balance() == 0
 
-    def setup(self, gas: int = GAS_LIMIT) -> bool:
+    def setup(
+        self,
+        gas: int = GAS_LIMIT,
+        blocking: bool = False,
+        retries: int = 3,
+        delay: int = 5,
+        backoff: int = 2,
+    ) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
@@ -449,6 +457,11 @@ class Job:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
+
+        if not contract_is_setup and blocking:
+            fn = partial(handle_transaction, *func_args, **txn_info)
+            fn.__name__ = f"Job.setup.{handle_transaction.__name__}"  # type:ignore
+            contract_is_setup = utils.with_retry(fn, retries, delay, backoff)
 
         if not contract_is_setup:
             contract_is_setup = self._raffle_txn(
