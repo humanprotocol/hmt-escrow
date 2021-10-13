@@ -41,6 +41,11 @@ module.exports = {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://humanprotocol-integration.skale.network', 0, 10),
       network_id: '344435',
     },
+    polygon: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://polygon-rpc.com/', 0, 10),
+      network_id: '137',
+      gasPrice: 30000000000,
+    },
   },
   compilers: {
     solc: {
