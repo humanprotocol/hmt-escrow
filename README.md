@@ -1,5 +1,15 @@
 # <img height="60px" src="./static/human.svg" alt="human" />
 
+# Polygon contract address
+
+HMT Token: 0xC5B074aF543c02bfbbEe1faC98703D01Bf108Dd1
+
+Escrow: 0xEfeEA7766c0FCcd8c393aABC14EF1B8b2363807C
+
+Escrow factory: 0x887eF4e1707644B38A948B8F9Cc92c0B101aE56f
+
+Ethkv-store: 0x8C8aC9400f54E30B6666De491F7042f7323ABa56
+
 # Help Wanted!
 
 HCaptcha’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
