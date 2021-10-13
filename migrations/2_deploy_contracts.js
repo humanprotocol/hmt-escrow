@@ -4,7 +4,7 @@ const path = require('path');
 
 const HMToken = artifacts.require('./HMToken.sol');
 
-const ADDRESS_OUTPUT_FILENAME = '/deployed-hmtoken/hmt.address.json';
+const ADDRESS_OUTPUT_FILENAME = './deployed-hmtoken/hmt.address.json';
 
 module.exports = (deployer) => {
   deployer
