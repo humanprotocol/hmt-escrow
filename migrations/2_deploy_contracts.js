@@ -2,16 +2,18 @@ const fs = require('fs');
 
 const path = require('path');
 
-const HMToken = artifacts.require('./HMToken.sol');
+// const HMToken = artifacts.require('./HMToken.sol');
+const cHMToken = artifacts.require('./cHMToken.sol');
 
 const ADDRESS_OUTPUT_FILENAME = './deployed-hmtoken/hmt.address.json';
 
 module.exports = (deployer) => {
   deployer
-    .deploy(HMToken, 1000000000, 'Human Token', 18, 'HMT')
+    // .deploy(HMToken, 1000000000, 'Human Token', 18, 'HMT') eth
+    .deploy(cHMToken, 'Human Token', 18, 'HMT', '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa') // polygon
     .then(() => {
       const fileContent = {
-        address: HMToken.address,
+        address: cHMToken.address,
       };
 
       try {
