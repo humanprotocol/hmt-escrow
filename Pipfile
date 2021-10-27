@@ -6,14 +6,21 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-trinity = {git = "https://github.com/ethereum/trinity.git", ref = "master"}
-py-solc-x = {git = "https://github.com/iamdefinitelyahuman/py-solc-x.git", ref = "master"}
 boto3 = "*"
 hmt-basemodels = "*"
-Sphinx = {git = "https://github.com/sphinx-doc/sphinx.git", ref = "master"}
+web3 = "==5.12.0"
+cryptography = "*"
 
 [requires]
 python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
+
+[packages.py-solc-x]
+git = "https://github.com/iamdefinitelyahuman/py-solc-x.git"
+ref = "master"
+
+[packages.Sphinx]
+git = "https://github.com/sphinx-doc/sphinx.git"
+ref = "master"
