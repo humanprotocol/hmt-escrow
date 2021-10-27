@@ -9,6 +9,10 @@ RUN apt-get update -y && \
     apt-get install -y automake bash black build-essential curl git jq libffi-dev libgmp-dev libtool mypy nodejs npm \
 	pandoc pkg-config python3-boto python3-dev python3-pip libsnappy-dev node-gyp
 
+RUN npm install --global npm@latest
+RUN npm install --global node-gyp@latest
+RUN npm config set node_gyp $(npm prefix -g)/lib/node_modules/node-gyp/bin/node-gyp.js
+
 ENV PYTHONPATH "/usr/lib/python3.8/:/usr/local/lib/python3.8/dist-packages/:/work:/work/banhammer:/work/hmt-servers"
 
 COPY package.json package-lock.json /work/
@@ -17,7 +21,6 @@ ENV PATH="/work/node_modules/.bin/:${PATH}"
 
 # Pin to specific version that's guaranteed to work
 RUN pip3 install pipenv
-RUN pip3 install git+https://chromium.googlesource.com/external/gyp
 COPY Pipfile Pipfile.lock /work/
 RUN pipenv install --system --deploy --pre
 
