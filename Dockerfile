@@ -17,6 +17,7 @@ ENV PATH="/work/node_modules/.bin/:${PATH}"
 
 # Pin to specific version that's guaranteed to work
 RUN pip3 install pipenv
+RUN pip3 install git+https://chromium.googlesource.com/external/gyp
 COPY Pipfile Pipfile.lock /work/
 RUN pipenv install --system --deploy --pre
 
