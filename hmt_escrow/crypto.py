@@ -15,6 +15,7 @@ from eth_utils import (
     int_to_big_endian,
 )
 
+
 # Length of public keys: 512 bit keys in uncompressed form, without format byte
 PUBKEY_LEN = 64
 
