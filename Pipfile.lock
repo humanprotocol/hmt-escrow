@@ -171,7 +171,6 @@
                 "sha256:f85a8e164ebbe75e77a9c8a0b91bd2a3ceb5beeb0f1c180affe75318a41df98c",
                 "sha256:fb1b6bb4dee54fe62306d7330639f57a0dbb612520516b97b1c9dea5bc506634"
             ],
-            "markers": "implementation_name == 'cpython'",
             "version": "==0.11.0"
         },
         "eth-abi": {
@@ -254,10 +253,10 @@
         },
         "ipfshttpclient": {
             "hashes": [
-                "sha256:161c348e91cdc194c06c8725446a51a2d758ff2cc5ea97ec98f49e2af2465405",
-                "sha256:feb1033c14c3ac87ee81264176c5beefeaf386385804427160466117ccc43693"
+                "sha256:0d80e95ee60b02c7d414e79bf81a36fc3c8fbab74265475c52f70b2620812135",
+                "sha256:ce6bac0e3963c4ced74d7eb6978125362bb05bbe219088ca48f369ce14d3cc39"
             ],
-            "version": "==0.7.0"
+            "version": "==0.8.0a2"
         },
         "jmespath": {
             "hashes": [
