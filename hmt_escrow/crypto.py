@@ -17,9 +17,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.constant_time import bytes_eq
 from eth_keys import datatypes
 from eth_keys import keys
-from eth_utils import (
-    int_to_big_endian,
-)
+from eth_utils import int_to_big_endian
 
 
 # Length of public keys: 512 bit keys in uncompressed form, without format byte

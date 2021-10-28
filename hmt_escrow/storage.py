@@ -110,7 +110,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
     >>> manifest_dict == job.serialized_manifest
     True
-    
+
     >>> job = Job(credentials=credentials, escrow_manifest=manifest)
     >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
     >>> manifest_url.startswith('s3')
