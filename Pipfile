@@ -8,16 +8,13 @@ verify_ssl = true
 [packages]
 boto3 = "*"
 hmt-basemodels = "*"
-web3 = "==5.12.0"
+web3 = "*"
 cryptography = "*"
-py-solc-x = "*"
+Sphinx = {git = "https://github.com/sphinx-doc/sphinx.git", ref = "master"}
+py-solc-x = {git = "https://github.com/iamdefinitelyahuman/py-solc-x.git", ref = "master"}
 
 [requires]
 python_version = "3.8"
 
 [pipenv]
 allow_prereleases = true
-
-[packages.Sphinx]
-git = "https://github.com/sphinx-doc/sphinx.git"
-ref = "master"

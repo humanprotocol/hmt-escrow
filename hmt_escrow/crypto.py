@@ -1,3 +1,7 @@
+# The MIT License (MIT)
+#
+# Copyright 2017-2019 Ethereum Foundation
+# Source: https://github.com/ethereum/trinity/blob/master/p2p/ecies.py
 import os
 import struct
 from hashlib import sha256
