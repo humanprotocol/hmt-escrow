@@ -633,9 +633,9 @@ class Job:
         """Kills the contract and returns the HMT back to the gas payer.
         The contract cannot be aborted if the contract is in Partial, Paid or Complete state.
 
-        Returns:        
+        Returns:
             bool: returns True if contract has been destroyed successfully.
-        
+
         >>> credentials = {
         ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
         ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
@@ -1455,7 +1455,7 @@ class Job:
             txn_args (List): the arguments the transaction takes.
             txn_event (str): the transaction event that will be performed.
             gas (int): maximum amount of gas the caller is ready to pay.
-        
+
         Returns:
             bool: returns True if the given transaction succeeds.
 

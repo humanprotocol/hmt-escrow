@@ -6,9 +6,9 @@ logger = logging.getLogger("hmt_escrow.job")
 
 
 def with_retry(fn, retries=3, delay=5, backoff=2):
-    """ Retry a function
+    """Retry a function
 
-    Mainly used with handle_transaction to retry on case of failure. 
+    Mainly used with handle_transaction to retry on case of failure.
     Uses expnential backoff.
 
      Args:
@@ -24,7 +24,7 @@ def with_retry(fn, retries=3, delay=5, backoff=2):
     Raises:
         No error
 
-    NOTE: 
+    NOTE:
         If the partial returns a Boolean and it happens to be False,
     we would not know if the tx succeeded and it will retry.
     """
