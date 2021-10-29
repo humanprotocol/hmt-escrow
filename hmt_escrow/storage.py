@@ -9,7 +9,7 @@ from typing import Dict, Tuple
 import boto3
 from eth_keys import keys
 
-import crypto
+from hmt_escrow import crypto
 
 SHARED_MAC_DATA = os.getenv(
     "SHARED_MAC", b"9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350"
