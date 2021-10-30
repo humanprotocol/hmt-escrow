@@ -172,7 +172,12 @@ def _decrypt(private_key: bytes, msg: bytes) -> str:
 
     """
     priv_key = keys.PrivateKey(codecs.decode(private_key, "hex"))
-    e = crypto.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
+    shared_mac_data = (
+        SHARED_MAC_DATA
+        if isinstance(SHARED_MAC_DATA, bytes)
+        else SHARED_MAC_DATA.encode("ascii")
+    )
+    e = crypto.decrypt(msg, priv_key, shared_mac_data=shared_mac_data)
     return e.decode("utf-8")
 
 
@@ -196,7 +201,12 @@ def _encrypt(public_key: bytes, msg: str) -> bytes:
     """
     pub_key = keys.PublicKey(codecs.decode(public_key, "hex"))
     msg_bytes = msg.encode("utf-8")
-    return crypto.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
+    shared_mac_data = (
+        SHARED_MAC_DATA
+        if isinstance(SHARED_MAC_DATA, bytes)
+        else SHARED_MAC_DATA.encode("ascii")
+    )
+    return crypto.encrypt(msg_bytes, pub_key, shared_mac_data=shared_mac_data)
 
 
 class StorageTest(unittest.TestCase):
