@@ -2,13 +2,11 @@
 
 # Help Wanted!
 
-HCaptcha’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
+Human Protocol’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
 
-Reward sizes are guided by the rules below and payable in USD via PayPal. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
+Reward sizes are guided by the rules below and payable in USDC. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
 
-    - Larger or Critical: $100 - $500
-    - Small: up to $100
-
+Read more on our [bug bounty page](https://www.humanprotocol.org/bug-bounty-program?lng=en-US)
 ## Installation
 
 ### Manual
@@ -161,13 +159,13 @@ Versioning should follow the [semver](https://semver.org/) versioning methodolog
 
 ## Have a question?
 
-Join our [Telegram](https://t.me/hcaptchachat) channel, we will gladly answer your questions.
+Join our [Telegram](https://hmt.ai/telegram) channel, we will gladly answer your questions.
 
 ## Found a bug or a feature request?
 
-Please search for any existing issues at our [Issues](https://github.com/IntuitionMachines/hmt-contracts/issues) page before submitting your own. If you submit your own, please follow our `Bug Request` and `Feature Request` templates.
+Please search for any existing issues at our [Issues](https://github.com/humanprotocol/hmt-contracts/issues) page before submitting your own. If you submit your own, please follow our `Bug Request` and `Feature Request` templates.
 
-Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties) and [Bounty Issues](https://github.com/hCaptcha/hmt-escrow/issues?q=is%3Aopen+is%3Aissue+label%3Abounty).
+Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties) and [Bounty Issues](https://github.com/humanprotocol/hmt-escrow/issues?q=is%3Aopen+is%3Aissue+label%3Abounty).
 
 ## Contributions
 
