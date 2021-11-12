@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const { INFURA_TOKEN, MNEMONIC, PRIV_KEY, ETH_HOST, ETH_PORT } = process.env;
 const HDWalletProvider = require('truffle-hdwallet-provider');
+const HDWalletProvider2 = require('@truffle/hdwallet-provider');
 const PrivateKeyProvider = require('./private-provider');
 
 module.exports = {
@@ -41,6 +42,33 @@ module.exports = {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://humanprotocol-integration.skale.network', 0, 10),
       network_id: '344435',
     },
+    harmony: {
+      provider: () => new HDWalletProvider2({
+        mnemonic: MNEMONIC,
+        providerOrUrl: `https://api.harmony.one`,
+        addressIndex: 0,
+        numberOfAddresses: 10,
+        chainId: 1666600000,
+        chainSettings: {
+          chainId: 0,
+        }
+      }),
+      network_id: '1666600000',
+      networkCheckTimeout: '100000',
+    },
+    harmony_testnet: {
+      network_id: "1666700000",
+      provider: () => new HDWalletProvider2({
+        mnemonic: MNEMONIC,
+        providerOrUrl: `https://api.s0.b.hmny.io`,
+        addressIndex: 0,
+        numberOfAddresses: 10,
+        chainId: 1666700000,
+        chainSettings: {
+          chainId: 0,
+        }
+      }),
+    }
   },
   compilers: {
     solc: {

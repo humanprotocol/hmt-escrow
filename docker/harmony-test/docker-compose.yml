@@ -2,7 +2,7 @@ version: "2"
 services:
   job:
     image: humanprotocol/hmt-escrow:latest
-    build: .
+    build: ../../
     environment:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
