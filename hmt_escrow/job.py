@@ -3,6 +3,8 @@ import os
 import sys
 import logging
 import unittest
+from time import sleep
+from unittest.mock import MagicMock, patch
 from functools import partial
 from decimal import Decimal
 from enum import Enum
@@ -292,7 +294,7 @@ class Job:
         else:
             raise ValueError("Job instantiation wrong, double-check arguments.")
 
-    def launch(self, pub_key: bytes) -> bool:
+    def launch(self, pub_key: bytes, wait_on_failure=0) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
         to S3 with the public key of the Reputation Oracle and stores
         the S3 url to the escrow contract.
@@ -333,6 +335,7 @@ class Job:
 
         Args:
             pub_key (bytes): the public key of the Reputation Oracle.
+            wait_on_failure (int): wait a given amount of seconds before retry. Default is 0.
         Returns:
             bool: returns True if Job initialization and Ethereum and IPFS transactions succeed.
 
@@ -342,7 +345,14 @@ class Job:
 
         # Use factory to deploy a new escrow contract.
         trusted_handlers = [addr for addr, priv_key in self.multi_credentials]
-        self._create_escrow(trusted_handlers)
+
+        txn_success = self._create_escrow(
+            trusted_handlers, wait_on_failure=wait_on_failure
+        )
+
+        if not txn_success:
+            raise Exception("Unable to create escrow")
+
         job_addr = self._last_escrow_addr()
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
         self.job_contract = get_escrow(job_addr)
@@ -1386,7 +1396,9 @@ class Job:
             {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
-    def _create_escrow(self, trusted_handlers=[], gas: int = GAS_LIMIT) -> bool:
+    def _create_escrow(
+        self, trusted_handlers=[], gas: int = GAS_LIMIT, wait_on_failure=0
+    ) -> bool:
         """Launches a new escrow contract to the ethereum network.
 
         >>> from test_manifest import manifest
@@ -1410,6 +1422,7 @@ class Job:
 
         Args:
             gas (int): maximum amount of gas the caller is ready to pay.
+            wait_on_failure (int): number of seconds to wait when using multi-cred
 
         Returns:
             bool: returns True if a new job was successfully launched to the network.
@@ -1436,7 +1449,7 @@ class Job:
             )
 
         escrow_created = self._raffle_txn(
-            self.multi_credentials, txn_func, func_args, txn_event
+            self.multi_credentials, txn_func, func_args, txn_event, wait_on_failure=0
         )
 
         if not escrow_created:
@@ -1445,7 +1458,13 @@ class Job:
         return escrow_created
 
     def _raffle_txn(
-        self, multi_creds, txn_func, txn_args, txn_event, gas: int = GAS_LIMIT
+        self,
+        multi_creds,
+        txn_func,
+        txn_args,
+        txn_event,
+        gas: int = GAS_LIMIT,
+        wait_on_failure=0,
     ):
         """Takes in multiple credentials, loops through each and performs the given transaction.
 
@@ -1455,12 +1474,16 @@ class Job:
             txn_args (List): the arguments the transaction takes.
             txn_event (str): the transaction event that will be performed.
             gas (int): maximum amount of gas the caller is ready to pay.
+            wait_on_failure (int): number of seconds to wait before retrying with another cred
 
         Returns:
             bool: returns True if the given transaction succeeds.
 
         """
         txn_succeeded = False
+
+        if isinstance(wait_on_failure, int) and wait_on_failure > 0:
+            sleep(wait_on_failure)
 
         for gas_payer, gas_payer_priv in multi_creds:
             txn_info = {
@@ -1734,6 +1757,50 @@ class JobTestCase(unittest.TestCase):
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
         self.assertEqual(self.job.balance(), 100000000000000000000)
+
+    def test_launch_failure(self):
+        """ Test _launch raises error on failure to create contract """
+
+        handler_mock = MagicMock()
+        handler_mock.side_effect = Exception("")
+
+        e = None
+        with self.assertRaises(Exception) as e:
+            with patch(__name__ + ".handle_transaction", handler_mock):
+                self.job.launch(b"")
+
+        self.assertIsNotNone(e)
+        self.assertEqual(str(e.exception), " Unable to create escrow")
+
+    def test__raffle_txn_sleeps(self):
+        """ Test waiting on raffle_txn """
+
+        sleep_mock = MagicMock()
+        handler_mock = MagicMock()
+        with patch(__name__ + ".sleep", sleep_mock), patch(
+            __name__ + ".handle_transaction", handler_mock
+        ):
+            sleep_time = 5
+
+            self.job._raffle_txn(
+                multi_creds=[("1", "11")],
+                txn_func=MagicMock(),
+                txn_args=[],
+                txn_event="Transfer",
+                wait_on_failure=sleep_time,
+            )
+
+            sleep_mock.assert_called_once_with(sleep_time)
+            sleep_mock.reset_mock()
+
+            self.job._raffle_txn(
+                multi_creds=[("1", "11")],
+                txn_func=MagicMock(),
+                txn_args=[],
+                txn_event="Transfer",
+            )
+
+            self.assertEqual(sleep_mock.call_count, 0)
 
 
 if __name__ == "__main__":
