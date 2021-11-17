@@ -1770,7 +1770,7 @@ class JobTestCase(unittest.TestCase):
                 self.job.launch(b"")
 
         self.assertIsNotNone(e)
-        self.assertEqual(str(e.exception), " Unable to create escrow")
+        self.assertEqual(str(e.exception), "Unable to create escrow")
 
     def test__raffle_txn_sleeps(self):
         """ Test waiting on raffle_txn """
