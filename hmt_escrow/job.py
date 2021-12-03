@@ -4,7 +4,7 @@ import sys
 import logging
 import unittest
 from time import sleep
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 from functools import partial
 from decimal import Decimal
 from enum import Enum
@@ -23,7 +23,8 @@ from hmt_escrow.eth_bridge import (
     get_factory,
     deploy_factory,
     get_w3,
-    handle_transaction,
+    handle_transaction_with_retry,
+    Retry,
 )
 from hmt_escrow import utils
 from hmt_escrow.storage import download, upload
@@ -191,6 +192,7 @@ class Job:
         factory_addr: str = None,
         escrow_addr: str = None,
         multi_credentials: List[Tuple] = [],
+        retry: Retry = None,
     ):
         """Initializes a Job instance with values from a Manifest class and
         checks that the provided credentials are valid. An optional factory
@@ -267,6 +269,13 @@ class Job:
             ValueError: if the credentials are not valid.
 
         """
+
+        # holds global retry parameters for transactions
+        if retry is None:
+            self.retry = Retry()
+        else:
+            self.retry = retry
+
         main_credentials_valid = self._validate_credentials(
             multi_credentials, **credentials
         )
@@ -294,7 +303,7 @@ class Job:
         else:
             raise ValueError("Job instantiation wrong, double-check arguments.")
 
-    def launch(self, pub_key: bytes, wait_on_failure=0) -> bool:
+    def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
         to S3 with the public key of the Reputation Oracle and stores
         the S3 url to the escrow contract.
@@ -335,7 +344,7 @@ class Job:
 
         Args:
             pub_key (bytes): the public key of the Reputation Oracle.
-            wait_on_failure (int): wait a given amount of seconds before retry. Default is 0.
+
         Returns:
             bool: returns True if Job initialization and Ethereum and IPFS transactions succeed.
 
@@ -346,9 +355,7 @@ class Job:
         # Use factory to deploy a new escrow contract.
         trusted_handlers = [addr for addr, priv_key in self.multi_credentials]
 
-        txn_success = self._create_escrow(
-            trusted_handlers, wait_on_failure=wait_on_failure
-        )
+        txn_success = self._create_escrow(trusted_handlers)
 
         if not txn_success:
             raise Exception("Unable to create escrow")
@@ -362,14 +369,7 @@ class Job:
         self.manifest_hash = hash_
         return self.status() == Status.Launched and self.balance() == 0
 
-    def setup(
-        self,
-        gas: int = GAS_LIMIT,
-        blocking: bool = False,
-        retries: int = 3,
-        delay: int = 5,
-        backoff: int = 2,
-    ) -> bool:
+    def setup(self, gas: int = GAS_LIMIT) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
@@ -431,7 +431,7 @@ class Job:
         func_args = [self.job_contract.address, hmt_amount]
 
         try:
-            handle_transaction(txn_func, *func_args, **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             hmt_transferred = True
         except Exception as e:
             LOG.info(
@@ -443,6 +443,7 @@ class Job:
                 self.multi_credentials, txn_func, func_args, txn_event
             )
 
+        # give up
         if not hmt_transferred:
             LOG.exception(
                 f"{txn_event} failed with all credentials, not continuing to setup."
@@ -461,17 +462,12 @@ class Job:
         ]
 
         try:
-            handle_transaction(txn_func, *func_args, **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             contract_is_setup = True
         except Exception as e:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
-
-        if not contract_is_setup and blocking:
-            fn = partial(handle_transaction, *func_args, **txn_info)
-            fn.__name__ = f"Job.setup.{handle_transaction.__name__}"  # type:ignore
-            contract_is_setup = utils.with_retry(fn, retries, delay, backoff)
 
         if not contract_is_setup:
             contract_is_setup = self._raffle_txn(
@@ -526,7 +522,7 @@ class Job:
         func_args = [handlers]
 
         try:
-            handle_transaction(txn_func, *func_args, **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
@@ -623,7 +619,7 @@ class Job:
 
         func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
         try:
-            handle_transaction(txn_func, *func_args, **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
             LOG.info(
@@ -724,7 +720,7 @@ class Job:
         }
 
         try:
-            handle_transaction(txn_func, *[], **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             # After abort the contract should be destroyed
             return w3.eth.getCode(self.job_contract.address) == b""
         except Exception as e:
@@ -802,7 +798,7 @@ class Job:
         }
 
         try:
-            handle_transaction(txn_func, *[], **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             return self.status() == Status.Cancelled
         except Exception as e:
             LOG.info(
@@ -888,7 +884,7 @@ class Job:
         func_args = [url, hash_]
 
         try:
-            handle_transaction(txn_func, *func_args, **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
@@ -907,7 +903,14 @@ class Job:
 
         return results_stored
 
-    def complete(self, gas: int = GAS_LIMIT) -> bool:
+    def complete(
+        self,
+        gas: int = GAS_LIMIT,
+        blocking: bool = False,
+        retries: int = 3,
+        delay: int = 5,
+        backoff: int = 2,
+    ) -> bool:
         """Completes the Job if it has been paid.
 
         >>> from test_manifest import manifest
@@ -955,7 +958,7 @@ class Job:
         }
 
         try:
-            handle_transaction(txn_func, *[], **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             return self.status() == Status.Complete
         except Exception as e:
             LOG.info(
@@ -1396,9 +1399,7 @@ class Job:
             {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
-    def _create_escrow(
-        self, trusted_handlers=[], gas: int = GAS_LIMIT, wait_on_failure=0
-    ) -> bool:
+    def _create_escrow(self, trusted_handlers=[], gas: int = GAS_LIMIT) -> bool:
         """Launches a new escrow contract to the ethereum network.
 
         >>> from test_manifest import manifest
@@ -1422,7 +1423,6 @@ class Job:
 
         Args:
             gas (int): maximum amount of gas the caller is ready to pay.
-            wait_on_failure (int): number of seconds to wait when using multi-cred
 
         Returns:
             bool: returns True if a new job was successfully launched to the network.
@@ -1441,7 +1441,7 @@ class Job:
         func_args = [trusted_handlers]
 
         try:
-            handle_transaction(txn_func, *func_args, **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
@@ -1449,7 +1449,7 @@ class Job:
             )
 
         escrow_created = self._raffle_txn(
-            self.multi_credentials, txn_func, func_args, txn_event, wait_on_failure=0
+            self.multi_credentials, txn_func, func_args, txn_event
         )
 
         if not escrow_created:
@@ -1458,13 +1458,7 @@ class Job:
         return escrow_created
 
     def _raffle_txn(
-        self,
-        multi_creds,
-        txn_func,
-        txn_args,
-        txn_event,
-        gas: int = GAS_LIMIT,
-        wait_on_failure=0,
+        self, multi_creds, txn_func, txn_args, txn_event, gas: int = GAS_LIMIT
     ):
         """Takes in multiple credentials, loops through each and performs the given transaction.
 
@@ -1474,16 +1468,12 @@ class Job:
             txn_args (List): the arguments the transaction takes.
             txn_event (str): the transaction event that will be performed.
             gas (int): maximum amount of gas the caller is ready to pay.
-            wait_on_failure (int): number of seconds to wait before retrying with another cred
 
         Returns:
             bool: returns True if the given transaction succeeds.
 
         """
         txn_succeeded = False
-
-        if isinstance(wait_on_failure, int) and wait_on_failure > 0:
-            sleep(wait_on_failure)
 
         for gas_payer, gas_payer_priv in multi_creds:
             txn_info = {
@@ -1492,7 +1482,9 @@ class Job:
                 "gas": gas,
             }
             try:
-                handle_transaction(txn_func, *txn_args, **txn_info)
+                handle_transaction_with_retry(
+                    txn_func, self.retry, *txn_args, **txn_info
+                )
                 self.gas_payer = gas_payer
                 self.gas_payer_priv = gas_payer_priv
                 txn_succeeded = True
@@ -1772,35 +1764,62 @@ class JobTestCase(unittest.TestCase):
         self.assertIsNotNone(e)
         self.assertEqual(str(e.exception), "Unable to create escrow")
 
-    def test__raffle_txn_sleeps(self):
-        """ Test waiting on raffle_txn """
+    def test__raffle_txn_retry(self):
+        """ Test general retry logic """
 
+        retries = 4
+        delay = 0.01
+        backoff = 2
+        self.job.retry = Retry(retries=retries, delay=delay, backoff=backoff)
+
+        txn_mock = MagicMock()
+        handler_mock = MagicMock(side_effect=Exception)
         sleep_mock = MagicMock()
-        handler_mock = MagicMock()
-        with patch(__name__ + ".sleep", sleep_mock), patch(
-            __name__ + ".handle_transaction", handler_mock
+
+        with patch("hmt_escrow.eth_bridge.handle_transaction", handler_mock), patch(
+            "hmt_escrow.eth_bridge.sleep", sleep_mock
         ):
-            sleep_time = 5
-
-            self.job._raffle_txn(
+            success = self.job._raffle_txn(
                 multi_creds=[("1", "11")],
-                txn_func=MagicMock(),
+                txn_func=txn_mock,
                 txn_args=[],
                 txn_event="Transfer",
-                wait_on_failure=sleep_time,
             )
 
-            sleep_mock.assert_called_once_with(sleep_time)
+            self.assertFalse(success)
+
+            self.assertEqual(
+                handler_mock.call_args_list,
+                [
+                    call(txn_mock, gas_payer="1", gas_payer_priv="11", gas=6700000)
+                    for i in range(5)
+                ],
+            )
+            self.assertEqual(
+                sleep_mock.call_args_list,
+                [call(delay * backoff ** i) for i in range(retries)],
+            )
+
             sleep_mock.reset_mock()
+            handler_mock.reset_mock()
+            handler_mock.side_effect = Exception
 
-            self.job._raffle_txn(
+            # no retries
+            self.job.retry = Retry()
+
+            success = self.job._raffle_txn(
                 multi_creds=[("1", "11")],
-                txn_func=MagicMock(),
+                txn_func=txn_mock,
                 txn_args=[],
                 txn_event="Transfer",
             )
 
-            self.assertEqual(sleep_mock.call_count, 0)
+            self.assertFalse(success)
+            self.assertEqual(
+                handler_mock.call_args_list,
+                [call(txn_mock, gas_payer="1", gas_payer_priv="11", gas=6700000)],
+            )
+            self.assertEqual(sleep_mock.call_args_list, [])
 
 
 if __name__ == "__main__":

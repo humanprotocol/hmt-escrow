@@ -2,6 +2,7 @@ import logging
 import os
 import time
 import unittest
+from time import sleep
 
 from solcx import compile_files
 from web3 import Web3
@@ -41,6 +42,22 @@ KVSTORE_CONTRACT = Web3.toChecksumAddress(
 )
 WEB3_POLL_LATENCY = float(os.getenv("WEB3_POLL_LATENCY", 5))
 WEB3_TIMEOUT = int(os.getenv("WEB3_TIMEOUT", 240))
+
+
+class Retry(object):
+    """ Retry class holding retry parameters """
+
+    def __init__(self, retries=0, delay=5, backoff=2):
+        """ Inits
+
+        Args:
+            retries: number of retries
+            delay: seconds to wait between retries
+            backoff: exponent to increment delay between calls (1 linear, 2 quadratic)
+        """
+        self.retries = retries
+        self.delay = delay
+        self.backoff = backoff
 
 
 def get_w3() -> Web3:
@@ -116,6 +133,46 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
     except TimeoutError as e:
         raise e
     return txn_receipt
+
+
+def handle_transaction_with_retry(
+    txn_func, retry=Retry(), *args, **kwargs
+) -> TxReceipt:
+    """ Handle transaction
+
+    Same as ``handle_transaction`` but with retry and backoff 
+
+    Args:
+        txn_func: the transaction function to be handled.
+
+        retry: Retry object containing retrying parameters.
+
+        \*args: all the arguments the function takes.
+
+        \*\*kwargs: the transaction data used to complete the transaction.
+
+    Returns:
+        AttributeDict: returns the transaction receipt.
+
+    """
+
+    wait_time = retry.delay
+
+    for i in range(retry.retries + 1):
+        try:
+            return handle_transaction(txn_func, *args, **kwargs)
+        except Exception as e:
+            if i == retry.retries:
+                LOG.warning(f"giving up on transaction after {i} retries")
+                raise e
+            else:
+                LOG.warning(
+                    f"(x{i+1}) handle_transaction: {e}. Retrying after {wait_time} sec..."
+                )
+                sleep(wait_time)
+                wait_time *= retry.backoff
+
+    raise Exception("give up on handle_transaction")
 
 
 def get_contract_interface(contract_entrypoint):
