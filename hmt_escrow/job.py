@@ -1758,7 +1758,7 @@ class JobTestCase(unittest.TestCase):
 
         e = None
         with self.assertRaises(Exception) as e:
-            with patch(__name__ + ".handle_transaction", handler_mock):
+            with patch("hmt_escrow.eth_bridge.handle_transaction", handler_mock):
                 self.job.launch(b"")
 
         self.assertIsNotNone(e)
