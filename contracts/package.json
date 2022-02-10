@@ -1,0 +1,12 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "deploy": "truffle migrate --network=development"
+  },
+  "dependencies": {
+    "truffle": "^5.4.32"
+  }
+}
