@@ -59,3 +59,12 @@ Accounts addresses(For the ganache network)
 * Escrow Factory Address - `0x3FF93a3847Cd1fa62DD9BcfE351C4b6BcCcF10cB`
 * Recording Oracle Address - `0x61F9F0B31eacB420553da8BCC59DC617279731Ac`
 * Reputation Oracle Address - `0xD979105297fB0eee83F7433fC09279cb5B94fFC6`
+
+
+## Deployed Playground
+
+For running this in the playground, all steps are the same. But minio has already ready to go manifest.json deployed to the `manifests` bucket, so you can get a shareable link from there
+
+* [Launcher](http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:3000/)
+* [Minio](http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:9001)
+* Ganache network to be added to the metamask - http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:8545. Check other params in the "Running Locally" section
