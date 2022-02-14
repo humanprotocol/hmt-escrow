@@ -12,6 +12,40 @@ The entity which records the task output and who does what. In this case, a fort
 - Reptutation Oracle
 The entity which payes for the tasks based on the reputation in the oracle network. In this case, the fortune payer collects all the information from the fortune recorder and payes out the fortune teller and fortune recorder.
 
+## Deployed Playground
+
+To try out this example you'll need to have a [Metamask](https://metamask.io/) wallet configured with Fortune Ethereum Testnet. Basically, it is a [Ganache](https://trufflesuite.com/ganache/) setup.
+
+Add network with next parameters:
+* New RPC URL - http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:8545
+* Chain ID - 1337
+* Currency Symbol - ETH
+
+![Adding Network](https://miro.medium.com/max/708/1*J1QV3L1z7U6qRYrVBRbJQQ.gif)
+
+
+After that, you'll need to import several accounts to the Metamask. These are standard accounts from the Ganache setup. Here is the list of private keys:
+
+* `28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5` - Account #1: A job requester
+* `9e531b326f8c09437ab2af7a768e5e25422b43075169714f1790b6b036f73b00` - Account #2: An agent number 1
+* `9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350` - Account #3: An agent number 2
+
+
+Add HMToken to the all new accounts. The HMTs Address is `0x444c45937D2202118a0FF9c48d491cef527b59dF`
+
+Then go to the [Job Launcher](http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:3000/), connect your wallet and create the Escrow.
+
+Next step would be to fund the Escrow. You can try with 10 HMT at first. 
+
+When it's done - it is a time to setup an Escrow. This is a separate step, where we define required parameters, such as recording,reputation oracles details and a manifest URL. Oracles details are hardcoded, but you can choose it to any service you'd like to see. Just look at the recording and reputation oracles implementations. The ready to go manifest can be found under [Minio](http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:9001) `manifests` bucket. There is a `manifest.json`. Grab the link by clicking "Share" button and paste it to the launcher form and click "Setup Escrow"
+
+After Escrow setup - you will see Exchange link in the contract. Exchange - is a place, where humans provide their fortunes to the fortune requester(you) and then get paid for the work. The Exchange requires wallet to be connected, so go ahead and switch Metamask account to Account #3. Connect the wallet and paste some words into the input.
+
+The manifest in this example requires 2 fortunes to be filled, so you should paste 2 fortunes from 2 different accounts. Also, they should differ from each other
+
+After 2 fortunes filled - the reputation oracle will initiate the payout to all parties(2 workers and 2 oracles). Please, check your balance in HMT for account #2 and account #3
+
+
 ## Running Locally
 
 
@@ -52,19 +86,9 @@ After required fortunes are gathered - you will be able to see the Final Results
 **IMPORTANT NOTE**: Current setup with docker compose leads to the final results url with minio:9000 host inside. Which is inacessible from the localhost. So results could be found directly in the minio server under `job-results` bucket. The second way to overcome this - is to run each application without docker, which might lead to some changes in the compose file(for environment variables related to hosts)
 
 
-
-Accounts addresses(For the ganache network)
+## Accounts addresses(For the ganache network)
 
 * HMToken address - `0x444c45937D2202118a0FF9c48d491cef527b59dF`
 * Escrow Factory Address - `0x3FF93a3847Cd1fa62DD9BcfE351C4b6BcCcF10cB`
 * Recording Oracle Address - `0x61F9F0B31eacB420553da8BCC59DC617279731Ac`
 * Reputation Oracle Address - `0xD979105297fB0eee83F7433fC09279cb5B94fFC6`
-
-
-## Deployed Playground
-
-For running this in the playground, all steps are the same. But minio has already ready to go manifest.json deployed to the `manifests` bucket, so you can get a shareable link from there
-
-* [Launcher](http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:3000/)
-* [Minio](http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:9001)
-* Ganache network to be added to the metamask - http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:8545. Check other params in the "Running Locally" section
