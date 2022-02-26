@@ -481,7 +481,9 @@ class Job:
         if not contract_is_setup:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
-        return str(self.status()) == str(Status.Pending) and self.balance() == hmt_amount
+        return (
+            str(self.status()) == str(Status.Pending) and self.balance() == hmt_amount
+        )
 
     def add_trusted_handlers(self, handlers: List[str], gas: int = GAS_LIMIT) -> bool:
         """Add trusted handlers that can freely transact with the contract and perform aborts and cancels for example.
