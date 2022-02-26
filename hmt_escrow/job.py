@@ -369,7 +369,7 @@ class Job:
         self.manifest_hash = hash_
         return self.status() == Status.Launched and self.balance() == 0
 
-    def setup(self, gas: int = GAS_LIMIT) -> bool:
+    def setup(self, gas: int = GAS_LIMIT, sender: str = None) -> bool:
         """Sets the escrow contract to be ready to receive answers from the Recording Oracle.
         The contract needs to be deployed and funded first.
 
@@ -427,8 +427,12 @@ class Job:
             "gas_payer_priv": self.gas_payer_priv,
             "gas": gas,
         }
-        txn_func = hmtoken_contract.functions.transfer
-        func_args = [self.job_contract.address, hmt_amount]
+        if sender:
+            txn_func = hmtoken_contract.functions.transferFrom
+            func_args = [sender, self.job_contract.address, hmt_amount]
+        else:
+            txn_func = hmtoken_contract.functions.transfer
+            func_args = [self.job_contract.address, hmt_amount]
 
         try:
             handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
@@ -477,7 +481,7 @@ class Job:
         if not contract_is_setup:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
-        return self.status() == Status.Pending and self.balance() == hmt_amount
+        return str(self.status()) == str(Status.Pending) and self.balance() == hmt_amount
 
     def add_trusted_handlers(self, handlers: List[str], gas: int = GAS_LIMIT) -> bool:
         """Add trusted handlers that can freely transact with the contract and perform aborts and cancels for example.

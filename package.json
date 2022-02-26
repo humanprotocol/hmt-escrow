@@ -1,6 +1,6 @@
 {
   "name": "hmt-escrow",
-  "version": "0.9.2",
+  "version": "0.9.7",
   "description": "Launch escrow contracts to the HUMAN network",
   "main": "truffle.js",
   "directories": {
