@@ -191,3 +191,10 @@ The docker-compose.yml references a default minio username and password for deve
 
 When deploying to a production environment you are expected to set your own credentials based on the rules applied to minio access within your cluster.
 
+
+## Polygon deployment
+```
+Escrow Factory - 0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794
+KVStore - 0x6334dB76037bb6d4bc21901433E870b22ACa1F9a
+HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571B
+```
