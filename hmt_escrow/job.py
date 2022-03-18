@@ -438,7 +438,7 @@ class Job:
             handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             hmt_transferred = True
         except Exception as e:
-            LOG.info(
+            LOG.debug(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
@@ -449,7 +449,7 @@ class Job:
 
         # give up
         if not hmt_transferred:
-            LOG.exception(
+            LOG.warning(
                 f"{txn_event} failed with all credentials, not continuing to setup."
             )
             return False
@@ -469,7 +469,7 @@ class Job:
             handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             contract_is_setup = True
         except Exception as e:
-            LOG.info(
+            LOG.debug(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
@@ -479,7 +479,7 @@ class Job:
             )
 
         if not contract_is_setup:
-            LOG.exception(f"{txn_event} failed with all credentials.")
+            LOG.warning(f"{txn_event} failed with all credentials.")
 
         return (
             str(self.status()) == str(Status.Pending) and self.balance() == hmt_amount
@@ -628,7 +628,7 @@ class Job:
             handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
-            LOG.info(
+            LOG.debug(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
@@ -637,7 +637,7 @@ class Job:
         )
 
         if not bulk_paid:
-            LOG.exception(f"{txn_event} failed with all credentials.")
+            LOG.warning(f"{txn_event} failed with all credentials.")
 
         return bulk_paid == True
 
@@ -1496,7 +1496,7 @@ class Job:
                 txn_succeeded = True
                 break
             except Exception as e:
-                LOG.info(
+                LOG.debug(
                     f"{txn_event} failed with {gas_payer} and {gas_payer_priv} due to {e}."
                 )
 
