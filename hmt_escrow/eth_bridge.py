@@ -163,10 +163,10 @@ def handle_transaction_with_retry(
             return handle_transaction(txn_func, *args, **kwargs)
         except Exception as e:
             if i == retry.retries:
-                LOG.warning(f"giving up on transaction after {i} retries")
+                LOG.debug(f"giving up on transaction after {i} retries")
                 raise e
             else:
-                LOG.warning(
+                LOG.debug(
                     f"(x{i+1}) handle_transaction: {e}. Retrying after {wait_time} sec..."
                 )
                 sleep(wait_time)
