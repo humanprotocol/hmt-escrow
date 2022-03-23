@@ -1,5 +1,6 @@
 # Fortune
 
+<a href="https://cla-assistant.io/humanprotocol/fortune"><img src="https://cla-assistant.io/readme/badge/humanprotocol/fortune" alt="CLA assistant" /></a>
 
 An example human application for telling the future with 3 ethereum comptatible oracles. 
 
