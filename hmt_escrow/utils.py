@@ -48,11 +48,7 @@ def with_retry(fn, retries=3, delay=5, backoff=2):
     return False
 
 
-def get_hmt_balance(
-    wallet_addr,
-    token_addr,
-    w3
-):
+def get_hmt_balance(wallet_addr, token_addr, w3):
     """ Get hmt balance
 
     Args:
@@ -64,16 +60,16 @@ def get_hmt_balance(
         Decimal with HMT balance
     """
     try:
-        abi = [{
-            "constant": True,
-            "inputs": [{ "name": "_owner", "type": "address" }],
-            "name": "balanceOf",
-            "outputs": [{ "name": "balance", "type": "uint256" }],
-            "type": "function",
-        }]
+        abi = [
+            {
+                "constant": True,
+                "inputs": [{"name": "_owner", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"name": "balance", "type": "uint256"}],
+                "type": "function",
+            }
+        ]
         contract = w3.eth.contract(abi=abi, address=token_addr)
         return contract.functions.balanceOf(wallet_addr).call()
     except Exception as e:
-        logger.warning(
-            f"Can't get HMT Balance: {e}"
-        )
+        logger.warning(f"Can't get HMT Balance: {e}")
