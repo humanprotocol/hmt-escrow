@@ -1840,9 +1840,9 @@ class JobTestCase(unittest.TestCase):
             utils.get_hmt_balance(
                 "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
                 "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
-                get_w3()
+                get_w3(),
             )
-            , 1000000
+            , 1000000,
         )
 
 if __name__ == "__main__":
