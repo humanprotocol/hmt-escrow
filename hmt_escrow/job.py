@@ -25,6 +25,7 @@ from hmt_escrow.eth_bridge import (
     get_w3,
     handle_transaction_with_retry,
     Retry,
+    HMTOKEN_ADDR
 )
 from hmt_escrow import utils
 from hmt_escrow.storage import download, upload
@@ -434,13 +435,20 @@ class Job:
             txn_func = hmtoken_contract.functions.transfer
             func_args = [self.job_contract.address, hmt_amount]
 
-        try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
-            hmt_transferred = True
-        except Exception as e:
-            LOG.debug(
-                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
-            )
+        balance = utils.get_hmt_balance(
+            self.gas_payer,
+            HMTOKEN_ADDR,
+            get_w3()
+        )
+
+        if balance and balance > hmt_amount:
+            try:
+                handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
+                hmt_transferred = True
+            except Exception as e:
+                LOG.debug(
+                    f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                )
 
         if not hmt_transferred:
             hmt_transferred = self._raffle_txn(
