@@ -437,7 +437,8 @@ class Job:
 
         balance = utils.get_hmt_balance(self.gas_payer, HMTOKEN_ADDR, get_w3())
 
-        if not balance or balance > hmt_amount:
+        # make sure there is enough HMT to fund the escrow
+        if balance > hmt_amount:
             try:
                 handle_transaction_with_retry(
                     txn_func, self.retry, *func_args, **txn_info
@@ -1833,6 +1834,16 @@ class JobTestCase(unittest.TestCase):
             )
             self.assertEqual(sleep_mock.call_args_list, [])
 
+    def test_get_hmt_balance(self):
+        """ Test wallet HMT balance is OK """
+        self.assertGreater(
+            utils.get_hmt_balance(
+                "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+                "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
+                get_w3()
+            )
+            , 1000000
+        )
 
 if __name__ == "__main__":
     from test_manifest import manifest

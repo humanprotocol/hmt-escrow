@@ -59,17 +59,14 @@ def get_hmt_balance(wallet_addr, token_addr, w3):
     Return:
         Decimal with HMT balance
     """
-    try:
-        abi = [
-            {
-                "constant": True,
-                "inputs": [{"name": "_owner", "type": "address"}],
-                "name": "balanceOf",
-                "outputs": [{"name": "balance", "type": "uint256"}],
-                "type": "function",
-            }
-        ]
-        contract = w3.eth.contract(abi=abi, address=token_addr)
-        return contract.functions.balanceOf(wallet_addr).call()
-    except Exception as e:
-        logger.warning(f"Can't get HMT Balance: {e}")
+    abi = [
+        {
+            "constant": True,
+            "inputs": [{"name": "_owner", "type": "address"}],
+            "name": "balanceOf",
+            "outputs": [{"name": "balance", "type": "uint256"}],
+            "type": "function",
+        }
+    ]
+    contract = w3.eth.contract(abi=abi, address=token_addr)
+    return contract.functions.balanceOf(wallet_addr).call()
