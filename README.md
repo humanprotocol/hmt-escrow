@@ -13,6 +13,9 @@ The entity which records the task output and who does what. In this case, a fort
 - Reptutation Oracle
 The entity which payes for the tasks based on the reputation in the oracle network. In this case, the fortune payer collects all the information from the fortune recorder and payes out the fortune teller and fortune recorder.
 
+<img src="https://i.pinimg.com/originals/72/63/c2/7263c28bf10fddd54982e88796a441d1.jpg" alt="Psychedelic Art Merlin Wizard Poster UV Black Light Fluorescent Glow In The  Dark #Psychedelic | Psychedelic art, Poster art, Art web"/>
+
+
 ## Deployed Playground
 
 To try out this example you'll need to have a [Metamask](https://metamask.io/) wallet configured with Fortune Ethereum Testnet. Basically, it is a [Ganache](https://trufflesuite.com/ganache/) setup.
