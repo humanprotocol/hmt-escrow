@@ -25,6 +25,7 @@ from hmt_escrow.eth_bridge import (
     get_w3,
     handle_transaction_with_retry,
     Retry,
+    HMTOKEN_ADDR,
 )
 from hmt_escrow import utils
 from hmt_escrow.storage import download, upload
@@ -434,13 +435,19 @@ class Job:
             txn_func = hmtoken_contract.functions.transfer
             func_args = [self.job_contract.address, hmt_amount]
 
-        try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
-            hmt_transferred = True
-        except Exception as e:
-            LOG.debug(
-                f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
-            )
+        balance = utils.get_hmt_balance(self.gas_payer, HMTOKEN_ADDR, get_w3())
+
+        # make sure there is enough HMT to fund the escrow
+        if balance > hmt_amount:
+            try:
+                handle_transaction_with_retry(
+                    txn_func, self.retry, *func_args, **txn_info
+                )
+                hmt_transferred = True
+            except Exception as e:
+                LOG.debug(
+                    f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
+                )
 
         if not hmt_transferred:
             hmt_transferred = self._raffle_txn(
@@ -1826,6 +1833,17 @@ class JobTestCase(unittest.TestCase):
                 [call(txn_mock, gas_payer="1", gas_payer_priv="11", gas=6700000)],
             )
             self.assertEqual(sleep_mock.call_args_list, [])
+
+    def test_get_hmt_balance(self):
+        """ Test wallet HMT balance is OK """
+        self.assertGreater(
+            utils.get_hmt_balance(
+                "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+                "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
+                get_w3(),
+            ),
+            1000000,
+        )
 
 
 if __name__ == "__main__":
