@@ -20,4 +20,3 @@ HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to ma
 ### High level rules to make sure that you are doing this correctly
 - [ ] We never want to create a token fork. The token should always share supply with the main HMT. 
 - [ ] If you add more solidity code, we must have it audited before it is to go production
-- [ ]
