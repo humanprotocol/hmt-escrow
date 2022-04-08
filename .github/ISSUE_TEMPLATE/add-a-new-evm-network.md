@@ -7,7 +7,7 @@ assignees: posix4e
 
 ---
 
-HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to make a network first class and make sure that it works. All of our EVM network launches are supported by gitcoin but you can gain a yearly bonus by being our network sponsor. 
+HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to make a network first class and make sure that it works. All of our EVM network launches are supported by gitcoin but you can gain a yearly bonus by being our network sponsor. If you need support please join tech-discussions on the human protocol discord linked on hmt.ai.
 
 ### Steps to receive gitcoin bounty
 - [ ] Launch the contracts on the devnet and make sure that everything is working
