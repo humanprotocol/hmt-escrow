@@ -2,7 +2,10 @@
 
 <a href="https://cla-assistant.io/humanprotocol/fortune"><img src="https://cla-assistant.io/readme/badge/humanprotocol/fortune" alt="CLA assistant" /></a>
 
-An example human application for telling the future with 3 ethereum comptatible oracles. 
+An example human application for telling the future with 3 ethereum comptatible oracles. We also include a launcher to make it easier to launch the escrow contracts
+
+- Launcher
+The entity which creates the escrow contracts.
 
 - Exchange Oracle
 The entity which interacts with people or bots to fufill the task. In this case, a fortune teller tells fortune recorder.
