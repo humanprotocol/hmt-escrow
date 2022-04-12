@@ -19,3 +19,4 @@ HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to ma
 - [ ] Verify bridging of tokens works
 ### High level rules to make sure that you are doing this correctly
 - [ ] We never want to create a mintable token. Your change should not change the total token supply from 1 billion
+- [ ] When deploying production contracts use a dedicated wallet with a seed phrase you don't use anywhere else. You might be required to share it with us. 
