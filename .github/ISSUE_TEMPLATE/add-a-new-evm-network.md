@@ -12,6 +12,7 @@ HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to ma
 ### Steps to receive gitcoin bounty
 - [ ] Launch the contracts on the devnet and make sure that everything is working
 - [ ] Launch contracts on production network and file a commit with all the contract information to this repo's documentation. Here's an example https://github.com/humanprotocol/hmt-escrow/pull/296
+* [ ] Launch KVstore contracts https://github.com/humanprotocol/eth-kvstore
 - [ ] Add the contracts to the relevant network scanner (etherscan equivalent) 
 - [ ] Launch a working app on the network. The easiest one to get going is our example fortune. https://github.com/humanprotocol/fortune  Make a video of the functionality of the app working on the new network and link to relevant scanner transactions.
 - [ ] Add to human dashboard [ https://dashboard.humanprotocol.org/ ]
