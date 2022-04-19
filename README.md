@@ -199,7 +199,7 @@ KVStore - 0x6334dB76037bb6d4bc21901433E870b22ACa1F9a
 HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571B
 ```
 
-## Moonbeam deployment
+## Moonbeam deployment (Not Yet Verified)
 ```
 Escrow Factory - 0x3C5a2966A1b5eBF9f4b2B372857C4deD545Bed45
 KVStore - 0xC1e779E71E6bf7Ded0dDdCb6e221404f497CeE8e
