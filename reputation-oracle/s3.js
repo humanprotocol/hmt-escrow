@@ -1,5 +1,5 @@
 const Minio = require('minio');
-const fs = require('fs');
+const fs = require('fs/promises');
 const minioHost = process.env.MINIO_HOST || 'localhost';
 const minioPort = Number(process.env.MINIO_PORT) || 9000;
 const minioAccessKey = process.env.MINIO_ACCESS_KEY || 'dev';
@@ -16,8 +16,9 @@ const minioClient = new Minio.Client({
 
 const uploadResults = async (fortunes, escrowAddress) => {
   const fileName = `${escrowAddress}.json`;
-  const filePath = `./${fileName}`;
-  fs.writeFileSync(filePath, JSON.stringify(fortunes));
+  const filePath = `./data/${fileName}`;
+  await fs.mkdir('./data', {recursive: true});
+  await fs.writeFile(filePath, JSON.stringify(fortunes));
 
   const bucketExists = await minioClient.bucketExists(minioBucketName);
   if (!bucketExists) {
