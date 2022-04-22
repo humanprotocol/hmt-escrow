@@ -52,7 +52,7 @@ services:
     build:
       context: ./reputation-oracle
     ports:
-      - 3006:3005
+      - 3006:3006
     environment:
       ETH_PRIVATE_KEY: 657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8
       ETH_HTTP_SERVER: http://ganache:8545
@@ -61,5 +61,5 @@ services:
       MINIO_ACCESS_KEY: dev
       MINIO_SECRET_KEY: devdevdev
       MINIO_BUCKET_NAME: job-results
-      PORT: 3005
+      PORT: 3006
     command: ["yarn", "start"]
