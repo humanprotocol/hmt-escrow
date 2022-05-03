@@ -216,6 +216,6 @@ HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
 ## Neonlabs Devnet
 ```
 Escrow Factory - ""
-KVStore - "0x2210c93c4fad2d8113035f6ec6e25d47be012604"
+KVStore - 0x2210c93c4fad2d8113035f6ec6e25d47be012604
 HMToken - ""
 ```
