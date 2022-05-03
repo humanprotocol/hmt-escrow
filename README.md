@@ -212,3 +212,10 @@ Escrow Factory - 0xeD26cc8A4eC4ade08BC7bc53951af9146F52347F
 KVStore - 0x7666373b9E8E8A23340d3c5C6b08Da3d813D4aaC
 HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
 ```
+
+## Neonlabs Devnet
+```
+Escrow Factory - ""
+KVStore - "0x2210c93c4fad2d8113035f6ec6e25d47be012604"
+HMToken - ""
+```
