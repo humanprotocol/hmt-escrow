@@ -215,7 +215,7 @@ HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
 
 ## Neonlabs Devnet
 ```
-Escrow Factory - ""
+Escrow Factory - 0xB46b95aa85D2085Bf6CCbb9cB953c28cc7DE6F4a
 KVStore - 0x2210c93c4fad2d8113035f6ec6e25d47be012604
-HMToken - ""
+HMToken - 0x7c79652c2cfbaE787d7bDbAF455118Fa51662c23
 ```
