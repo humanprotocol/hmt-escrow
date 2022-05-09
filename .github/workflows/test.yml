@@ -1,0 +1,34 @@
+name: Run tests on pull requests
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Run tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.13.2
+
+      - name: Start containers
+        run: docker-compose -f docker-compose.test.yml up -d --build
+
+      - name: Install contract dependencies
+        working-directory: ./contracts
+        run: yarn
+
+      - name: Deploy contracts
+        working-directory: ./contracts
+        run: yarn deploy
+
+      - name: Install tests dependencies
+        working-directory: ./tests
+        run: yarn
+
+      - name: Run tests
+        working-directory: ./tests
+        run: yarn test:e2e-backend

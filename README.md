@@ -92,6 +92,13 @@ After required fortunes are gathered - you will be able to see the Final Results
 
 **IMPORTANT NOTE**: Current setup with docker compose leads to the final results url with minio:9000 host inside. Which is inacessible from the localhost. So results could be found directly in the minio server under `job-results` bucket. The second way to overcome this - is to run each application without docker, which might lead to some changes in the compose file(for environment variables related to hosts)
 
+## Running Tests Locally
+
+```
+docker-compose -f docker-compose.test.yml up
+cd contracts && yarn && yarn deploy // this commands deploys contracts to the blockchain
+cd ../tests/ && yarn && yarn test:e2e-backend // this command runs tests
+```
 
 ## Accounts addresses(For the ganache network)
 
