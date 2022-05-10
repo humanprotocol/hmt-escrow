@@ -8,7 +8,7 @@ In this specific usecase a job requester is requesting a fortune prediction from
 
 ## High Level Overview
 
-At a very high level this project consists of 4 main components:
+At a very high level this project consists of 4 main components (smart contracts):
 
 **Launcher (Job Launcher)** - The Job Launcher is factory which creates new escrow contracts. A job requester can then add Job details (as a mainfest) and fund the escrow.
 
@@ -93,7 +93,7 @@ In Metamask, switch to the Job Requester account that you imported above
 5. Assuming the above transaction was successful you will now have a new Escrow address under the "Escrow created" field, this address represents the job, copy it down. Next we must fund the escrow.
 6. Enter the Escrow address in to the search box and click the 'Search Escrow' button. You should now be presented with information about the Escrow, such as the status etc. Enter any amount into the box titled 'Fund the escrow' and click the 'Fund' button.
 7. To complete the job creation process we must add the manifest URL. This URL points to the manifest.json file, which contains job specific data. For this example the data is already created for you and stored in a local datastore (minio) which can be accessed at http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:9001 (To login you must use the default username: 'dev' and password 'devdevdev')
-8. Once you are into the minio dashboard, click on the 'Browse' button, then click on the manifest.json file. Click the 'share' button to get the manifest url.
+8. Once you are into the minio dashboard, click on the 'Browse' button (manifests bucket), then click on the manifest.json file. Click the 'share' button to get the manifest url.
 9. Enter the manifest URL into the form and hit 'Setup Escrow'.
 
 The job creation is now complete!
@@ -126,7 +126,7 @@ To deploy the contracts to the our Local Testnet, in a new window execute:
 cd contracts && yarn && yarn deploy
 ```
 
-At this point we have a Local Testnet running and our contracts deployed to this testnet. The next step is to configure Metamask to work with our Local Testnet.
+At this point we have a Local Testnet running with our contracts deployed to this testnet. The next step is to configure Metamask to work with our Local Testnet.
 
 ### Metamask Configuration for Local Testnet
 
