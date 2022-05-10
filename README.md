@@ -183,9 +183,15 @@ To fulfil this job we require answers (fortunes in our case) from 2 workers.
 We have now provided 2 predictions from 2 Workers. Lets check the status of the job again by navigating to http://localhost:3001
 You should see account balance for Worker 1 and 2 has increased by the relevant amount. The final results URL can be found by navigating to the Job Launcher (http://localhost:3000).
 
-# Run Tests
+# Run Tests Locally
 
 To run tests please execute the commands below:
+
+```
+docker-compose -f docker-compose.test.yml up
+cd contracts && yarn && yarn deploy // this commands deploys contracts to the blockchain
+cd ../tests/ && yarn && yarn test:e2e-backend // this command runs tests
+```
 
 # Troubleshooting
 
