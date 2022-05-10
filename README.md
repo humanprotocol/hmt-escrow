@@ -14,7 +14,7 @@ At a very high level this project consists of 4 main components (smart contracts
 
 **Exchange Oracle** - An Ethereum Oracle that interacts with people or bots to fufill the job.
 
-**Recording Oracle** - An Ethereum Oracle which records the task output and who does what. In this case, the Recording Oracle will receive response from the Exchange Oracle.
+**Recording Oracle** - An Ethereum Oracle which records the task output and who does what. In this case, the Recording Oracle will receive responses from the Exchange Oracle.
 
 **Reptutation Oracle** - An Ethereum Oracle which pays workers for the jobs performed, based on their reputation within the oracle network. In this case, the Reputation Oracle collects all the responses from the Recording Oracle and pays out the Worker and the Recording Oracle.
 
@@ -31,20 +31,20 @@ At a very high level this project consists of 4 main components (smart contracts
 1. The Job creator creates an escrow, funds it and adds the job manifest (a url with the job details)
 2. Once the job is registered on-chain the Exchange Oracle picks up the job and routes it to workers.
 
-   ![Diagram for steps 1 and 2](assets/fortuneflow1.jpg)
+![Diagram for steps 1 and 2](assets/fortuneflow1.jpg)
 
 ### Job Fulfillment and Answer Quality
 
 3. Workers perform the task and submit their responses (answers) back to the Exchange Oracle.
 4. The Exchange Oracle passes the responses to the Recording Oracle, which then checks the quality of answers. If the quality is acceptable the answers are then routed to the Reputation Oracle.
 
-   ![Diagram for steps 3 and 4](assets/fortuneflow2.jpg)
+![Diagram for steps 3 and 4](assets/fortuneflow2.jpg)
 
 ### Settlement
 
 5. The Reputation Oracle calculates a threshold based on certain job request parameters. If the answers pass the threshold it pays workers and updates the reputation scores for each worker.
 
-   ![Diagram for steps 4 and 5](assets/fortuneflow3.jpg)
+![Diagram for steps 4 and 5](assets/fortuneflow3.jpg)
 
 ## Usage Instructions
 
@@ -110,7 +110,7 @@ To fulfil this job we require answers (fortunes in our case) from 2 workers.
 2. Now switch to Worker 2 and enter a fortune prediction (it should be different from Worker 1).
 
 We have now provided 2 predictions from 2 Workers. Lets check the status of the job again by navigating to http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:3001
-You should see account balance for Worker 1 and 2 has increased by the relevant amount. The final results URL can be found by navigating to the Job Launcher (http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:3000).
+You should see account balance for Worker 1 and 2 has increased by the relevant amount. The final results URL can be found by navigating to the Job Launcher (http://ec2-3-15-230-238.us-east-2.compute.amazonaws.com:3000) and entering the Escrow contract address into the searchbar.
 
 # Running Locally
 
@@ -180,8 +180,7 @@ To fulfil this job we require answers (fortunes in our case) from 2 workers.
 1. In your Metamask wallet switch to the Worker 1 account that we imported above. Navigate to http://localhost:3001 and enter a fortune prediction (any text).
 2. Now switch to Worker 2 and enter a fortune prediction (it should be different from Worker 1).
 
-We have now provided 2 predictions from 2 Workers. Lets check the status of the job again by navigating to http://localhost:3001
-You should see account balance for Worker 1 and 2 has increased by the relevant amount. The final results URL can be found by navigating to the Job Launcher (http://localhost:3000).
+We have now provided 2 predictions from 2 Workers. Lets check the status of the job again by navigating to http://localhost:3001 You should also see that the account balances for Worker 1 and 2 have increased by the relevant amount. The final results URL can be found by navigating to the Job Launcher (http://localhost:3000) and entering the Escrow contract address into the searchbar.
 
 # Run Tests Locally
 
