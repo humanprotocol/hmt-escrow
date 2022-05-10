@@ -8,5 +8,4 @@
     "recording_oracle_url": "http://localhost:3005/job/results",
     "reputation_oracle_url": "http://reputation-oracle:3005/job/results",
     "exchange_oracle_url": "http://localhost:3001"
-  }
-  
+}
