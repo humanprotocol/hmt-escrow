@@ -10,19 +10,19 @@ In this specific usecase a job requester is requesting a fortune prediction from
 
 At a very high level this project consists of 4 main components:
 
-    **Launcher (Job Launcher)** - The Job Launcher is factory which creates new escrow contracts. A job requester can then add Job details (as a mainfest) and fund the escrow.
+**Launcher (Job Launcher)** - The Job Launcher is factory which creates new escrow contracts. A job requester can then add Job details (as a mainfest) and fund the escrow.
 
-    **Exchange Oracle** - An Ethereum Oracle that interacts with people or bots to fufill the job.
+**Exchange Oracle** - An Ethereum Oracle that interacts with people or bots to fufill the job.
 
-    **Recording Oracle** - An Ethereum Oracle which records the task output and who does what. In this case, the Recording Oracle will receive response from the Exchange Oracle.
+**Recording Oracle** - An Ethereum Oracle which records the task output and who does what. In this case, the Recording Oracle will receive response from the Exchange Oracle.
 
-    **Reptutation Oracle** - An Ethereum Oracle which pays workers for the jobs performed, based on their reputation within the oracle network. In this case, the Reputation Oracle collects all the responses from the Recording Oracle and pays out the Worker and the Recording Oracle.
+**Reptutation Oracle** - An Ethereum Oracle which pays workers for the jobs performed, based on their reputation within the oracle network. In this case, the Reputation Oracle collects all the responses from the Recording Oracle and pays out the Worker and the Recording Oracle.
 
 ### User Persona's in this demo
 
-    **Job Creator/Requester** - The entity/person who wants some work performed.
+**Job Creator/Requester** - The entity/person who wants some work performed.
 
-    **Worker (Fortune Teller)** - The entity/person who performs the actual work.
+**Worker (Fortune Teller)** - The entity/person who performs the actual work.
 
 ## Process Flow
 
@@ -189,7 +189,7 @@ To run tests please execute the commands below:
 
 # Troubleshooting
 
-Error: The tx doesn't have the correct nonce
+Error: The tx doesn't have the correct nonce or the transaction freezes
 Fix: If you experience errors such as this when submitting transactions, try resetting Metamask by clicking on the account icon (top right) then Settings > Advanced > Reset Account.
 
 Use the developer console 'Ctrl+Shift+I (Command+Option+I on Mac)' in Chrome/Firefox to diagnose errors when submitting transactions from the front-end.
