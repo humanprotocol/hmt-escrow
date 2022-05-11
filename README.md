@@ -50,9 +50,13 @@ At a very high level this project consists of 4 main components (smart contracts
 
 There are two options to run the example, use our deployed playground example or run the example locally using Docker.
 
+## ATTENTION WINDOWS WSL USERS
+
+We recommend that Windows users try the Deployed Playground example as the Local example requires 'Host Mode' to be activated in the docker-compose.yml, which unfortunately is not available on Docker for Windows WSL.
+
 ## Deployed Playground
 
-To use the hosted example all you need is a metmask wallet with the Fortune Ethereum Testnet configured. Download and install Metamask from www.metamask.io.
+To use the deployed (hosted) example all you need is a metmask wallet with the Fortune Ethereum Testnet configured. Download and install Metamask from www.metamask.io.
 
 ### Metamask Configuration for Deployed Playground
 
@@ -153,6 +157,10 @@ To configure Metamask for the Local Testnet example:
 
    `9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350`
 
+(In case you are wondering where these private keys are from, they correspond to the standard accounts from a Ganache setup and are pre-funded with testnet HMT).
+
+3. The final step in configuring Metamask is to import the HMT Token for each of the accounts above. Click on 'Import tokens', located at the bottom of the 'Assets' tab on your wallet homepage and add the following Token Contract Address for the HMT Token: `0x444c45937D2202118a0FF9c48d491cef527b59dF` Repeat this process for each of the 3 accounts. Congratulations we have successfully configured Metamask and can proceed to interact with the Job Launcher to create new Jobs!
+
 ## Creating a Job (Local Testnet)
 
 In Metamask, switch to the Job Requester account that you imported above
@@ -194,11 +202,14 @@ cd ../tests/ && yarn && yarn test:e2e-backend // this command runs tests
 
 # Troubleshooting
 
-Error: The tx doesn't have the correct nonce or the transaction freezes
+Error: The tx doesn't have the correct nonce or the transaction freezes.
+
 Fix: If you experience errors such as this when submitting transactions, try resetting Metamask by clicking on the account icon (top right) then Settings > Advanced > Reset Account.
 
-Use the developer console 'Ctrl+Shift+I (Command+Option+I on Mac)' in Chrome/Firefox to diagnose errors when submitting transactions from the front-end.
+We also recommend that Windows WSL users try the Deployed Playground example as the Local example requires 'Host Mode' to be activated in the docker-compose.yml, which unfortunately is not available on Docker for Windows.
+
+If you encounter any other issues when using the front end, please use the developer console 'Ctrl+Shift+I (Command+Option+I on Mac)' in Chrome/Firefox to diagnose errors when submitting transactions from the front-end.
 
 # Conclusion
 
-In this example we have demonstrated the steps involved in creating and fulfilling jobs on the HUMAN protocol. This is a very basic example and could quite easily be extended to other use case's. If you have any problems with the setup please open an issue and let us know! Feel free to check out the HUMAN github repostory for other useful resources.
+In this example we have demonstrated the steps involved in creating and fulfilling jobs on the HUMAN protocol. This is a very basic example which could easily be extended to other use case's. If you have any problems with the setup or usage of this example, please open an issue and let us know! Feel free to check out the HUMAN github repostory for other useful resources.
