@@ -13,7 +13,8 @@
     "no-console": 0,
     "prefer-destructuring": ["error", { "object": true, "array": false }],
     "max-len": 0,
-    "eol-last": ["error", "always"]
+    "eol-last": ["error", "always"],
+    "object-curly-newline": 0
   },
   "globals": {
     "assert": true,

@@ -7,6 +7,7 @@ Human Protocol’s bounty program is the easiest way to get a job working with u
 Reward sizes are guided by the rules below and payable in USDC. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
 
 Read more on our [bug bounty page](https://www.humanprotocol.org/bug-bounty-program?lng=en-US)
+
 ## Installation
 
 ### Manual
@@ -14,10 +15,10 @@ Read more on our [bug bounty page](https://www.humanprotocol.org/bug-bounty-prog
 You need few essential system requirements to successfully install our Python 3 package.
 
 ### Annoying testing feature
+
 Rightly or Wrongly we tried to use doctests for the vast majority of testing in this project
 . As a result you may have to remove the raise_on_error=True in the module you are testing
 to get good feedback on what's broken.
-
 
 #### Debian / Ubuntu
 
@@ -32,6 +33,7 @@ pip install git+https://github.com/iamdefinitelyahuman/py-solc-x@master#egg=py-s
 
 pip install hmt-escrow
 ```
+
 ### Docker
 
 In order to build the image you need [Docker](https://www.docker.com/) installed on your computer.
@@ -40,18 +42,18 @@ We have gathered relevant commands in the `bin/` folder.
 
 You can run the project with `bin/prelaunch`.
 
-
 ### Getting Started
 
-Creating a new HUMAN Protocol Job requires a manifest and credentials at minimum. Optionally a factory 
-address and/or an escrow address can be given. Using an existing factory address can be used to deploy 
-a new Job to the Ethereum network. Using an existing factory address and escrow address together an 
-existing Job on the Ethereum network can be accessed. Creating a Job without a factory address deploys 
+Creating a new HUMAN Protocol Job requires a manifest and credentials at minimum. Optionally a factory
+address and/or an escrow address can be given. Using an existing factory address can be used to deploy
+a new Job to the Ethereum network. Using an existing factory address and escrow address together an
+existing Job on the Ethereum network can be accessed. Creating a Job without a factory address deploys
 a fresh factory to the Ethereum network.
 
 A Manifest has to follow the specification at https://github.com/hCaptcha/hmt-basemodels
 
 Credentials must follow the following format:
+
 ```
 >>> credentials = {
 ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
@@ -62,6 +64,7 @@ Credentials must follow the following format:
 
 Using only the Manifest and Credentials deploys a new factory to the Ethereum network
 with the public key of a known Reputation Oracle.
+
 ```
 >>> job = Job(credentials, manifest)
 >>> job.launch(rep_oracle_pub_key)
@@ -69,6 +72,7 @@ True
 ```
 
 Providing an existing factory address is done via the Job's class attributes.
+
 ```
 >>> factory_addr = deploy_factory(**credentials)
 >>> job = Job(credentials, manifest, factory_addr)
@@ -76,8 +80,8 @@ Providing an existing factory address is done via the Job's class attributes.
 True
 ```
 
-You can supply an existing escrow factory address when instantiating the class, which 
-it will use to do all operations. If an escrow factory address is not given, it creates one. 
+You can supply an existing escrow factory address when instantiating the class, which
+it will use to do all operations. If an escrow factory address is not given, it creates one.
 
 Credentials have to contain the private key that was used to upload
 the previously deployed manifest to IPFS. The Job is instantiated with the fetched
@@ -94,8 +98,8 @@ manifest.
 >>> escrow_addr = job.job_contract.address
 ```
 
-If you provide an `escrow_addr` and a `factory_addr` the library will check 
-whether that `escrow_addr` belongs to the `factory_addr`. If that succeeds 
+If you provide an `escrow_addr` and a `factory_addr` the library will check
+whether that `escrow_addr` belongs to the `factory_addr`. If that succeeds
 you can continue from the state the contract is in.
 
 A Job can only be launched once: calling `launch()` will return False if
@@ -108,12 +112,14 @@ False
 ```
 
 Calling setup funds the deployed escrow contract and updates its state with data from the manifest.
+
 ```
 >>> job.setup()
 True
 ```
 
 While no payouts have been performed, aborting and canceling a job is still possible.
+
 ```
 >>> job.abort()
 True
@@ -124,6 +130,7 @@ True
 Performing a bulk payout that doesn't fully drain the escrow contract sets the contract to
 Partial state. It also uploads the final results from the Reputation Oracle to the contract's
 state.
+
 ```
 >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('20.0'))]
 >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
@@ -133,6 +140,7 @@ True
 ```
 
 Draining the escrow contract fully sets the contract to Paid state.
+
 ```
 >>> payouts = [("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal('80.0'))]
 >>> job.bulk_payout(payouts, {}, rep_oracle_pub_key)
@@ -142,6 +150,7 @@ True
 ```
 
 Completing the job sets a Paid contract to complete.
+
 ```
 >>> job.complete()
 True
@@ -151,9 +160,9 @@ True
 
 ## Note for maintainers: Deploying to PyPi
 
-A build will automatically be deployed to PyPi from master if tagged with a version number.  This version number should  match the version in the `setup.py` file.
+A build will automatically be deployed to PyPi from master if tagged with a version number. This version number should match the version in the `setup.py` file.
 
-The tags will need to be pushed to master via a user that has the proper privileges (see the contributors of this repo).  
+The tags will need to be pushed to master via a user that has the proper privileges (see the contributors of this repo).
 
 Versioning should follow the [semver](https://semver.org/) versioning methodology and not introduce breaking changes on minor or patch-level changes.
 
@@ -179,27 +188,37 @@ MIT © HUMAN Protocol
 
 The HUMAN Protocol token contract (HMToken.sol) has been audited by several third parties, most recently CertiK. You can see the results of this audit in the `audits` directory. The code for this contract is stable and not expected to change materially in the future.
 
-The escrow factory and related code are under active development, and escrow factories on the testnet are frequently launched during development. 
+The escrow factory and related code are under active development, and escrow factories on the testnet are frequently launched during development.
 
-Although all code goes through internal reviews before being committed, you should assume the current code in master has not been externally audited to the same degree as the token contract. 
+Although all code goes through internal reviews before being committed, you should assume the current code in master has not been externally audited to the same degree as the token contract.
 
 When a stable 1.0 version of the escrow factory contract is released, this section of the README will be updated with a link to audit results for that githash.
 
 ## Note to bug hunters and those deploying to production
 
-The docker-compose.yml references a default minio username and password for development. minio as used here is an internal cache for low-privilege, publicly readable, encrypted data. Including these default credentials for development is intentional. 
+The docker-compose.yml references a default minio username and password for development. minio as used here is an internal cache for low-privilege, publicly readable, encrypted data. Including these default credentials for development is intentional.
 
 When deploying to a production environment you are expected to set your own credentials based on the rules applied to minio access within your cluster.
 
+## Polygon Mainnet deployment
 
-## Polygon deployment
 ```
 Escrow Factory - 0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794
+Escrow Factory polygon-escrow-bulk https://github.com/humanprotocol/hmt-escrow/tree/polygon-escrow-bulk - 0xF09f451eC04cAb1b1FAe98C86F45291B00E52b03
 KVStore - 0x6334dB76037bb6d4bc21901433E870b22ACa1F9a
-HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571B
+HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
+```
+
+## Polygon Mumbai Testnet
+
+```
+Escrow Factory - 0x558cd800f9F0B02f3B149667bDe003284c867E94
+KVStore - 0x32e27177BA6Ea91cf28dfd91a0Da9822A4b74EcF
+HMToken - 0x0376D26246Eb35FF4F9924cF13E6C05fd0bD7Fb4
 ```
 
 ## Moonbeam deployment (Not Yet Verified)
+
 ```
 Escrow Factory - 0x3C5a2966A1b5eBF9f4b2B372857C4deD545Bed45
 KVStore - 0xC1e779E71E6bf7Ded0dDdCb6e221404f497CeE8e
@@ -207,8 +226,13 @@ HMToken - 0xa1d4836243DfA3259e28b8A9D11377455B935632
 ```
 
 ## Moonbase Alpha deployment
+
 ```
 Escrow Factory - 0xeD26cc8A4eC4ade08BC7bc53951af9146F52347F
 KVStore - 0x7666373b9E8E8A23340d3c5C6b08Da3d813D4aaC
 HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
 ```
+
+## Maintainers
+
+Polygon : [foufrix](https://github.com/foufrix)
