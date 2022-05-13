@@ -41,7 +41,12 @@ app.post('/job/results', async function(req, res) {
     const rewards = workerAddresses.map(() => evenWorkerReward.toString());
     const bulkTransactionId = 1;
 
-    await Escrow.methods.bulkPayOut(workerAddresses, rewards, resultsUrl, resultHash, 1).send({from: account.address, gas: 5000000});
+    const gasNeeded = await Escrow.methods.bulkPayOut(workerAddresses, rewards, resultsUrl, resultHash, 1).estimateGas({ from: account.address });
+    const gasPrice = await web3.eth.getGasPrice();
+
+    console.log(`bulkpayout will be send, gasNeeded : ${gasNeeded}, gasPrice: ${gasPrice} `);
+
+    await Escrow.methods.bulkPayOut(workerAddresses, rewards, resultsUrl, resultHash, 1).send({ from: account.address, gas: gasNeeded, gasPrice });
 
     res.status(200).send({ message: 'Escrow has been completed' })
   } catch(err) {
