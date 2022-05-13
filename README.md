@@ -204,7 +204,7 @@ When deploying to a production environment you are expected to set your own cred
 
 ```
 Escrow Factory - 0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794
-Escrow Factory ([polygon-escrow-bulk branch](https://github.com/humanprotocol/hmt-escrow/tree/polygon-escrow-bulk)) - 0xF09f451eC04cAb1b1FAe98C86F45291B00E52b03
+Escrow Factory polygon-escrow-bulk https://github.com/humanprotocol/hmt-escrow/tree/polygon-escrow-bulk - 0xF09f451eC04cAb1b1FAe98C86F45291B00E52b03
 KVStore - 0x6334dB76037bb6d4bc21901433E870b22ACa1F9a
 HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
 ```
@@ -232,3 +232,7 @@ Escrow Factory - 0xeD26cc8A4eC4ade08BC7bc53951af9146F52347F
 KVStore - 0x7666373b9E8E8A23340d3c5C6b08Da3d813D4aaC
 HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
 ```
+
+## Maintainers
+
+Polygon : [foufrix](https://github.com/foufrix)
