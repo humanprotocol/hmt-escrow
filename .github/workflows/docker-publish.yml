@@ -23,6 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+
       - name: Run tests
+        timeout-minutes: 15
         run: |
           ./bin/ci
