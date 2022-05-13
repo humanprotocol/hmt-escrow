@@ -25,6 +25,6 @@ jobs:
 
 
       - name: Run tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         run: |
           ./bin/ci
