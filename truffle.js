@@ -41,6 +41,21 @@ module.exports = {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://humanprotocol-integration.skale.network', 0, 10),
       network_id: '344435',
     },
+    mumbai: {
+      provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mumbai.infura.io/v3/${INFURA_TOKEN}`),
+      network_id: 80001,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    polygon: {
+      provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mainnet.infura.io/v3/${INFURA_TOKEN}`),
+      network_id: 137,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+      // check gasPrice here https://polygonscan.com/gastracker for deployment
+    },
   },
   compilers: {
     solc: {
