@@ -195,9 +195,17 @@ When deploying to a production environment you are expected to set your own cred
 ## Polygon deployment
 ```
 Escrow Factory - 0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794
+Escrow Factory polygon-escrow-bulk branch https://github.com/humanprotocol/hmt-escrow/tree/polygon-escrow-bulk - 0xF09f451eC04cAb1b1FAe98C86F45291B00E52b03
 KVStore - 0x6334dB76037bb6d4bc21901433E870b22ACa1F9a
-HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571B
+HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
 ```
+
+## Polygon Mumbai Testnet
+
+```
+Escrow Factory - 0x558cd800f9F0B02f3B149667bDe003284c867E94
+KVStore - 0x32e27177BA6Ea91cf28dfd91a0Da9822A4b74EcF
+HMToken - 0x0376D26246Eb35FF4F9924cF13E6C05fd0bD7Fb4
 
 ## Moonbeam deployment (Not Yet Verified)
 ```
@@ -219,3 +227,6 @@ Escrow Factory - 0x75D377773aCf9eB1076B01c1698415Bfe2db6D9d
 KVStore - 0x2210c93c4fad2d8113035f6ec6e25d47be012604
 HMToken - 0x2A78BA72f52Af2CC90c9389DbE0d2C4B10055b81
 ```
+## Maintainers
+
+Polygon : [foufrix](https://github.com/foufrix)
