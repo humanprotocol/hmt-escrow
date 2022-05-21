@@ -10,7 +10,7 @@ assignees: posix4e
 HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to make a network first class and make sure that it works. All of our EVM network launches are supported by gitcoin but you can gain a yearly bonus by being our network sponsor. If you need support please join tech-discussions on the human protocol discord linked on hmt.ai.
 
 ### Steps to receive gitcoin bounty
-- [ ] Suggest and have us authorize your bridging strategy. After all we need to bridge HMT over to the new network
+- [ ] Suggest and have us authorize your bridging strategy. After all we need to bridge HMT over to the new network. Usually we need to use a erc20 compatible approach.
 - [ ] Launch the contracts on the devnet and make sure that everything is working
 - [ ] Launch contracts on production network and file a commit with all the contract information to this repo's documentation. Here's an example https://github.com/humanprotocol/hmt-escrow/pull/296
 * [ ] Launch KVstore contracts https://github.com/humanprotocol/eth-kvstore
