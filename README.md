@@ -229,5 +229,5 @@ HMToken - 0x2A78BA72f52Af2CC90c9389DbE0d2C4B10055b81
 ```
 ## Maintainers
 
-Polygon : [foufrix](https://github.com/foufrix)
-Neonlabs : [molecula451](https://github.com/molecula451)
+- Polygon : [foufrix](https://github.com/foufrix)
+- Neonlabs : [molecula451](https://github.com/molecula451)
