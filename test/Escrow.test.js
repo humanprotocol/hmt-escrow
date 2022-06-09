@@ -80,7 +80,7 @@ contract('Escrow', (accounts) => {
 
     it('fails when aborting with different address', async () => {
       try {
-        tx = await Escrow.abort({ from: externalAddress });
+        await Escrow.abort({ from: externalAddress });
         console.log(`Abort costs: ${tx.receipt.gasUsed} wei.`);
         assert(false);
       } catch (ex) {

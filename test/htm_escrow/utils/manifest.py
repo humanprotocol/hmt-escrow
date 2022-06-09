@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import logging
-import os
-import basemodels
 
+import basemodels
 from web3 import Web3
 
 CALLBACK_URL = "http://google.com/webback"
-GAS_PAYER = Web3.toChecksumAddress("0x1413862c2b7054cdbfdc181b83962cb0fc11fd92")
+GAS_PAYER = Web3.toChecksumAddress(
+    "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"
+)
 FAKE_URL = "http://google.com/fake"
 IMAGE_LABEL_BINARY = "image_label_binary"
 
