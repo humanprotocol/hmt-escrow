@@ -59,7 +59,7 @@ class Retry(object):
         self.backoff = backoff
 
 
-def get_w3() -> Web3:
+def get_w3(hmt_server_addr: str = None) -> Web3:
     """Set up the web3 provider for serving transactions to the ethereum network.
 
     >>> w3 = get_w3()
@@ -76,11 +76,21 @@ def get_w3() -> Web3:
     <class 'web3.providers.websocket.WebsocketProvider'>
     >>> del os.environ["HMT_ETH_SERVER"]
 
+    Args:
+        hmt_server_addr: infura API address.
+
     Returns:
         Web3: returns the web3 provider.
 
     """
-    endpoint = os.getenv("HMT_ETH_SERVER", "http://localhost:8545")
+    endpoint = None
+
+    if hmt_server_addr:
+        endpoint = hmt_server_addr
+
+    if not endpoint:
+        endpoint = os.getenv("HMT_ETH_SERVER", "http://localhost:8545")
+
     if not endpoint:
         LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
 
@@ -114,8 +124,9 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
     gas_payer = kwargs["gas_payer"]
     gas_payer_priv = kwargs["gas_payer_priv"]
     gas = kwargs["gas"]
+    hmt_server_addr = kwargs.get("hmt_server_addr")
 
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
     nonce = w3.eth.getTransactionCount(gas_payer)
 
     txn_dict = txn_func(*args).buildTransaction(
@@ -189,17 +200,20 @@ def get_contract_interface(contract_entrypoint):
     return contract_interface
 
 
-def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
+def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR, hmt_server_addr: str = None) -> Contract:
     """Retrieve the HMToken contract from a given address.
 
     >>> type(get_hmtoken())
     <class 'web3._utils.datatypes.Contract'>
 
+    Args:
+        hmt_server_addr (str): infura API address.
+
     Returns:
         Contract: returns the HMToken solidity contract.
 
     """
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
     contract_interface = get_contract_interface(
         "{}/HMTokenInterface.sol:HMTokenInterface".format(CONTRACT_FOLDER)
     )
@@ -207,7 +221,7 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
     return contract
 
 
-def get_escrow(escrow_addr: str) -> Contract:
+def get_escrow(escrow_addr: str, hmt_server_addr: str = None) -> Contract:
     """Retrieve the Escrow contract from a given address.
 
     >>> credentials = {
@@ -227,12 +241,14 @@ def get_escrow(escrow_addr: str) -> Contract:
     Args:
         escrow_addr (str): an ethereum address of the escrow contract.
 
+        hmt_server_addr (str): infura API address.
+
     Returns:
         Contract: returns the Escrow solidity contract.
 
     """
 
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
     contract_interface = get_contract_interface(
         "{}/Escrow.sol:Escrow".format(CONTRACT_FOLDER)
     )
@@ -243,7 +259,7 @@ def get_escrow(escrow_addr: str) -> Contract:
     return escrow
 
 
-def get_factory(factory_addr: str) -> Contract:
+def get_factory(factory_addr: str, hmt_server_addr: str = None) -> Contract:
     """Retrieve the EscrowFactory contract from a given address.
 
     >>> credentials = {
@@ -257,11 +273,13 @@ def get_factory(factory_addr: str) -> Contract:
     Args:
         factory_addr (str): the ethereum address of the Escrow contract.
 
+        hmt_server_addr (str): infura API address.
+
     Returns:
         Contract: returns the EscrowFactory solidity contract.
 
     """
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
     contract_interface = get_contract_interface(
         "{}/EscrowFactory.sol:EscrowFactory".format(CONTRACT_FOLDER)
     )
@@ -272,11 +290,18 @@ def get_factory(factory_addr: str) -> Contract:
     return escrow_factory
 
 
-def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
+def deploy_factory(
+    gas: int = GAS_LIMIT,
+    hmt_server_addr: str = None,
+    hmtoken_addr: str = None,
+    **credentials,
+) -> str:
     """Deploy an EscrowFactory solidity contract to the ethereum network.
 
     Args:
         gas (int): maximum amount of gas the caller is ready to pay.
+
+        hmt_server_addr (str): infura API address.
 
     Returns
         str: returns the contract address of the newly deployed factory.
@@ -284,8 +309,9 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     """
     gas_payer = credentials["gas_payer"]
     gas_payer_priv = credentials["gas_payer_priv"]
+    hmtoken_address = HMTOKEN_ADDR if hmtoken_addr is None else hmtoken_addr
 
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
     contract_interface = get_contract_interface(
         "{}/EscrowFactory.sol:EscrowFactory".format(CONTRACT_FOLDER)
     )
@@ -294,14 +320,19 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
     )
 
     txn_func = factory.constructor
-    func_args = [HMTOKEN_ADDR]
-    txn_info = {"gas_payer": gas_payer, "gas_payer_priv": gas_payer_priv, "gas": gas}
+    func_args = [hmtoken_address]
+    txn_info = {
+        "gas_payer": gas_payer,
+        "gas_payer_priv": gas_payer_priv,
+        "gas": gas,
+        "hmt_server_addr": hmt_server_addr,
+    }
     txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
     contract_addr = txn_receipt["contractAddress"]
     return str(contract_addr)
 
 
-def get_pub_key_from_addr(wallet_addr: str) -> bytes:
+def get_pub_key_from_addr(wallet_addr: str, hmt_server_addr: str = None) -> bytes:
     """
     Given a wallet address, uses the kvstore to pull down the public key for a user
     in the hmt universe, defined by the kvstore key `hmt_pub_key`.  Works with the
@@ -312,6 +343,8 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
 
     Args:
         wallet_addr (string): address to get the public key of
+
+        hmt_server_addr (str): infura API address.
 
     Returns:
         bytes: the public key in bytes form
@@ -342,7 +375,7 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     if not GAS_PAYER:
         raise ValueError("environment variable GAS_PAYER required")
 
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
 
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
     addr_pub_key = kvstore.functions.get(GAS_PAYER, "hmt_pub_key").call(
@@ -352,7 +385,7 @@ def get_pub_key_from_addr(wallet_addr: str) -> bytes:
     return bytes(addr_pub_key, encoding="utf-8")
 
 
-def set_pub_key_at_addr(pub_key: str) -> TxReceipt:
+def set_pub_key_at_addr(pub_key: str, hmt_server_addr: str = None) -> TxReceipt:
     """
     Given a public key, this function will use the eth-kvstore to reach out to the blockchain
     and set the key `hmt_pub_key` on the callers kvstore collection of values, equivalent to the
@@ -362,6 +395,8 @@ def set_pub_key_at_addr(pub_key: str) -> TxReceipt:
 
     Args:
         pub_key (string): RSA Public key for this user
+
+        hmt_server_addr (str): infura API address.
 
     Returns:
         AttributeDict: receipt of the set transaction on the blockchain
@@ -382,7 +417,7 @@ def set_pub_key_at_addr(pub_key: str) -> TxReceipt:
     if not (GAS_PAYER or GAS_PAYER_PRIV):
         raise ValueError("environment variable GAS_PAYER AND GAS_PAYER_PRIV required")
 
-    w3 = get_w3()
+    w3 = get_w3(hmt_server_addr)
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
 
     txn_func = kvstore.functions.set
@@ -391,6 +426,7 @@ def set_pub_key_at_addr(pub_key: str) -> TxReceipt:
         "gas_payer": GAS_PAYER,
         "gas_payer_priv": GAS_PAYER_PRIV,
         "gas": GAS_LIMIT,
+        "hmt_server_addr": hmt_server_addr,
     }
 
     return handle_transaction(txn_func, *func_args, **txn_info)
