@@ -17,7 +17,7 @@ from hmt_escrow.job import (
     launcher,
     is_trusted_handler
 )
-from test.htm_escrow.utils.manifest import manifest
+from test.hmt_escrow.utils.manifest import manifest
 
 
 class JobTestCase(unittest.TestCase):
@@ -33,6 +33,9 @@ class JobTestCase(unittest.TestCase):
         """ Tests job launch """
         lauched = self.job.launch(self.rep_oracle_pub_key)
         self.assertEqual(lauched, True)
+
+        next_status = status(self.job.job_contract, self.job.gas_payer)
+        self.assertEqual(next_status, Status.Launched)
 
     def test_status(self):
         lauched = self.job.launch(self.rep_oracle_pub_key)
@@ -232,8 +235,53 @@ class JobTestCase(unittest.TestCase):
         self.assertTrue(
             self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
+    def test_job_bulk_payout_with_encryption_option(self):
+        """Tests whether final results must be persisted in storage encrypted
+        or plain.
+        """
+        job = Job(self.credentials, manifest)
+        self.assertEqual(job.launch(self.rep_oracle_pub_key), True)
+        self.assertEqual(job.setup(), True)
+
+        payouts = [
+            ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("100.0"))
+        ]
+
+        final_results = {'results': 0}
+
+        mock_upload = MagicMock(return_value=('hash', 'url'))
+        with patch('hmt_escrow.job.upload', mock_upload):
+            # Bulk payout with final results as plain (not encrypted)
+            job.bulk_payout(payouts=payouts,
+                            results=final_results,
+                            pub_key=self.rep_oracle_pub_key,
+                            encrypt_final_results=False)
+
+            mock_upload.assert_called_once_with(
+                msg=final_results,
+                public_key=self.rep_oracle_pub_key,
+                encrypt_data=False
+            )
+            mock_upload.reset_mock()
+
+        with patch("hmt_escrow.job.upload", mock_upload):
+            # Bulk payout with final results as plain (not encrypted)
+            job.bulk_payout(payouts=payouts,
+                            results={"results": 0},
+                            pub_key=self.rep_oracle_pub_key,
+                            encrypt_final_results=True)
+
+            mock_upload.assert_called_once_with(
+                msg=final_results,
+                public_key=self.rep_oracle_pub_key,
+                encrypt_data=True
+            )
+
     def test_job_abort(self):
-        # The escrow contract is in Paid state after the full bulk payout and it can't be aborted.
+        """
+        The escrow contract is in Paid state after the full bulk payout, and
+            it can't be aborted.
+        """
 
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
@@ -322,9 +370,12 @@ class JobTestCase(unittest.TestCase):
         handler_mock = MagicMock(side_effect=Exception)
         sleep_mock = MagicMock()
 
-        with patch("hmt_escrow.eth_bridge.handle_transaction",
-                   handler_mock), patch(
-            "hmt_escrow.eth_bridge.sleep", sleep_mock
+        with patch(
+                "hmt_escrow.eth_bridge.handle_transaction",
+                handler_mock
+        ), patch(
+            "hmt_escrow.eth_bridge.sleep",
+            sleep_mock
         ):
             success = self.job._raffle_txn(
                 multi_creds=[("1", "11")],
@@ -365,21 +416,24 @@ class JobTestCase(unittest.TestCase):
             self.assertFalse(success)
             self.assertEqual(
                 handler_mock.call_args_list,
-                [call(txn_mock, gas_payer="1", gas_payer_priv="11",
-                      gas=6700000)],
+                [call(
+                    txn_mock,
+                    gas_payer="1",
+                    gas_payer_priv="11",
+                    gas=6700000
+                )],
             )
             self.assertEqual(sleep_mock.call_args_list, [])
 
     def test_get_hmt_balance(self):
         """ Test wallet HMT balance is OK """
-        self.assertGreater(
-            utils.get_hmt_balance(
-                "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-                "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
-                get_w3(),
-            ),
-            1000000,
+        amount = utils.get_hmt_balance(
+            "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
+            "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
+            get_w3(),
         )
+        print(amount)
+        self.assertGreater(amount, 10000)
 
 
 if __name__ == "__main__":
