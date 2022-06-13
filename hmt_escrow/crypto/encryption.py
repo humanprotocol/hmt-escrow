@@ -27,7 +27,6 @@ import hashlib
 import os
 import struct
 import typing as t
-from ctypes import cast
 
 from cryptography.hazmat.primitives import ciphers, hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -96,14 +95,14 @@ class Encryption:
 
         # 2) generate shared-secret = key_derivation( key_exchange(r, P) )
         try:
-            key_material = self.process_key_exchange(ephemeral, public_key)
+            key_material = self._process_key_exchange(ephemeral, public_key)
         except exceptions.InvalidPublicKey as exc:
             raise exceptions.DecryptionError(
                 "Failed to generate shared secret with"
                 f" pubkey {public_key!r}: {exc}"
             ) from exc
 
-        key = self._concat_key_derivation(key_material)
+        key = self._get_key_derivation(key_material)
 
         k_len = self.KEY_LEN // 2
         key_enc, key_mac = key[:k_len], key[k_len:]
@@ -156,7 +155,7 @@ class Encryption:
         shared = data[1:1 + self.PUBLIC_KEY_LEN]
 
         try:
-            key_material = self.process_key_exchange(
+            key_material = self._process_key_exchange(
                 private_key,
                 eth_keys.PublicKey(shared)
             )
@@ -166,7 +165,7 @@ class Encryption:
                 f" pubkey {shared!r}: {exc}"
             ) from exc
 
-        key = self._concat_key_derivation(key_material)
+        key = self._get_key_derivation(key_material)
 
         k_len = self.KEY_LEN // 2
         key_enc, key_mac = key[:k_len], key[k_len:]
@@ -186,29 +185,43 @@ class Encryption:
 
         # 3) Decrypt
         algo = self.CIPHER(key_enc)
-        block_size = os.urandom(algo.block_size // 8)
+        block_size = algo.block_size // 8
 
-        cipher_context = Cipher(algo, self.MODE(block_size)).encryptor()
+        data_start = 1 + self.PUBLIC_KEY_LEN
+        data_slice = data[data_start: data_start + block_size]
 
-        data_start = 1 + self.PUBLIC_KEY_LEN + int(block_size)
-        ciphertext = data[data_start: -self.KEY_LEN]
+        cipher_context = Cipher(algo, self.MODE(data_slice)).decryptor()
+        ciphertext = data[data_start + block_size: -self.KEY_LEN]
 
         return cipher_context.update(ciphertext) + cipher_context.finalize()
 
-    def process_key_exchange(self,
-                             private_key: eth_datatypes.PrivateKey,
-                             public_key: eth_datatypes.PublicKey) -> bytes:
+    def _process_key_exchange(self,
+                              private_key: eth_datatypes.PrivateKey,
+                              public_key: eth_datatypes.PublicKey) -> bytes:
         """
         Performs a key exchange operation using the
-        ECDH (Elliptic-curve Diffie–Hellman) algorithm. 
+        ECDH (Elliptic-curve Diffie–Hellman) algorithm.
+        
+        NIST SP 800-56a Concatenation Key Derivation Function
+        (see section 4) - Key agreement.
+        https://csrc.nist.gov/CSRC/media/Publications/sp/800-56a/archive/2006-05-03/documents/sp800-56-draft-jul2005.pdf
+
+        
+        A key establishment procedure where the resultant secret keying
+        material is a function of information contributed by two participants,
+        so that no party can predetermine the value of the secret keying
+        material independently from the contribut ions of the other parties.
+        Contrast with key transport.  
         
         Args:
-            private_key (eth_datatypes.PrivateKey):  Private key to be used in
-                agreement.
-            public_key (eth_datatypes.PublicKey): Public key to be exchanged.
+            private_key (eth_datatypes.PrivateKey): Private key to be used in
+                agreement (the initiator).
+            public_key (eth_datatypes.PublicKey): Public key to be exchanged
+                (responder).
 
         Returns:
-
+            Key material resulted of the exchange between two keys, assuming
+                that they derive the same key material
         """""
         private_key_int = int(t.cast(int, private_key))
         ec_private_key = ec.derive_private_key(private_key_int,
@@ -233,20 +246,45 @@ class Encryption:
             raise exceptions.InvalidPublicKey(str(error)) from error
 
     def generate_private_key(self) -> eth_datatypes.PrivateKey:
-        """ Generate a new SECP256K1 private key and return it """
-        priv_key = ec.generate_private_key(self.ELLIPTIC_CURVE)
-        key = cast(ec.EllipticCurvePrivateKeyWithSerialization, priv_key)
+        """ Generates a new SECP256K1 private key and return it """
+        key = ec.generate_private_key(self.ELLIPTIC_CURVE)
+        # key = cast(ec.EllipticCurvePrivateKeyWithSerialization, priv_key)
         big_key = int_to_big_endian(key.private_numbers().private_value)
         padded_key = self._pad32(big_key)
         return eth_keys.PrivateKey(padded_key)
 
-    def _concat_key_derivation(self, key_material: bytes) -> bytes:
+    @staticmethod
+    def generate_public_key(private_key: bytes) -> eth_keys.PublicKey:
+        """
+        Generates a public key with combination to private key provided.
+        Args:
+            private_key (bytes): Private to be used to create public key.
+
+        Returns:
+            Public key object.
+        """
+        private_key_obj = eth_keys.PrivateKey(private_key)
+        return private_key_obj.public_key
+
+    def _get_key_derivation(self, key_material: bytes) -> bytes:
         """
         NIST SP 800-56a Concatenation Key Derivation Function
-        (see section 5.8.1).
+        (see section 5.8.1) - KDF.
+
+        An Approved key derivation function (KDF) shall be used to derive
+        secret keying material from a shared secret.
 
         Pretty much copied from geth's implementation:
         https://github.com/ethereum/go-ethereum/blob/673007d7aed1d2678ea3277eceb7b55dc29cf092/crypto/ecies/ecies.go#L167
+
+        Args:
+            key_material (bytes): Key material derived from ECDH
+                (shared secret) exchange and must be processed to deverive a
+                key secret.
+
+        Returns:
+            Key secret derived - a called KDF
+
         """
         key = b""
         hash_ = hashes.SHA256()
