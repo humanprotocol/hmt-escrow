@@ -4,7 +4,6 @@ set -exu
 KVSTORE_ADDR_FILE=/deployed-kvstore/ethkvstore.address.json
 HMTOKEN_ADDR_FILE=/deployed-hmtoken/hmt.address.json
 
-
 until test -f $HMTOKEN_ADDR_FILE; do
   echo "waiting for hmt token file at $HMTOKEN_ADDR_FILE .."
   sleep 2
@@ -26,7 +25,6 @@ done
 
 mkdir -p minio/escrow-results
 
-#export PYTHONPATH=$(pwd)
 if [ ! -z $* ]; then
   $*
 else

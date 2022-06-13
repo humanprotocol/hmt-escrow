@@ -64,7 +64,7 @@ def download(key: str, private_key: bytes) -> Dict:
         BOTO3_CLIENT = _connect_s3()
         response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
         ciphertext = response["Body"].read()
-        msg = _decrypt(private_key, ciphertext)
+        msg = crypto.decrypt(private_key, ciphertext)
     except Exception as e:
         LOG.warning(
             "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}".format(
@@ -100,41 +100,9 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     hash_ = hashlib.sha1(manifest_.encode("utf-8")).hexdigest()
 
     BOTO3_CLIENT = _connect_s3()
-    encrypted_msg = _encrypt(public_key, manifest_)
+    encrypted_msg = crypto.encrypt(public_key, manifest_)
     key = f"s3{hash_}"
     BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME, Key=key,
                             Body=encrypted_msg)
     LOG.debug(f"Uploaded to S3, key: {key}")
     return hash_, key
-
-
-def _decrypt(private_key: bytes, msg: bytes) -> str:
-    """Use ECIES to decrypt a message with a given private key and an optional MAC.
-
-    Args:
-        private_key (bytes): The private_key to decrypt the message with.
-        msg (bytes): The message to be decrypted.
-
-    Returns:
-        str: returns the plaintext equivalent to the originally encrypted one.
-
-    """
-    priv_key = keys.PrivateKey(codecs.decode(private_key, "hex"))
-    e = crypto.decrypt(msg, priv_key, shared_mac_data=SHARED_MAC_DATA)
-    return e.decode("utf-8")
-
-
-def _encrypt(public_key: bytes, msg: str) -> bytes:
-    """Use ECIES to encrypt a message with a given public key and optional MAC.
-
-    Args:
-        public_key (bytes): The public_key to encrypt the message with.
-        msg (str): The message to be encrypted.
-
-    Returns:
-        bytes: returns the cryptotext encrypted with the public key.
-
-    """
-    pub_key = keys.PublicKey(codecs.decode(public_key, "hex"))
-    msg_bytes = msg.encode("utf-8")
-    return crypto.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
