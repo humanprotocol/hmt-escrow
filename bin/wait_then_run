@@ -30,5 +30,5 @@ export PYTHONPATH=$(pwd)
 if [ ! -z $* ]; then
   $*
 else
-  python3 -m unittest discover -s test/htm_escrow
+  python3 -m unittest discover -s test/hmt_escrow
 fi
