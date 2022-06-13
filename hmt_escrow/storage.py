@@ -1,12 +1,10 @@
-import codecs
 import hashlib
 import json
 import logging
 import os
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 
 import boto3
-from eth_keys import keys
 
 from hmt_escrow import crypto
 
@@ -45,6 +43,15 @@ def _connect_s3():
         raise e
 
 
+def download_from_storage(key: str) -> bytes:
+    """ Downloads data from storage if exists. """
+    LOG.debug("Downloading s3 key: {}".format(key))
+
+    BOTO3_CLIENT = _connect_s3()
+    response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
+    return response["Body"].read()
+
+
 def download(key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
 
@@ -60,22 +67,25 @@ def download(key: str, private_key: bytes) -> Dict:
 
     """
     try:
-        LOG.debug("Downloading s3 key: {}".format(key))
-        BOTO3_CLIENT = _connect_s3()
-        response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
-        ciphertext = response["Body"].read()
-        msg = crypto.decrypt(private_key, ciphertext)
+        content = download_from_storage(key)
+
+        if crypto.is_encrypted(content) is True:
+            content = crypto.decrypt(private_key, content)
+
     except Exception as e:
         LOG.warning(
-            "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}".format(
+            "Reading the key {!r} with private key {!r} with S3 failed"
+            " because of: {!r}".format(
                 key, private_key, e
             )
         )
         raise e
-    return json.loads(msg)
+    return json.loads(content)
 
 
-def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
+def upload(msg: Dict,
+           public_key: bytes,
+           encrypt_data: Optional[bool] = False) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -83,6 +93,7 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     Args:
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
+        encrypt_data (bool): Whether data must be encrypted before uploading.
 
     Returns:
         Tuple[str, str]: returns the contents of the filename which was previously uploaded.
@@ -92,17 +103,21 @@ def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
 
     """
     try:
-        manifest_ = json.dumps(msg, sort_keys=True)
+        content = json.dumps(msg, sort_keys=True)
     except Exception as e:
         LOG.error("Can't extract the json from the dict")
         raise e
 
-    hash_ = hashlib.sha1(manifest_.encode("utf-8")).hexdigest()
+    hash_ = hashlib.sha1(content.encode("utf-8")).hexdigest()
+    key = f"s3{hash_}"
+
+    if encrypt_data:
+        content = crypto.encrypt(public_key, content)
 
     BOTO3_CLIENT = _connect_s3()
-    encrypted_msg = crypto.encrypt(public_key, manifest_)
-    key = f"s3{hash_}"
-    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME, Key=key,
-                            Body=encrypted_msg)
+    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
+                            Key=key,
+                            Body=content)
+
     LOG.debug(f"Uploaded to S3, key: {key}")
     return hash_, key
