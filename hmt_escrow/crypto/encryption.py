@@ -201,18 +201,18 @@ class Encryption:
         """
         Performs a key exchange operation using the
         ECDH (Elliptic-curve Diffie–Hellman) algorithm.
-        
+
         NIST SP 800-56a Concatenation Key Derivation Function
         (see section 4) - Key agreement.
         https://csrc.nist.gov/CSRC/media/Publications/sp/800-56a/archive/2006-05-03/documents/sp800-56-draft-jul2005.pdf
 
-        
+
         A key establishment procedure where the resultant secret keying
         material is a function of information contributed by two participants,
         so that no party can predetermine the value of the secret keying
         material independently from the contribut ions of the other parties.
         Contrast with key transport.  
-        
+
         Args:
             private_key (eth_datatypes.PrivateKey): Private key to be used in
                 agreement (the initiator).

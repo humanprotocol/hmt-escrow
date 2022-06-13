@@ -14,14 +14,14 @@ IMAGE_LABEL_BINARY = "image_label_binary"
 
 
 def test_manifest(
-    number_of_tasks=100,
-    bid_amount=1.0,
-    oracle_stake=0.05,
-    expiration_date=0,
-    minimum_trust=0.1,
-    request_type=IMAGE_LABEL_BINARY,
-    request_config=None,
-    job_mode="batch",
+        number_of_tasks=100,
+        bid_amount=1.0,
+        oracle_stake=0.05,
+        expiration_date=0,
+        minimum_trust=0.1,
+        request_type=IMAGE_LABEL_BINARY,
+        request_config=None,
+        job_mode="batch",
 ) -> basemodels.Manifest:
     model = {
         "requester_restricted_answer_set": {

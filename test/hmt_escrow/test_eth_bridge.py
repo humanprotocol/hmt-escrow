@@ -1,21 +1,25 @@
 import os
 import unittest
 
-from hmt_escrow.eth_bridge import get_hmtoken, handle_transaction, get_factory, \
-    get_escrow, get_pub_key_from_addr, set_pub_key_at_addr
-from test.hmt_escrow.utils import manifest
+from hmt_escrow.eth_bridge import (
+    get_hmtoken,
+    get_factory,
+    get_escrow,
+    get_pub_key_from_addr,
+    handle_transaction,
+    set_pub_key_at_addr
+)
+from test.hmt_escrow.utils import create_job
 
 
 class EthBridgeTestCase(unittest.TestCase):
     def setUp(self):
-        from hmt_escrow.job import Job
-
         self.credentials = {
             "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
             "gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
         }
         self.rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        self.job = Job(credentials=self.credentials, escrow_manifest=manifest)
+        self.job = create_job()
 
     def test_handle_transaction(self):
         from web3.datastructures import AttributeDict as Web3AttributeDict

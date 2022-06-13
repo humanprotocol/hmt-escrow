@@ -1,10 +1,12 @@
+import codecs
 import hashlib
 import json
 import logging
 import os
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 import boto3
+from eth_keys import keys
 
 from hmt_escrow import crypto
 
@@ -43,36 +45,8 @@ def _connect_s3():
         raise e
 
 
-def download_from_storage(key: str) -> bytes:
-    """ Downloads data from storage if exists. """
-    LOG.debug("Downloading s3 key: {}".format(key))
-
-    BOTO3_CLIENT = _connect_s3()
-    response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
-    return response["Body"].read()
-
-
 def download(key: str, private_key: bytes) -> Dict:
     """Download a key, decrypt it, and output it as a binary string.
-
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> from test.hmt_escrow.utils import manifest
-    >>> from hmt_escrow.job import Job
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
-
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
 
     Args:
         key (str): This is the hash code returned when uploading.
@@ -86,11 +60,11 @@ def download(key: str, private_key: bytes) -> Dict:
 
     """
     try:
-        content = download_from_storage(key)
-
-        if crypto.is_encrypted(content) is True:
-            content = crypto.decrypt(private_key, content)
-
+        LOG.debug("Downloading s3 key: {}".format(key))
+        BOTO3_CLIENT = _connect_s3()
+        response = BOTO3_CLIENT.get_object(Bucket=ESCROW_BUCKETNAME, Key=key)
+        ciphertext = response["Body"].read()
+        msg = crypto.decrypt(private_key, ciphertext)
     except Exception as e:
         LOG.warning(
             "Reading the key {!r} with private key {!r} with S3 failed because of: {!r}".format(
@@ -98,41 +72,17 @@ def download(key: str, private_key: bytes) -> Dict:
             )
         )
         raise e
-    return json.loads(content)
+    return json.loads(msg)
 
 
-def upload(msg: Dict,
-           public_key: bytes,
-           encrypt_data: Optional[bool] = False) -> Tuple[str, str]:
+def upload(msg: Dict, public_key: bytes) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
 
-    >>> from test.hmt_escrow.utils import manifest
-    >>> from hmt_escrow.job import Job
-    >>> credentials = {
-    ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-    ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-    ... }
-    >>> pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
-
-    >>> job = Job(credentials=credentials, escrow_manifest=manifest)
-    >>> (hash_, manifest_url) = upload(job.serialized_manifest, pub_key)
-    >>> manifest_url.startswith('s3')
-    True
-    >>> manifest_dict = download(manifest_url, job.gas_payer_priv)
-    >>> manifest_dict == job.serialized_manifest
-    True
-
     Args:
         msg (Dict): The message to upload and encrypt.
         public_key (bytes): The public_key to encrypt the file for.
-        encrypt_data (bool): Whether data must be encrypted before uploading.
 
     Returns:
         Tuple[str, str]: returns the contents of the filename which was previously uploaded.
@@ -142,21 +92,17 @@ def upload(msg: Dict,
 
     """
     try:
-        content = json.dumps(msg, sort_keys=True)
+        manifest_ = json.dumps(msg, sort_keys=True)
     except Exception as e:
         LOG.error("Can't extract the json from the dict")
         raise e
 
-    hash_ = hashlib.sha1(content.encode("utf-8")).hexdigest()
-    key = f"s3{hash_}"
-
-    if encrypt_data:
-        content = crypto.encrypt(public_key, content)
+    hash_ = hashlib.sha1(manifest_.encode("utf-8")).hexdigest()
 
     BOTO3_CLIENT = _connect_s3()
-    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
-                            Key=key,
-                            Body=content)
-
+    encrypted_msg = crypto.encrypt(public_key, manifest_)
+    key = f"s3{hash_}"
+    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME, Key=key,
+                            Body=encrypted_msg)
     LOG.debug(f"Uploaded to S3, key: {key}")
     return hash_, key
