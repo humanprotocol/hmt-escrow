@@ -1,4 +1,4 @@
 #!/bin/sh
 set -exu
 CMD=${1-'./bin/wait_then_run'}
-docker-compose run -w /work job $CMD
+docker-compose run -w /work job bash

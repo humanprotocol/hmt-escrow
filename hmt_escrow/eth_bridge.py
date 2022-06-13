@@ -1,20 +1,19 @@
 import logging
 import os
-import time
-import unittest
 from time import sleep
+from typing import Dict, Any
 
+from eth_typing import ChecksumAddress, HexAddress, HexStr, URI
 from solcx import compile_files
 from web3 import Web3
+from web3._utils.transactions import wait_for_transaction_receipt
+from web3.contract import Contract
+from web3.middleware import geth_poa_middleware
 from web3.providers.auto import load_provider_from_uri
 from web3.providers.eth_tester import EthereumTesterProvider
 from web3.types import TxReceipt
-from eth_typing import Address, ChecksumAddress, HexAddress, HexStr, URI
-from web3.contract import Contract
-from web3.middleware import geth_poa_middleware
-from web3._utils.transactions import wait_for_transaction_receipt
+
 from hmt_escrow.kvstore_abi import abi as kvstore_abi
-from typing import Dict, List, Tuple, Optional, Any
 
 AttributeDict = Dict[str, Any]
 
@@ -25,7 +24,8 @@ HMTOKEN_ADDR = Web3.toChecksumAddress(
     os.getenv("HMTOKEN_ADDR", "0x4C18A2E51edC5043e9c4B6b0757990A4Ac13797f")
 )
 
-CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contracts")
+CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                               "contracts")
 CONTRACTS = compile_files(
     [
         "{}/Escrow.sol".format(CONTRACT_FOLDER),
@@ -86,7 +86,8 @@ def get_w3() -> Web3:
         LOG.error("Using EthereumTesterProvider as we have no HMT_ETH_SERVER")
 
     provider = (
-        load_provider_from_uri(URI(endpoint)) if endpoint else EthereumTesterProvider()
+        load_provider_from_uri(
+            URI(endpoint)) if endpoint else EthereumTesterProvider()
     )
 
     w3 = Web3(provider)
@@ -123,7 +124,8 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
         {"from": gas_payer, "gas": gas, "nonce": nonce}
     )
 
-    signed_txn = w3.eth.account.signTransaction(txn_dict, private_key=gas_payer_priv)
+    signed_txn = w3.eth.account.signTransaction(txn_dict,
+                                                private_key=gas_payer_priv)
     txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     try:
@@ -136,7 +138,7 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
 
 
 def handle_transaction_with_retry(
-    txn_func, retry=Retry(), *args, **kwargs
+        txn_func, retry=Retry(), *args, **kwargs
 ) -> TxReceipt:
     """ Handle transaction
 
@@ -167,7 +169,7 @@ def handle_transaction_with_retry(
                 raise e
             else:
                 LOG.debug(
-                    f"(x{i+1}) handle_transaction: {e}. Retrying after {wait_time} sec..."
+                    f"(x{i + 1}) handle_transaction: {e}. Retrying after {wait_time} sec..."
                 )
                 sleep(wait_time)
                 wait_time *= retry.backoff
@@ -204,7 +206,8 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR) -> Contract:
     contract_interface = get_contract_interface(
         "{}/HMTokenInterface.sol:HMTokenInterface".format(CONTRACT_FOLDER)
     )
-    contract = w3.eth.contract(address=hmtoken_addr, abi=contract_interface["abi"])
+    contract = w3.eth.contract(address=hmtoken_addr,
+                               abi=contract_interface["abi"])
     return contract
 
 
@@ -296,7 +299,8 @@ def deploy_factory(gas: int = GAS_LIMIT, **credentials) -> str:
 
     txn_func = factory.constructor
     func_args = [HMTOKEN_ADDR]
-    txn_info = {"gas_payer": gas_payer, "gas_payer_priv": gas_payer_priv, "gas": gas}
+    txn_info = {"gas_payer": gas_payer, "gas_payer_priv": gas_payer_priv,
+                "gas": gas}
     txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
     contract_addr = txn_receipt["contractAddress"]
     return str(contract_addr)
@@ -381,7 +385,8 @@ def set_pub_key_at_addr(pub_key: str) -> TxReceipt:
     GAS_PAYER_PRIV = os.getenv("GAS_PAYER_PRIV")
 
     if not (GAS_PAYER or GAS_PAYER_PRIV):
-        raise ValueError("environment variable GAS_PAYER AND GAS_PAYER_PRIV required")
+        raise ValueError(
+            "environment variable GAS_PAYER AND GAS_PAYER_PRIV required")
 
     w3 = get_w3()
     kvstore = w3.eth.contract(address=KVSTORE_CONTRACT, abi=kvstore_abi)
@@ -395,62 +400,3 @@ def set_pub_key_at_addr(pub_key: str) -> TxReceipt:
     }
 
     return handle_transaction(txn_func, *func_args, **txn_info)
-
-
-class EthBridgeTestCase(unittest.TestCase):
-    def setUp(self):
-        from job import Job
-
-        self.credentials = {
-            "gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-            "gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5",
-        }
-        self.rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        self.job = Job(credentials=self.credentials, escrow_manifest=manifest)
-
-    def test_handle_transaction(self):
-        from web3.datastructures import AttributeDict as Web3AttributeDict
-
-        self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
-        gas = 4712388
-        hmt_amount = int(self.job.amount * 10 ** 18)
-        hmtoken_contract = get_hmtoken()
-        txn_func = hmtoken_contract.functions.transfer
-        func_args = [self.job.job_contract.address, hmt_amount]
-        txn_info = {
-            "gas_payer": self.job.gas_payer,
-            "gas_payer_priv": self.job.gas_payer_priv,
-            "gas": gas,
-        }
-        txn_receipt = handle_transaction(txn_func, *func_args, **txn_info)
-        self.assertIs(type(txn_receipt), Web3AttributeDict)
-
-    def test_get_escrow(self):
-        self.job.launch(self.rep_oracle_pub_key)
-        self.assertIsNotNone(get_escrow(self.job.job_contract.address))
-
-    def test_get_factory(self):
-        self.assertIsNotNone(get_factory(self.job.factory_contract.address))
-
-    def test_get_pub_key_from_address(self):
-        with self.assertRaises(ValueError):
-            get_pub_key_from_addr("badaddress")
-        os.environ["GAS_PAYER"] = self.credentials["gas_payer"]
-        os.environ["GAS_PAYER_PRIV"] = self.credentials["gas_payer_priv"]
-        set_pub_key_at_addr(self.rep_oracle_pub_key)
-        self.assertEqual(
-            get_pub_key_from_addr(os.environ["GAS_PAYER"]), self.rep_oracle_pub_key
-        )
-
-    def test_set_pub_key_at_address(self):
-        os.environ["GAS_PAYER"] = self.credentials["gas_payer"]
-        os.environ["GAS_PAYER_PRIV"] = self.credentials["gas_payer_priv"]
-        self.assertIsNotNone(
-            set_pub_key_at_addr(self.rep_oracle_pub_key).transactionHash
-        )
-
-
-if __name__ == "__main__":
-    from test_manifest import manifest
-
-    unittest.main(exit=True)
