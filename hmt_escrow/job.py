@@ -33,8 +33,7 @@ LOG = logging.getLogger("hmt_escrow.job")
 Status = Enum("Status", "Launched Pending Partial Paid Complete Cancelled")
 
 
-def status(escrow_contract: Contract, gas_payer: str,
-           gas: int = GAS_LIMIT) -> Enum:
+def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> Enum:
     """Returns the status of the Job.
 
     >>> from test.hmt_escrow.utils import manifest
@@ -68,7 +67,7 @@ def status(escrow_contract: Contract, gas_payer: str,
 
 
 def manifest_url(
-        escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
+    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
 ) -> str:
     """Retrieves the deployed manifest url uploaded on Job initialization.
 
@@ -101,7 +100,7 @@ def manifest_url(
 
 
 def manifest_hash(
-        escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
+    escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT
 ) -> str:
     """Retrieves the deployed manifest hash uploaded on Job initialization.
 
@@ -134,16 +133,14 @@ def manifest_hash(
 
 
 def is_trusted_handler(
-        escrow_contract: Contract, handler_addr: str, gas_payer: str,
-        gas: int = GAS_LIMIT
+    escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
 ) -> bool:
     return escrow_contract.functions.areTrustedHandlers(handler_addr).call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
 
 
-def launcher(escrow_contract: Contract, gas_payer: str,
-             gas: int = GAS_LIMIT) -> str:
+def launcher(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> str:
     """Retrieves the details on what eth wallet launched the job
 
     Args:
@@ -184,13 +181,13 @@ class Job:
     """
 
     def __init__(
-            self,
-            credentials: Dict[str, str],
-            escrow_manifest: Manifest = None,
-            factory_addr: str = None,
-            escrow_addr: str = None,
-            multi_credentials: List[Tuple] = [],
-            retry: Retry = None,
+        self,
+        credentials: Dict[str, str],
+        escrow_manifest: Manifest = None,
+        factory_addr: str = None,
+        escrow_addr: str = None,
+        multi_credentials: List[Tuple] = [],
+        retry: Retry = None,
     ):
         """Initializes a Job instance with values from a Manifest class and
         checks that the provided credentials are valid. An optional factory
@@ -278,18 +275,15 @@ class Job:
             multi_credentials, **credentials
         )
         if not main_credentials_valid:
-            raise ValueError(
-                "Given private key doesn't match the ethereum address.")
+            raise ValueError("Given private key doesn't match the ethereum address.")
 
         self.gas_payer = Web3.toChecksumAddress(credentials["gas_payer"])
         self.gas_payer_priv = credentials["gas_payer_priv"]
-        self.multi_credentials = self._validate_multi_credentials(
-            multi_credentials)
+        self.multi_credentials = self._validate_multi_credentials(multi_credentials)
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
-            self.factory_contract = self._init_factory(factory_addr,
-                                                       credentials)
+            self.factory_contract = self._init_factory(factory_addr, credentials)
             self._init_job(escrow_manifest)
 
         # Access an existing Job.
@@ -302,8 +296,7 @@ class Job:
 
         # Handle incorrect usage
         else:
-            raise ValueError(
-                "Job instantiation wrong, double-check arguments.")
+            raise ValueError("Job instantiation wrong, double-check arguments.")
 
     def launch(self, pub_key: bytes) -> bool:
         """Launches an escrow contract to the network, uploads the manifest
@@ -415,10 +408,8 @@ class Job:
         recording_oracle_stake = int(
             Decimal(self.serialized_manifest["oracle_stake"]) * 100
         )
-        reputation_oracle = str(
-            self.serialized_manifest["reputation_oracle_addr"])
-        recording_oracle = str(
-            self.serialized_manifest["recording_oracle_addr"])
+        reputation_oracle = str(self.serialized_manifest["reputation_oracle_addr"])
+        recording_oracle = str(self.serialized_manifest["recording_oracle_addr"])
         hmt_amount = int(self.amount * 10 ** 18)
         hmtoken_contract = get_hmtoken()
 
@@ -476,8 +467,7 @@ class Job:
         ]
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args,
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             contract_is_setup = True
         except Exception as e:
             LOG.debug(
@@ -493,12 +483,10 @@ class Job:
             LOG.warning(f"{txn_event} failed with all credentials.")
 
         return (
-                str(self.status()) == str(
-            Status.Pending) and self.balance() == hmt_amount
+            str(self.status()) == str(Status.Pending) and self.balance() == hmt_amount
         )
 
-    def add_trusted_handlers(self, handlers: List[str],
-                             gas: int = GAS_LIMIT) -> bool:
+    def add_trusted_handlers(self, handlers: List[str], gas: int = GAS_LIMIT) -> bool:
         """Add trusted handlers that can freely transact with the contract and perform aborts and cancels for example.
 
         >>> from test.hmt_escrow.utils import manifest
@@ -541,8 +529,7 @@ class Job:
         func_args = [handlers]
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args,
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
@@ -558,11 +545,11 @@ class Job:
         return trusted_handlers_added
 
     def bulk_payout(
-            self,
-            payouts: List[Tuple[str, Decimal]],
-            results: Dict,
-            pub_key: bytes,
-            gas: int = GAS_LIMIT,
+        self,
+        payouts: List[Tuple[str, Decimal]],
+        results: Dict,
+        pub_key: bytes,
+        gas: int = GAS_LIMIT,
     ) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
@@ -639,8 +626,7 @@ class Job:
 
         func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args,
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return self._bulk_paid() == True
         except Exception as e:
             LOG.debug(
@@ -741,8 +727,7 @@ class Job:
         }
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *[],
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             # After abort the contract should be destroyed
             return w3.eth.getCode(self.job_contract.address) == b""
         except Exception as e:
@@ -750,8 +735,7 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_aborted = self._raffle_txn(self.multi_credentials, txn_func, [],
-                                       txn_event)
+        job_aborted = self._raffle_txn(self.multi_credentials, txn_func, [], txn_event)
 
         if not job_aborted:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -821,8 +805,7 @@ class Job:
         }
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *[],
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             return self.status() == Status.Cancelled
         except Exception as e:
             LOG.info(
@@ -839,7 +822,7 @@ class Job:
         return self.status() == Status.Cancelled
 
     def store_intermediate_results(
-            self, results: Dict, pub_key: bytes, gas: int = GAS_LIMIT
+        self, results: Dict, pub_key: bytes, gas: int = GAS_LIMIT
     ) -> bool:
         """Recording Oracle stores intermediate results with Reputation Oracle's public key to S3
         and updates the contract's state.
@@ -908,8 +891,7 @@ class Job:
         func_args = [url, hash_]
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args,
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
@@ -929,12 +911,12 @@ class Job:
         return results_stored
 
     def complete(
-            self,
-            gas: int = GAS_LIMIT,
-            blocking: bool = False,
-            retries: int = 3,
-            delay: int = 5,
-            backoff: int = 2,
+        self,
+        gas: int = GAS_LIMIT,
+        blocking: bool = False,
+        retries: int = 3,
+        delay: int = 5,
+        backoff: int = 2,
     ) -> bool:
         """Completes the Job if it has been paid.
 
@@ -983,8 +965,7 @@ class Job:
         }
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *[],
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             return self.status() == Status.Complete
         except Exception as e:
             LOG.info(
@@ -1083,8 +1064,7 @@ class Job:
         """
         return download(self.manifest_url, priv_key)
 
-    def intermediate_results(self, priv_key: bytes,
-                             gas: int = GAS_LIMIT) -> Dict:
+    def intermediate_results(self, priv_key: bytes, gas: int = GAS_LIMIT) -> Dict:
         """Reputation Oracle retrieves the intermediate results stored by the Recording Oracle.
 
         >>> from test.hmt_escrow.utils import manifest
@@ -1196,7 +1176,7 @@ class Job:
         return Web3.toChecksumAddress(addr) == calculated_addr
 
     def _validate_multi_credentials(
-            self, multi_credentials: List[Tuple]
+        self, multi_credentials: List[Tuple]
     ) -> List[Tuple[Any, Any]]:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
@@ -1236,7 +1216,7 @@ class Job:
         return valid_credentials
 
     def _validate_credentials(
-            self, multi_credentials: List[Tuple], **credentials
+        self, multi_credentials: List[Tuple], **credentials
     ) -> bool:
         """Validates whether the given ethereum private key maps to the address
         by calculating the checksum address from the private key and comparing that
@@ -1276,7 +1256,7 @@ class Job:
         return self._eth_addr_valid(gas_payer_addr, gas_payer_priv)
 
     def _factory_contains_escrow(
-            self, escrow_addr: str, factory_addr: str, gas: int = GAS_LIMIT
+        self, escrow_addr: str, factory_addr: str, gas: int = GAS_LIMIT
     ) -> bool:
         """Checks whether a given factory address contains a given escrow address.
 
@@ -1316,10 +1296,10 @@ class Job:
         )
 
     def _init_factory(
-            self,
-            factory_addr: Optional[str],
-            credentials: Dict[str, str],
-            gas: int = GAS_LIMIT,
+        self,
+        factory_addr: Optional[str],
+        credentials: Dict[str, str],
+        gas: int = GAS_LIMIT,
     ) -> Contract:
         """Takes an optional factory address and returns its contract representation. Alternatively
         a new factory is created.
@@ -1426,8 +1406,7 @@ class Job:
             {"from": self.gas_payer, "gas": Wei(gas)}
         )
 
-    def _create_escrow(self, trusted_handlers=[],
-                       gas: int = GAS_LIMIT) -> bool:
+    def _create_escrow(self, trusted_handlers=[], gas: int = GAS_LIMIT) -> bool:
         """Launches a new escrow contract to the ethereum network.
 
         >>> from test.hmt_escrow.utils import manifest
@@ -1469,8 +1448,7 @@ class Job:
         func_args = [trusted_handlers]
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args,
-                                          **txn_info)
+            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return True
         except Exception as e:
             LOG.info(
@@ -1487,8 +1465,7 @@ class Job:
         return escrow_created
 
     def _raffle_txn(
-            self, multi_creds, txn_func, txn_args, txn_event,
-            gas: int = GAS_LIMIT
+        self, multi_creds, txn_func, txn_args, txn_event, gas: int = GAS_LIMIT
     ):
         """Takes in multiple credentials, loops through each and performs the given transaction.
 
