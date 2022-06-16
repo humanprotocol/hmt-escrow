@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 
 import logging
-import os
-import basemodels
 
+import basemodels
 from web3 import Web3
 
 CALLBACK_URL = "http://google.com/webback"
-GAS_PAYER = Web3.toChecksumAddress("0x1413862c2b7054cdbfdc181b83962cb0fc11fd92")
+GAS_PAYER = Web3.toChecksumAddress(
+    "0x1413862c2b7054cdbfdc181b83962cb0fc11fd92"
+)
 FAKE_URL = "http://google.com/fake"
 IMAGE_LABEL_BINARY = "image_label_binary"
 
 
 def test_manifest(
-    number_of_tasks=100,
-    bid_amount=1.0,
-    oracle_stake=0.05,
-    expiration_date=0,
-    minimum_trust=0.1,
-    request_type=IMAGE_LABEL_BINARY,
-    request_config=None,
-    job_mode="batch",
+        number_of_tasks=100,
+        bid_amount=1.0,
+        oracle_stake=0.05,
+        expiration_date=0,
+        minimum_trust=0.1,
+        request_type=IMAGE_LABEL_BINARY,
+        request_config=None,
+        job_mode="batch",
 ) -> basemodels.Manifest:
     model = {
         "requester_restricted_answer_set": {
