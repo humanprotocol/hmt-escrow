@@ -9,8 +9,7 @@ import boto3
 from hmt_escrow import crypto
 
 SHARED_MAC_DATA: bytes = os.getenv(
-    "SHARED_MAC",
-    "9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350"
+    "SHARED_MAC", "9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350"
 ).encode("ascii")
 
 logging.getLogger("boto").setLevel(logging.INFO)
@@ -23,8 +22,7 @@ LOG.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
 ESCROW_BUCKETNAME = os.getenv("ESCROW_BUCKETNAME", "escrow-results")
 ESCROW_AWS_ACCESS_KEY_ID = os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio")
-ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY",
-                                         "minio123")
+ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY", "minio123")
 ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
 ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
 
