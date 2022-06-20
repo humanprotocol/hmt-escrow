@@ -250,6 +250,8 @@ class JobTestCase(unittest.TestCase):
         final_results = {'results': 0}
 
         mock_upload = MagicMock(return_value=('hash', 'url'))
+
+        # Testing option as: do not encrypt final results: encrypt_final_results=False
         with patch('hmt_escrow.job.upload', mock_upload):
             # Bulk payout with final results as plain (not encrypted)
             job.bulk_payout(payouts=payouts,
@@ -264,6 +266,7 @@ class JobTestCase(unittest.TestCase):
             )
             mock_upload.reset_mock()
 
+        # Testing option as: encrypt final results: encrypt_final_results=True
         with patch("hmt_escrow.job.upload", mock_upload):
             # Bulk payout with final results as plain (not encrypted)
             job.bulk_payout(payouts=payouts,
