@@ -28,9 +28,10 @@ import os
 import struct
 import typing as t
 
-from cryptography.hazmat.primitives import ciphers, hashes, hmac
+from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers import CipherAlgorithm, Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.primitives.constant_time import bytes_eq
 from eth_keys import (
     datatypes as eth_datatypes,
@@ -52,10 +53,10 @@ class Encryption:
     KEY_LEN = 32
     """ ECIES using AES256 and HMAC-SHA-256-32 """
 
-    CIPHER: ciphers.CipherAlgorithm = algorithms.AES
+    CIPHER = algorithms.AES
     """ Cipher algorithm defintion. """
 
-    MODE: modes.Mode = modes.CTR
+    MODE = CTR
     """ Cipher mode definition. """
 
     PUBLIC_KEY_LEN: int = 64
