@@ -30,7 +30,8 @@ import typing as t
 
 from cryptography.hazmat.primitives import hashes, hmac
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.ciphers import CipherAlgorithm, Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
 from cryptography.hazmat.primitives.constant_time import bytes_eq
 from eth_keys import (
@@ -53,7 +54,7 @@ class Encryption:
     KEY_LEN = 32
     """ ECIES using AES256 and HMAC-SHA-256-32 """
 
-    CIPHER = algorithms.AES
+    CIPHER = AES
     """ Cipher algorithm defintion. """
 
     MODE = CTR
@@ -129,10 +130,10 @@ class Encryption:
         return msg + tag
 
     def decrypt(
-            self,
-            data: bytes,
-            private_key: eth_datatypes.PrivateKey,
-            shared_mac_data: bytes = b"") -> bytes:
+        self,
+        data: bytes,
+        private_key: eth_datatypes.PrivateKey,
+        shared_mac_data: bytes = b"") -> bytes:
         """
         Decrypt data with ECIES method using the given private key
         1) generate shared-secret = kdf( ecdhAgree(myPrivKey, msg[1:65]) )
