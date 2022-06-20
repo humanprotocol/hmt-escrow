@@ -66,24 +66,24 @@ def download(key: str, private_key: bytes) -> Dict:
     """
     try:
         content = download_from_storage(key)
-
-        if crypto.is_encrypted(content) is True:
-            content = crypto.decrypt(private_key, content)
+        artifact = (
+            crypto.decrypt(private_key, content)
+            if crypto.is_encrypted(content) is True
+            else content.decode()
+        )
 
     except Exception as e:
         LOG.warning(
             "Reading the key {!r} with private key {!r} with S3 failed"
-            " because of: {!r}".format(
-                key, private_key, e
-            )
+            " because of: {!r}".format(key, private_key, e)
         )
         raise e
-    return json.loads(content)
+    return json.loads(artifact)
 
 
-def upload(msg: Dict,
-           public_key: bytes,
-           encrypt_data: Optional[bool] = False) -> Tuple[str, str]:
+def upload(
+    msg: Dict, public_key: bytes, encrypt_data: Optional[bool] = False
+) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
     encrypted.
@@ -101,21 +101,21 @@ def upload(msg: Dict,
 
     """
     try:
-        content = json.dumps(msg, sort_keys=True)
+        artifact = json.dumps(msg, sort_keys=True)
     except Exception as e:
         LOG.error("Can't extract the json from the dict")
         raise e
 
-    hash_ = hashlib.sha1(content.encode("utf-8")).hexdigest()
+    content = artifact.encode("utf-8")
+
+    hash_ = hashlib.sha1(content).hexdigest()
     key = f"s3{hash_}"
 
-    if encrypt_data:
-        content = crypto.encrypt(public_key, content)
+    if encrypt_data is True:
+        content = crypto.encrypt(public_key, artifact)
 
     BOTO3_CLIENT = _connect_s3()
-    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME,
-                            Key=key,
-                            Body=content)
+    BOTO3_CLIENT.put_object(Bucket=ESCROW_BUCKETNAME, Key=key, Body=content)
 
     LOG.debug(f"Uploaded to S3, key: {key}")
     return hash_, key
