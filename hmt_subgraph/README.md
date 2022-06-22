@@ -2,6 +2,7 @@
 
 This is the repo of the human subgraph.
 The goal of the subgraph is to index all of the emissions for Escrow and Escrow Factories
+To get more information about how the graph works : https://thegraph.com/en/
 
 ## Installation
 
