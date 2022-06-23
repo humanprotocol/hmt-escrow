@@ -1,9 +1,9 @@
 name: Ci
 
 on: [push, pull_request]
-  paths:
-        - 'contracts/**'
-        - 'hmt_subgraph/**'
+paths:
+  - "contracts/**"
+  - "hmt_subgraph/**"
 jobs:
   ci:
     runs-on: ubuntu-latest
