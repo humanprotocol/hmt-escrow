@@ -118,7 +118,6 @@ het/secrets.json
 
 # Generated stuff
 # ================================================
-src
 .vscode
 docker-compose
 build/
