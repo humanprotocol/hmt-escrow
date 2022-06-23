@@ -30,7 +30,6 @@ services:
       - eth_kvstore_addr:/deployed-kvstore
       - ./minio:/data
       - .:/work
-      - ./deployed-hmtoken:/deployed-hmtoken
     command: sh -c "rm /deployed-hmtoken/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; cd /work && npm install && npm run test; ./bin/wait_then_run"
 
   ganache:
