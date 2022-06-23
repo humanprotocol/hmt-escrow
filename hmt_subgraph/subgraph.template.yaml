@@ -1,15 +1,15 @@
 specVersion: 0.0.5
-description: Human subgraph on Polygon network
+description: __DESCRIPTION__
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
     name: EscrowFactory
-    network: matic
+    network: __NETWORK__
     source:
       abi: EscrowFactory
-      address: '0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794'
-      startBlock: 25426565
+      address: __ESCROW_FACTORY_ADDRESS__
+      startBlock: __STARTBLOCK_ESCROW_FACTORY__
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -25,11 +25,11 @@ dataSources:
           handler: handleLaunched
   - kind: ethereum
     name: HMToken
-    network: matic
+    network: __NETWORK__
     source:
       abi: HMToken
-      address: 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
-      startBlock: '20181700'
+      address: __HMTOKEN_ADDRESS__
+      startBlock: __STARTBLOCK_HMTOKEN__
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -55,7 +55,7 @@ dataSources:
 templates:
   - name: Escrow
     kind: ethereum/contract
-    network: matic
+    network: __NETWORK__
     source:
       abi: Escrow
     mapping:

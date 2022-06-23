@@ -3,8 +3,10 @@
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",
-    "compile": "node compile.js",
+    "compile": "node scripts/compile.js",
     "build": "npm run compile && graph build",
+    "quickstart:matic": "npm run compile && node ./scripts/generatenetworkssubgraphs.js matic && graph create --node http://localhost:8020/ posix4e/humansubgraph",
+    "quickstart:rinkeby": "npm run compile && node ./scripts/generatenetworkssubgraphs.js rinkeby && graph create --node http://localhost:8020/ posix4e/humansubgraph",
     "deploy": "npm run compile && graph deploy --node https://api.thegraph.com/deploy/ posix4e/humansubgraph",
     "create-local": "npm run compile && graph create --node http://localhost:8020/ posix4e/humansubgraph",
     "remove-local": "npm run compile && graph remove --node http://localhost:8020/ posix4e/humansubgraph",
