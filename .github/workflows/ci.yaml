@@ -15,5 +15,7 @@ jobs:
         with:
           node-version: 18
       - run: npm install
+      - run: npm run compile
       - run: npm run codegen
+      - run: node ./scripts/generatenetworkssubgraphs.js matic
       - run: npm run build
