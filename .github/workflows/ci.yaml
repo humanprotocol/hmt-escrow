@@ -1,10 +1,7 @@
 name: Ci
+
 on: [push, pull_request]
-  branches:
-    - main
-  paths:
-    - contracts/**
-    - hmt_subgraph/**
+
 jobs:
   ci:
     runs-on: ubuntu-latest
