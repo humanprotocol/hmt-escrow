@@ -8,10 +8,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up JS
+        working-directory: ./hmt_subgraph
         uses: actions/setup-node@v3
         with:
           node-version: 18
-        working-directory: ./hmt_subgraph
+
       - run: npm install
       - run: npm run codegen
       - run: npm run build
