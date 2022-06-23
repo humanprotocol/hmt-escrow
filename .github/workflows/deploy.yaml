@@ -4,8 +4,8 @@ on:
     branches:
       - main
     paths:
-      - "hmt_subgraph/**"
-      - "hmt_subgraph/**"
+      - contracts/**
+      - hmt_subgraph/**
 
 jobs:
   deploy:
