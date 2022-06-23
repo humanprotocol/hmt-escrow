@@ -14,7 +14,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - run: cd hmt_subgraph
       - run: npm install
       - run: npm run codegen
       - run: npm run build
