@@ -235,6 +235,51 @@ class JobTestCase(unittest.TestCase):
         self.assertTrue(
             self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
+    def test_job_bulk_payout_with_encryption_option(self):
+        """Tests whether final results must be persisted in storage encrypted
+        or plain.
+        """
+        job = Job(self.credentials, manifest)
+        self.assertEqual(job.launch(self.rep_oracle_pub_key), True)
+        self.assertEqual(job.setup(), True)
+
+        payouts = [
+            ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("100.0"))
+        ]
+
+        final_results = {'results': 0}
+
+        mock_upload = MagicMock(return_value=('hash', 'url'))
+
+        # Testing option as: do not encrypt final results: encrypt_final_results=False
+        with patch('hmt_escrow.job.upload', mock_upload):
+            # Bulk payout with final results as plain (not encrypted)
+            job.bulk_payout(payouts=payouts,
+                            results=final_results,
+                            pub_key=self.rep_oracle_pub_key,
+                            encrypt_final_results=False)
+
+            mock_upload.assert_called_once_with(
+                msg=final_results,
+                public_key=self.rep_oracle_pub_key,
+                encrypt_data=False
+            )
+            mock_upload.reset_mock()
+
+        # Testing option as: encrypt final results: encrypt_final_results=True
+        with patch("hmt_escrow.job.upload", mock_upload):
+            # Bulk payout with final results as plain (not encrypted)
+            job.bulk_payout(payouts=payouts,
+                            results={"results": 0},
+                            pub_key=self.rep_oracle_pub_key,
+                            encrypt_final_results=True)
+
+            mock_upload.assert_called_once_with(
+                msg=final_results,
+                public_key=self.rep_oracle_pub_key,
+                encrypt_data=True
+            )
+
     def test_job_abort(self):
         """
         The escrow contract is in Paid state after the full bulk payout, and
