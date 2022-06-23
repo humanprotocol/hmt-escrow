@@ -17,34 +17,36 @@ yarn global add @graphprotocol/graph-cli
 
 ### Run the graph locally
 
-
 ```sh
 npm run create-local
 ```
+
 This command will deploy the graph on your local environement
 
-You can access it on  `http://localhost:8020/`
+## 🏊 Deploying graphs for live networks
 
+1. Generate & deploy on matic
 
-### Build the graph
-
-```sh
-npm run build
+```bash
+npm run quickstart:matic
 ```
-This command will build a production ready package of the graph. 
 
-### Deploy the graph
+2. Generate & deploy on rinkeby
 
-```sh
-npm run deploy
+```bash
+npm run quickstart:rinkeby
 ```
-This command will build the graph and then deploy it on `https://api.thegraph.com/deploy/ posix4e/humansubgraph`
 
-### Contracts compilation 
+You can access it on `http://localhost:8020/`
 
-The compilation of the contracts is automatically made at the build. ABIs are generated from files (.sol) on `/contracts` folder. 
-See `compile.js` file. 
+### Build and deploy the graph
 
+This deploiement of the graph on each network is automatically triggered by the github CI
+
+### Contracts compilation
+
+The compilation of the contracts is automatically made at the build. ABIs are generated from files (.sol) on `/contracts` folder.
+See `compile.js` file.
 
 Currently deploying to:
 

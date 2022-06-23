@@ -2,12 +2,13 @@ const path = require("path");
 const solc = require("solc");
 const fs = require("fs-extra");
 
+const contracts_path = "../../contracts";
 /**
  * Makes sure that the build folder is deleted, before every compilation
  * @returns {*} - Path where the compiled sources should be saved.
  */
 function compilingPreperations() {
-  const buildPath = path.resolve(__dirname, "abis");
+  const buildPath = path.resolve(__dirname, "../abis");
   fs.removeSync(buildPath);
   return buildPath;
 }
@@ -21,19 +22,19 @@ function createConfiguration() {
     sources: {
       "Escrow.sol": {
         content: fs.readFileSync(
-          path.resolve(__dirname, "../contracts", "Escrow.sol"),
+          path.resolve(__dirname, contracts_path, "Escrow.sol"),
           "utf8"
         ),
       },
       "EscrowFactory.sol": {
         content: fs.readFileSync(
-          path.resolve(__dirname, "../contracts", "EscrowFactory.sol"),
+          path.resolve(__dirname, contracts_path, "EscrowFactory.sol"),
           "utf8"
         ),
       },
       "HMToken.sol": {
         content: fs.readFileSync(
-          path.resolve(__dirname, "../contracts", "HMToken.sol"),
+          path.resolve(__dirname, contracts_path, "HMToken.sol"),
           "utf8"
         ),
       },
@@ -75,7 +76,7 @@ function getImports(dependency) {
 
   return {
     contents: fs.readFileSync(
-      path.resolve(__dirname, "../contracts", dependency),
+      path.resolve(__dirname, contracts_path, dependency),
       "utf8"
     ),
   };

@@ -1,15 +1,15 @@
 specVersion: 0.0.5
-description: Human subgraph on Polygon network
+description: Human subgraph on rinkeby network
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
     name: EscrowFactory
-    network: matic
+    network: rinkeby
     source:
       abi: EscrowFactory
-      address: '0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794'
-      startBlock: 25426565
+      address: '0x925B24444511c86F4d4E63141D8Be0A025E2dca4'
+      startBlock: 8180730
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -25,11 +25,11 @@ dataSources:
           handler: handleLaunched
   - kind: ethereum
     name: HMToken
-    network: matic
+    network: rinkeby
     source:
       abi: HMToken
-      address: 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
-      startBlock: '20181700'
+      address: 0x4dCf5ac4509888714dd43A5cCc46d7ab389D9c23
+      startBlock: '7200306'
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -55,7 +55,7 @@ dataSources:
 templates:
   - name: Escrow
     kind: ethereum/contract
-    network: matic
+    network: rinkeby
     source:
       abi: Escrow
     mapping:

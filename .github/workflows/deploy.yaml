@@ -1,8 +1,11 @@
-name: DeployPolygon
+name: DeployGraphs
 on:
   push:
     branches:
       - main
+        paths:
+        - 'contracts/**'
+        - 'hmt_subgraph/**'
 
 jobs:
   deploy:
@@ -13,6 +16,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+      - run: cd hmt_subgraph
       - run: npm install
       - run: npm install -g @graphprotocol/graph-cli
       - run: npm run codegen
