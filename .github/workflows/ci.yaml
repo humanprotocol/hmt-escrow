@@ -5,14 +5,16 @@ on: [push, pull_request]
 jobs:
   ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./hmt_subgraph
     steps:
       - uses: actions/checkout@v3
       - name: Set up JS
-        working-directory: ./hmt_subgraph
         uses: actions/setup-node@v3
         with:
           node-version: 18
-
+      - run: cd hmt_subgraph
       - run: npm install
       - run: npm run codegen
       - run: npm run build
