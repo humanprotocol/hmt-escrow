@@ -33,11 +33,11 @@ async function replaceContractAddresses() {
   // HMToken CONFIGURATION
   subgraph = subgraph.replace(
     /__HMTOKEN_ADDRESS__/g,
-    network["HMToken"].address
+    "'" + network["HMToken"].address + "'"
   );
   subgraph = subgraph.replace(
     /__STARTBLOCK_HMTOKEN__/g,
-    "'" + network["HMToken"].startBlock + "'"
+    network["HMToken"].startBlock
   );
 
   fs.writeFileSync("subgraph.yaml", subgraph, "utf8");
