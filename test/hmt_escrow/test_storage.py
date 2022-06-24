@@ -2,8 +2,9 @@ import logging
 import os
 import unittest
 
+from hmt_escrow.crypto import is_encrypted
 from hmt_escrow.job import Job
-from hmt_escrow.storage import upload, download
+from hmt_escrow.storage import upload, download, download_from_storage
 from test.hmt_escrow.utils import manifest
 
 SHARED_MAC_DATA: bytes = os.getenv(
@@ -49,6 +50,27 @@ class StorageTest(unittest.TestCase):
         self.assertTrue(manifest_url.startswith("s3"))
         manifest_dict = download(manifest_url, job.gas_payer_priv)
         self.assertEqual(manifest_dict, job.serialized_manifest)
+
+    def test_upload_with_encryption_option(self):
+        """
+        Tests whether data must be persisted in storage encrypted or plain.
+        """
+        pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
+        serialized = dict(manifest.serialize())
+
+        # Uplaoding data flagging to send it plain (not encrypted).
+        (_, manifest_url) = upload(serialized,
+                                   pub_key,
+                                   encrypt_data=False)
+        data = download_from_storage(manifest_url)
+        self.assertEqual(is_encrypted(data), False)
+
+        # Uplaoding data flagging to send it encrypted.
+        (_, manifest_url) = upload(serialized,
+                                   pub_key,
+                                   encrypt_data=True)
+        data = download_from_storage(manifest_url)
+        self.assertEqual(is_encrypted(data), True)
 
 
 if __name__ == "__main__":
