@@ -1,0 +1,78 @@
+specVersion: 0.0.5
+description: Human subgraph on Polygon network
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: EscrowFactory
+    network: matic
+    source:
+      abi: EscrowFactory
+      address: '0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794'
+      startBlock: 25426565
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mapping/escrowfactory.ts
+      entities:
+        - Launched
+      abis:
+        - name: EscrowFactory
+          file: ./abis/EscrowFactory.json
+      eventHandlers:
+        - event: Launched(address,address)
+          handler: handleLaunched
+  - kind: ethereum
+    name: HMToken
+    network: matic
+    source:
+      abi: HMToken
+      address: '0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf'
+      startBlock: 20181700
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - BulkApproval
+        - BulkTransfer
+        - Transfer
+      abis:
+        - name: HMToken
+          file: ./abis/HMToken.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: BulkApproval(indexed uint256,uint256)
+          handler: handleBulkApproval
+        - event: BulkTransfer(indexed uint256,uint256)
+          handler: handleBulkTransfer
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mapping/hm-token.ts
+templates:
+  - name: Escrow
+    kind: ethereum/contract
+    network: matic
+    source:
+      abi: Escrow
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mapping/escrow.ts
+      entities:
+        - ISEvent
+        - PEvent
+      abis:
+        - name: Escrow
+          file: ./abis/Escrow.json
+      eventHandlers:
+        - event: IntermediateStorage(string,string)
+          handler: handleIntermediateStorage
+        - event: Pending(string,string)
+          handler: handlePending
+        - event: BulkTransfer(indexed uint256,uint256)
+          handler: handleBulkTransfer
