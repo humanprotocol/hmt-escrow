@@ -16,7 +16,7 @@ HMT-Escrow supports arbitrary EVM networks but there's a bit of work to do to ma
 * [ ] Launch KVstore contracts https://github.com/humanprotocol/eth-kvstore
 - [ ] Add the contracts to the relevant network scanner (etherscan equivalent) 
 - [ ] Launch a working app on the network. The easiest one to get going is our example fortune. https://github.com/humanprotocol/fortune  Make a video of the functionality of the app working on the new network and link to relevant scanner transactions.
-- [ ] Add to human dashboard [ https://dashboard.humanprotocol.org/ ]
+- [ ] Add to human dashboard [ https://dashboard.humanprotocol.org/ ]. This will require that you configure a human subgraph
 - [ ] Request to become the maintainer for your EVM network. We will list you on our repo, give you an extra reward (generally around 1 ETH per year) and invite you to conferences. We will celebrate your name forever!
 - [ ] Verify bridging of tokens works
 ### High level rules to make sure that you are doing this correctly
