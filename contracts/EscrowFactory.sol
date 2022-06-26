@@ -3,7 +3,6 @@ import "./Escrow.sol";
 
 
 contract EscrowFactory {
-
     // all Escrows will have this duration.
     uint256 constant STANDARD_DURATION = 8640000;
 
