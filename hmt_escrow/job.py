@@ -3,7 +3,7 @@ import logging
 import os
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Union, Type
 
 from basemodels import Manifest
 from eth_keys import keys
@@ -699,7 +699,7 @@ class Job:
         try:
             handle_transaction_with_retry(txn_func, self.retry, *[], **txn_info)
             # After abort the contract should be destroyed
-            return w3.eth.getCode(self.job_contract.address) == b""
+            return w3.eth.get_code(self.job_contract.address) == b""
         except Exception as e:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
@@ -710,7 +710,7 @@ class Job:
         if not job_aborted:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
-        return w3.eth.getCode(self.job_contract.address) == b""
+        return w3.eth.get_code(self.job_contract.address) == b""
 
     def cancel(self, gas: int = GAS_LIMIT) -> bool:
         """Returns the HMT back to the gas payer. It's the softer version of abort as the contract is not destroyed.
@@ -1270,7 +1270,7 @@ class Job:
         factory_addr: Optional[str],
         credentials: Dict[str, str],
         gas: int = GAS_LIMIT,
-    ) -> Contract:
+    ) -> Union[Type[Contract], Contract]:
         """Takes an optional factory address and returns its contract representation. Alternatively
         a new factory is created.
 

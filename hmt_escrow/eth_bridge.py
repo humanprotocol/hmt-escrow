@@ -6,7 +6,6 @@ from typing import Dict, Any
 from eth_typing import ChecksumAddress, HexAddress, HexStr, URI
 from solcx import compile_files
 from web3 import Web3
-from web3._utils.transactions import wait_for_transaction_receipt
 from web3.contract import Contract
 from web3.middleware import geth_poa_middleware
 from web3.providers.auto import load_provider_from_uri
@@ -126,8 +125,8 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
     txn_hash = w3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
     try:
-        txn_receipt = wait_for_transaction_receipt(
-            w3, txn_hash, timeout=WEB3_TIMEOUT, poll_latency=WEB3_POLL_LATENCY
+        txn_receipt = w3.eth.wait_for_transaction_receipt(
+            txn_hash, timeout=WEB3_TIMEOUT, poll_latency=WEB3_POLL_LATENCY
         )
     except TimeoutError as e:
         raise e
