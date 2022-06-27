@@ -447,10 +447,11 @@
         },
         "hmt-basemodels": {
             "hashes": [
-                "sha256:1f00dc0b2b9633e572fd0146072f6d825259270e21abd065e030e6cfa3f24afb"
+                "sha256:3356ba5ec14cb47574705063c1bee5d269886c50981375f08677534309aaad4e",
+                "sha256:884d9e089055d6cf5f0c67c37ce93be6e7f41bdaed95cc013838e21b70648f4b"
             ],
             "index": "pypi",
-            "version": "==0.1.9"
+            "version": "==0.1.15"
         },
         "idna": {
             "hashes": [
