@@ -393,7 +393,7 @@ class JobTestCase(unittest.TestCase):
                 handler_mock.call_args_list,
                 [
                     call(txn_mock, gas_payer="1", gas_payer_priv="11",
-                         gas=6700000)
+                         gas=6700000, hmt_server_addr=None)
                     for i in range(5)
                 ],
             )
@@ -423,7 +423,8 @@ class JobTestCase(unittest.TestCase):
                     txn_mock,
                     gas_payer="1",
                     gas_payer_priv="11",
-                    gas=6700000
+                    gas=6700000,
+                    hmt_server_addr=None
                 )],
             )
             self.assertEqual(sleep_mock.call_args_list, [])
