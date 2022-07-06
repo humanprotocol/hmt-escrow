@@ -307,6 +307,8 @@ def deploy_factory(
         str: returns the contract address of the newly deployed factory.
 
     """
+    if gas is None:
+        gas = GAS_LIMIT
     gas_payer = credentials["gas_payer"]
     gas_payer_priv = credentials["gas_payer_priv"]
     hmtoken_address = HMTOKEN_ADDR if hmtoken_addr is None else hmtoken_addr
@@ -385,7 +387,7 @@ def get_pub_key_from_addr(wallet_addr: str, hmt_server_addr: str = None) -> byte
     return bytes(addr_pub_key, encoding="utf-8")
 
 
-def set_pub_key_at_addr(pub_key: str, hmt_server_addr: str = None) -> TxReceipt:
+def set_pub_key_at_addr(pub_key: str, hmt_server_addr: str = None, gas: int = GAS_LIMIT) -> TxReceipt:
     """
     Given a public key, this function will use the eth-kvstore to reach out to the blockchain
     and set the key `hmt_pub_key` on the callers kvstore collection of values, equivalent to the
@@ -414,6 +416,9 @@ def set_pub_key_at_addr(pub_key: str, hmt_server_addr: str = None) -> TxReceipt:
     GAS_PAYER = os.getenv("GAS_PAYER")
     GAS_PAYER_PRIV = os.getenv("GAS_PAYER_PRIV")
 
+    if gas is None:
+        gas = GAS_LIMIT
+
     if not (GAS_PAYER or GAS_PAYER_PRIV):
         raise ValueError("environment variable GAS_PAYER AND GAS_PAYER_PRIV required")
 
@@ -425,7 +430,7 @@ def set_pub_key_at_addr(pub_key: str, hmt_server_addr: str = None) -> TxReceipt:
     txn_info = {
         "gas_payer": GAS_PAYER,
         "gas_payer_priv": GAS_PAYER_PRIV,
-        "gas": GAS_LIMIT,
+        "gas": gas,
         "hmt_server_addr": hmt_server_addr,
     }
 
