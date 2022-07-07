@@ -1,6 +1,5 @@
 import { describe, test, assert, clearStore } from "matchstick-as/assembly/index";
 import { store, BigInt } from "@graphprotocol/graph-ts"
-import { logStore } from 'matchstick-as/assembly/store'
 
 
 import { ISEvent } from "../../generated/schema";
