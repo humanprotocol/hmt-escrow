@@ -387,7 +387,9 @@ def get_pub_key_from_addr(wallet_addr: str, hmt_server_addr: str = None) -> byte
     return bytes(addr_pub_key, encoding="utf-8")
 
 
-def set_pub_key_at_addr(pub_key: str, hmt_server_addr: str = None, gas: int = GAS_LIMIT) -> TxReceipt:
+def set_pub_key_at_addr(
+    pub_key: str, hmt_server_addr: str = None, gas: int = GAS_LIMIT
+) -> TxReceipt:
     """
     Given a public key, this function will use the eth-kvstore to reach out to the blockchain
     and set the key `hmt_pub_key` on the callers kvstore collection of values, equivalent to the
