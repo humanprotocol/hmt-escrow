@@ -24,6 +24,7 @@ until curl --silent ipfs:5001; do
 done
 
 mkdir -p minio/escrow-results
+mkdir -p minio/escrow-public-results
 
 if [ ! -z $* ]; then
   $*

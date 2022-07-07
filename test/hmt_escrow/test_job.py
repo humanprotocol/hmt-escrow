@@ -17,6 +17,7 @@ from hmt_escrow.job import (
     launcher,
     is_trusted_handler
 )
+from hmt_escrow.storage import get_public_bucket_url
 from test.hmt_escrow.utils.manifest import manifest
 
 
@@ -190,8 +191,7 @@ class JobTestCase(unittest.TestCase):
             ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal("20.0")),
             ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("50.0")),
         ]
-        self.assertTrue(
-            self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
+        self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
         # The escrow contract is still in Partial state as there's still balance left.
 
@@ -201,16 +201,16 @@ class JobTestCase(unittest.TestCase):
         # Trying to pay more than the contract balance results in failure.
 
         payouts = [
-            ("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal("40.0"))]
-        self.assertFalse(
-            self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
+            ("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal("40.0"))
+        ]
+        self.assertFalse(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
         # Paying the remaining amount empties the escrow and updates the status correctly.
 
         payouts = [
-            ("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal("30.0"))]
-        self.assertTrue(
-            self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
+            ("0x9d689b8f50Fd2CAec716Cc5220bEd66E03F07B5f", Decimal("30.0"))
+        ]
+        self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
         self.assertEqual(self.job.balance(), 0)
         self.assertEqual(self.job.status(), Status(4))
 
@@ -224,16 +224,14 @@ class JobTestCase(unittest.TestCase):
                 "f22d4fc42da79aa5ba839998a0a9f2c2c45f5e55ee7f1504e464d2c71ca199e1",
             ),
         ]
-        self.job = Job(self.credentials, manifest,
-                       multi_credentials=multi_credentials)
+        self.job = Job(self.credentials, manifest, multi_credentials=multi_credentials)
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         self.assertTrue(self.job.setup())
         payouts = [
             ("0x6b7E3C31F34cF38d1DFC1D9A8A59482028395809", Decimal("20.0")),
             ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("50.0")),
         ]
-        self.assertTrue(
-            self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
+        self.assertTrue(self.job.bulk_payout(payouts, {}, self.rep_oracle_pub_key))
 
     def test_job_bulk_payout_with_encryption_option(self):
         """Tests whether final results must be persisted in storage encrypted
@@ -270,7 +268,7 @@ class JobTestCase(unittest.TestCase):
         with patch("hmt_escrow.job.upload", mock_upload):
             # Bulk payout with final results as plain (not encrypted)
             job.bulk_payout(payouts=payouts,
-                            results={"results": 0},
+                            results=final_results,
                             pub_key=self.rep_oracle_pub_key,
                             encrypt_final_results=True)
 
@@ -279,6 +277,83 @@ class JobTestCase(unittest.TestCase):
                 public_key=self.rep_oracle_pub_key,
                 encrypt_data=True
             )
+
+    def test_job_bulk_payout_with_full_qualified_url(self):
+        """ Tests whether url is only S3 string with encryption is on/off."""
+        job = Job(self.credentials, manifest)
+        self.assertEqual(job.launch(self.rep_oracle_pub_key), True)
+        self.assertEqual(job.setup(), True)
+
+        payouts = [
+            ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("100.0"))
+        ]
+
+        final_results = {'results': 0}
+
+        with patch('hmt_escrow.job.handle_transaction_with_retry') as transaction_retry_mock, \
+            patch('hmt_escrow.job.upload') as upload_mock:
+            key = 'abcdefg'
+            hash_ = f's3{key}'
+            upload_mock.return_value = hash_, key
+
+            # Bulk payout with encryption ON (default)
+            job.bulk_payout(payouts=payouts,
+                            results=final_results,
+                            pub_key=self.rep_oracle_pub_key,
+                            encrypt_final_results=True)
+
+            # Key was passed to handle_transaction_with_retry as URL
+            self.assertIn(key, transaction_retry_mock.call_args.args)
+
+            transaction_retry_mock.reset_mock()
+
+            # Bulk payout with encryption OFF
+            job.bulk_payout(payouts=payouts,
+                            results=final_results,
+                            pub_key=self.rep_oracle_pub_key,
+                            encrypt_final_results=False)
+
+            # Key MUST NOT be passed as URL in handle_transaction_with_retry
+            self.assertNotIn(key, transaction_retry_mock.call_args.args)
+
+            # Full bucket URL must be persisted in blockchain during bulk payout
+            full_url = get_public_bucket_url(key)
+            self.assertIn(full_url, transaction_retry_mock.call_args.args)
+
+    def test_retrieving_final_results_url(self):
+        """ Tests retrieving final results URL with encryption on/off """
+
+        job = Job(self.credentials, manifest)
+        self.assertEqual(job.launch(self.rep_oracle_pub_key), True)
+        self.assertEqual(job.setup(), True)
+
+        # No bulk payout processed to have final results
+        persisted_final_results = job.final_results(self.credentials['gas_payer_priv'].encode('utf-8'))
+        self.assertIsNone(persisted_final_results)
+
+        payouts = [
+            ("0x852023fbb19050B8291a335E5A83Ac9701E7B4E6", Decimal("100.0"))
+        ]
+
+        final_results = {'results': 0}
+
+        # Bulk payout with encryption ON (default)
+        job.bulk_payout(payouts=payouts,
+                        results=final_results,
+                        pub_key=self.rep_oracle_pub_key,
+                        encrypt_final_results=True)
+
+        persisted_final_results = job.final_results(self.credentials['gas_payer_priv'].encode('utf-8'))
+        self.assertEqual(persisted_final_results, final_results)
+
+        # Bulk payout with encryption OFF
+        job.bulk_payout(payouts=payouts,
+                        results=final_results,
+                        pub_key=self.rep_oracle_pub_key,
+                        encrypt_final_results=True)
+
+        persisted_final_results = job.final_results(self.credentials['gas_payer_priv'].encode('utf-8'))
+        self.assertEqual(persisted_final_results, final_results)
 
     def test_job_abort(self):
         """
@@ -374,8 +449,8 @@ class JobTestCase(unittest.TestCase):
         sleep_mock = MagicMock()
 
         with patch(
-                "hmt_escrow.eth_bridge.handle_transaction",
-                handler_mock
+            "hmt_escrow.eth_bridge.handle_transaction",
+            handler_mock
         ), patch(
             "hmt_escrow.eth_bridge.sleep",
             sleep_mock

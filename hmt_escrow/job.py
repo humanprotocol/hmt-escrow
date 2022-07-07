@@ -3,7 +3,7 @@ import logging
 import os
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, List, Tuple, Optional, Any
 
 from basemodels import Manifest
 from eth_keys import keys
@@ -23,7 +23,7 @@ from hmt_escrow.eth_bridge import (
     Retry,
     HMTOKEN_ADDR,
 )
-from hmt_escrow.storage import download, upload
+from hmt_escrow.storage import download, upload, get_public_bucket_url, get_key_from_url
 
 GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 
@@ -592,9 +592,13 @@ class Job:
             "hmt_server_addr": self.hmt_server_addr,
         }
 
-        (hash_, url) = upload(
+        hash_, url = upload(
             msg=results, public_key=pub_key, encrypt_data=encrypt_final_results
         )
+
+        # Plain data will be publicly accessible
+        is_public_url = encrypt_final_results is False
+        url = get_public_bucket_url(url) if is_public_url else url
 
         eth_addrs = list()
         hmt_amounts = list()
@@ -604,6 +608,7 @@ class Job:
             hmt_amounts.append(int(amount * 10 ** 18))
 
         func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
+
         try:
             handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
             return self._bulk_paid() is True
@@ -1072,7 +1077,7 @@ class Job:
         """
         return download(self.intermediate_manifest_url, priv_key)
 
-    def final_results(self, priv_key: bytes) -> Dict:
+    def final_results(self, priv_key: bytes) -> Optional[Dict]:
         """Retrieves the final results stored by the Reputation Oracle.
 
         >>> from test.hmt_escrow.utils import manifest
@@ -1106,7 +1111,13 @@ class Job:
         final_results_url = self.job_contract.functions.finalResultsUrl().call(
             {"from": self.gas_payer, "gas": Wei(self.gas)}
         )
-        return download(final_results_url, priv_key)
+
+        if not final_results_url:
+            return None
+
+        url = get_key_from_url(final_results_url)
+
+        return download(url, priv_key)
 
     def _access_job(self, factory_addr: str, escrow_addr: str, **credentials):
         """Given a factory and escrow address and credentials, access an already
