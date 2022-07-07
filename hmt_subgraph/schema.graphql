@@ -51,3 +51,10 @@ type HMBulkTransferEvent @entity {
   timestamp: BigInt!
   transaction: Bytes!
 }
+
+type EscrowStatistics @entity {
+  id: ID!
+  intermediateStorageEventCount: BigInt!
+  pendingEventCount: BigInt!
+  bulkTransferEventCount: BigInt!
+}
