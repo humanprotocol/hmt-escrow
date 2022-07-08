@@ -14,7 +14,7 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      file: ./src/mapping/escrowfactory.ts
+      file: ./src/mapping/EscrowFactory.ts
       entities:
         - Launched
       abis:
@@ -62,7 +62,7 @@ templates:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      file: ./src/mapping/escrow.ts
+      file: ./src/mapping/Escrow.ts
       entities:
         - ISEvent
         - PEvent
