@@ -6,6 +6,7 @@ on:
     paths:
       - contracts/**
       - hmt_subgraph/**
+  workflow_dispatch:
 
 jobs:
   deploy:
