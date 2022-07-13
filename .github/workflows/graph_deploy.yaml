@@ -2,10 +2,11 @@ name: DeployGraphs
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - contracts/**
       - hmt_subgraph/**
+  workflow_dispatch:
 
 jobs:
   deploy:

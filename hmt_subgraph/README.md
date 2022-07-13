@@ -6,13 +6,10 @@ To get more information about how the graph works : https://thegraph.com/en/
 
 ## Installation
 
-You need to install the Graph CLI to use and deploy the graph :
+Package installation
 
-```sh
-# NPM
-npm install -g @graphprotocol/graph-cli
-# Yarn
-yarn global add @graphprotocol/graph-cli
+```
+npm install
 ```
 
 
@@ -41,6 +38,17 @@ The deployment of the graph on each network is automatically triggered by the gi
 
 The compilation of the contracts is automatically made at the build and before deploy the graph. ABIs are generated from files (.sol) on `/contracts` folder.
 See `compile.js` file.
+
+### Tests
+To run tests next commands should be executed:
+
+```bash
+npm run codegen
+
+npm run build
+
+npm test
+```
 
 ### Supported networks
 

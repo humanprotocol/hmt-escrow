@@ -29,6 +29,14 @@ type BulkTransferEvent @entity {
   transaction: Bytes!
 }
 
+type EscrowStatistics @entity {
+  id: ID!
+  intermediateStorageEventCount: BigInt!
+  pendingEventCount: BigInt!
+  bulkTransferEventCount: BigInt!
+}
+
+
 type HMTransferEvent @entity {
   id: ID!
   token: Bytes! # address 
@@ -50,4 +58,36 @@ type HMBulkTransferEvent @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+}
+
+type HMApprovalEvent @entity {
+  id: ID!
+  token: Bytes! #address
+  owner: Bytes! #address
+  spender: Bytes! #address
+  value: BigInt!
+
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type HMBulkApprovalEvent @entity {
+  id: ID!
+
+  bulkCount: BigInt!
+  txId: BigInt!
+
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type HMTokenStatistics @entity {
+  id: ID!
+  transferEventCount: BigInt!
+  bulkTransferEventCount: BigInt!
+  approvalEventCount: BigInt!
+  bulkApprovalEventCount: BigInt!
+  token: Bytes! # token address
 }
