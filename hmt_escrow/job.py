@@ -46,6 +46,9 @@ def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> E
         Enum: returns the status as an enumeration.
 
     """
+    if gas is None:
+        gas = GAS_LIMIT
+
     status_ = escrow_contract.functions.status().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
@@ -66,6 +69,10 @@ def manifest_url(
         str: returns the manifest url of Job's escrow contract.
 
     """
+
+    if gas is None:
+        gas = GAS_LIMIT
+
     return escrow_contract.functions.manifestUrl().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
@@ -85,6 +92,9 @@ def manifest_hash(
         str: returns the manifest hash of Job's escrow contract.
 
     """
+    if gas is None:
+        gas = GAS_LIMIT
+
     return escrow_contract.functions.manifestHash().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
@@ -93,6 +103,9 @@ def manifest_hash(
 def is_trusted_handler(
     escrow_contract: Contract, handler_addr: str, gas_payer: str, gas: int = GAS_LIMIT
 ) -> bool:
+    if gas is None:
+        gas = GAS_LIMIT
+
     return escrow_contract.functions.areTrustedHandlers(handler_addr).call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
@@ -110,6 +123,9 @@ def launcher(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) ->
         str: returns the address of who launched the job.
 
     """
+    if gas is None:
+        gas = GAS_LIMIT
+
     return escrow_contract.functions.launcher().call(
         {"from": gas_payer, "gas": Wei(gas)}
     )
@@ -243,7 +259,7 @@ class Job:
         self.multi_credentials = self._validate_multi_credentials(multi_credentials)
         self.hmt_server_addr = hmt_server_addr
         self.hmtoken_addr = HMTOKEN_ADDR if hmtoken_addr is None else hmtoken_addr
-        self.gas = gas_limit
+        self.gas = gas_limit or GAS_LIMIT
 
         # Initialize a new Job.
         if not escrow_addr and escrow_manifest:
