@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Union
 
 import boto3
 from botocore.exceptions import ClientError
@@ -37,11 +37,13 @@ ESCROW_PUBLIC_RESULTS_URL = os.getenv("ESCROW_PUBLIC_RESULTS_URL", ESCROW_ENDPOI
 
 class StorageClientError(Exception):
     """ Raises when some error happens when interacting with storage. """
+
     pass
 
 
 class StorageFileNotFoundError(StorageClientError):
     """ Raises when some error happens when file is not found by its key. """
+
     pass
 
 
@@ -80,7 +82,11 @@ def get_public_bucket_url(key: str) -> str:
     Returns:
         str: Bucket public URL
     """
-    base_url = ESCROW_PUBLIC_RESULTS_URL[:-1] if ESCROW_PUBLIC_RESULTS_URL.endswith("/") else ESCROW_PUBLIC_RESULTS_URL
+    base_url = (
+        ESCROW_PUBLIC_RESULTS_URL[:-1]
+        if ESCROW_PUBLIC_RESULTS_URL.endswith("/")
+        else ESCROW_PUBLIC_RESULTS_URL
+    )
     return f"{base_url}/{key}"
 
 
@@ -117,8 +123,8 @@ def download_from_storage(key: str, public: bool = False) -> bytes:
     try:
         response = BOTO3_CLIENT.get_object(Bucket=bucket_name, Key=key)
     except ClientError as e:
-        if e.response['Error']['Code'] == 'NoSuchKey':
-            raise StorageFileNotFoundError('No object found - returning empty')
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            raise StorageFileNotFoundError("No object found - returning empty")
 
         raise StorageClientError(str(e))
 
@@ -164,7 +170,10 @@ def download(key: str, private_key: bytes, public: bool = False) -> Dict:
 
 
 def upload(
-        msg: Dict, public_key: bytes, encrypt_data: Optional[bool] = True, use_public_bucket: Optional[bool] = False
+    msg: Dict,
+    public_key: bytes,
+    encrypt_data: Optional[bool] = True,
+    use_public_bucket: Optional[bool] = False,
 ) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
@@ -198,7 +207,7 @@ def upload(
     is_public = use_public_bucket is True and encrypt_data is False
     bucket_name = get_bucket(public=is_public)
 
-    bucket_kwargs = {"Key": key, "Bucket": bucket_name}
+    bucket_kwargs: Dict[str, Union[str, bytes]] = {"Key": key, "Bucket": bucket_name}
 
     if encrypt_data is True:
         # If encryption is enabled, the bucket is private and data is encrypted

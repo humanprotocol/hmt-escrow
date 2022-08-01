@@ -609,10 +609,12 @@ class Job:
             "hmt_server_addr": self.hmt_server_addr,
         }
 
-        hash_, url = upload(msg=results,
-                            public_key=pub_key,
-                            encrypt_data=encrypt_final_results,
-                            use_public_bucket=store_pub_final_results)
+        hash_, url = upload(
+            msg=results,
+            public_key=pub_key,
+            encrypt_data=encrypt_final_results,
+            use_public_bucket=store_pub_final_results,
+        )
 
         # Plain data will be publicly accessible
         url = get_public_bucket_url(url) if store_pub_final_results else url
