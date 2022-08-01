@@ -13,14 +13,12 @@ class BucketTest(unittest.TestCase):
     """ Bucket related tests """
 
     @patch("hmt_escrow.storage.ESCROW_BUCKETNAME", ESCROW_TEST_BUCKETNAME)
-    def test_retrieving_internal_bucket(self):
-        """ Tests whether internal bucket is retrieved as a non-public bucket. """
+    @patch("hmt_escrow.storage.ESCROW_PUBLIC_BUCKETNAME", ESCROW_TEST_PUBLIC_BUCKETNAME)
+    def test_retrieving_bucket(self):
+        """ Tests whether internal bucket is retrieved public/private bucket. """
         bucket_name = get_bucket(public=False)
         self.assertEqual(bucket_name, ESCROW_TEST_BUCKETNAME)
 
-    @patch("hmt_escrow.storage.ESCROW_PUBLIC_BUCKETNAME", ESCROW_TEST_PUBLIC_BUCKETNAME)
-    def test_retrieving_public_bucket(self):
-        """ Tests whether public bucket is retrieved as a public bucket. """
         bucket_name = get_bucket(public=True)
         self.assertEqual(bucket_name, ESCROW_TEST_PUBLIC_BUCKETNAME)
 

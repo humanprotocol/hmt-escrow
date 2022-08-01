@@ -535,6 +535,7 @@ class Job:
         results: Dict,
         pub_key: bytes,
         encrypt_final_results: bool = True,
+        store_pub_final_results: bool = False,
     ) -> bool:
         """Performs a payout to multiple ethereum addresses. When the payout happens,
         final results are uploaded to IPFS and contract's state is updated to Partial or Paid
@@ -592,8 +593,8 @@ class Job:
             payouts (List[Tuple[str, int]]): a list of tuples with ethereum addresses and amounts.
             results (Dict): the final answer results stored by the Reputation Oracle.
             pub_key (bytes): the public key of the Reputation Oracle.
-            gas (int): maximum amount of gas the caller is ready to pay.
             encrypt_final_results (bool): Whether final results must be encrypted.
+            store_pub_final_results (bool): Whether final results must be stored with public access.
 
         Returns:
             bool: returns True if paying to ethereum addresses and oracles succeeds.
@@ -608,13 +609,13 @@ class Job:
             "hmt_server_addr": self.hmt_server_addr,
         }
 
-        hash_, url = upload(
-            msg=results, public_key=pub_key, encrypt_data=encrypt_final_results
-        )
+        hash_, url = upload(msg=results,
+                            public_key=pub_key,
+                            encrypt_data=encrypt_final_results,
+                            use_public_bucket=store_pub_final_results)
 
         # Plain data will be publicly accessible
-        is_public_url = encrypt_final_results is False
-        url = get_public_bucket_url(url) if is_public_url else url
+        url = get_public_bucket_url(url) if store_pub_final_results else url
 
         eth_addrs = list()
         hmt_amounts = list()
