@@ -1,6 +1,6 @@
 {
   "name": "hmt-escrow",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "Launch escrow contracts to the HUMAN network",
   "main": "truffle.js",
   "directories": {
@@ -12,6 +12,7 @@
     "lint:js": "eslint test/** migrations/**",
     "lint": "npm run lint:js",
     "publish": "truffle publish",
+    "test": "npx truffle test",
     "test": "npx truffle test",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
