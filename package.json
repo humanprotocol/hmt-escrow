@@ -13,7 +13,6 @@
     "lint": "npm run lint:js",
     "publish": "truffle publish",
     "test": "npx truffle test",
-    "test": "npx truffle test",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
