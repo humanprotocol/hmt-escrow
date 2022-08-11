@@ -504,14 +504,14 @@ class JobTestCase(unittest.TestCase):
             "hmt_escrow.eth_bridge.sleep",
             sleep_mock
         ):
-            success = self.job._raffle_txn(
+            raffle_txn_res = self.job._raffle_txn(
                 multi_creds=[("1", "11")],
                 txn_func=txn_mock,
                 txn_args=[],
                 txn_event="Transfer",
             )
 
-            self.assertFalse(success)
+            self.assertFalse(raffle_txn_res["txn_succeeded"])
 
             self.assertEqual(
                 handler_mock.call_args_list,
@@ -533,14 +533,14 @@ class JobTestCase(unittest.TestCase):
             # no retries
             self.job.retry = Retry()
 
-            success = self.job._raffle_txn(
+            raffle_txn_res = self.job._raffle_txn(
                 multi_creds=[("1", "11")],
                 txn_func=txn_mock,
                 txn_args=[],
                 txn_event="Transfer",
             )
 
-            self.assertFalse(success)
+            self.assertFalse(raffle_txn_res["txn_succeeded"])
             self.assertEqual(
                 handler_mock.call_args_list,
                 [call(

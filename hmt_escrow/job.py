@@ -3,14 +3,14 @@ import logging
 import os
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, TypedDict
 
 from basemodels import Manifest
 from eth_keys import keys
 from eth_utils import decode_hex
 from web3 import Web3
 from web3.contract import Contract
-from web3.types import Wei
+from web3.types import TxReceipt, Wei
 
 from hmt_escrow import utils
 from hmt_escrow.eth_bridge import (
@@ -32,6 +32,11 @@ GAS_LIMIT = int(os.getenv("GAS_LIMIT", 4712388))
 LOG = logging.getLogger("hmt_escrow.job")
 
 Status = Enum("Status", "Launched Pending Partial Paid Complete Cancelled")
+
+
+class RaffleTxn(TypedDict):
+    txn_succeeded: bool
+    tx_receipt: Optional[TxReceipt]
 
 
 def status(escrow_contract: Contract, gas_payer: str, gas: int = GAS_LIMIT) -> Enum:
@@ -393,6 +398,7 @@ class Job:
         hmt_amount = int(self.amount * 10 ** 18)
         hmtoken_contract = get_hmtoken(self.hmtoken_addr, self.hmt_server_addr)
 
+        tx_balance = None
         hmt_transferred = False
         contract_is_setup = False
 
@@ -417,19 +423,27 @@ class Job:
         # make sure there is enough HMT to fund the escrow
         if balance > hmt_amount:
             try:
-                handle_transaction_with_retry(
+                tx_receipt = handle_transaction_with_retry(
                     txn_func, self.retry, *func_args, **txn_info
                 )
-                hmt_transferred = True
+
+                hmt_transferred, tx_balance = utils.parse_transfer_transaction(
+                    hmtoken_contract, tx_receipt
+                )
             except Exception as e:
                 LOG.debug(
                     f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
                 )
 
         if not hmt_transferred:
-            hmt_transferred = self._raffle_txn(
+            raffle_txn_res = self._raffle_txn(
                 self.multi_credentials, txn_func, func_args, txn_event
             )
+
+            if raffle_txn_res["txn_succeeded"]:
+                hmt_transferred, tx_balance = utils.parse_transfer_transaction(
+                    hmtoken_contract, raffle_txn_res["tx_receipt"]
+                )
 
         # give up
         if not hmt_transferred:
@@ -458,16 +472,15 @@ class Job:
             )
 
         if not contract_is_setup:
-            contract_is_setup = self._raffle_txn(
+            raffle_txn_res = self._raffle_txn(
                 self.multi_credentials, txn_func, func_args, txn_event
             )
+            contract_is_setup = raffle_txn_res["txn_succeeded"]
 
         if not contract_is_setup:
             LOG.warning(f"{txn_event} failed with all credentials.")
 
-        return (
-            str(self.status()) == str(Status.Pending) and self.balance() == hmt_amount
-        )
+        return str(self.status()) == str(Status.Pending) and tx_balance == hmt_amount
 
     def add_trusted_handlers(self, handlers: List[str]) -> bool:
         """Add trusted handlers that can freely transact with the contract and
@@ -520,9 +533,11 @@ class Job:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
-        trusted_handlers_added = self._raffle_txn(
+
+        raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, func_args, txn_event
         )
+        trusted_handlers_added = raffle_txn_res["txn_succeeded"]
 
         if not trusted_handlers_added:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -637,9 +652,10 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        bulk_paid = self._raffle_txn(
+        raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, func_args, txn_event
         )
+        bulk_paid = raffle_txn_res["txn_succeeded"]
 
         if not bulk_paid:
             LOG.warning(f"{txn_event} failed with all credentials.")
@@ -737,7 +753,10 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_aborted = self._raffle_txn(self.multi_credentials, txn_func, [], txn_event)
+        raffle_txn_res = self._raffle_txn(
+            self.multi_credentials, txn_func, [], txn_event
+        )
+        job_aborted = raffle_txn_res["txn_succeeded"]
 
         if not job_aborted:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -815,9 +834,10 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_cancelled = self._raffle_txn(
+        raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, [], txn_event
         )
+        job_cancelled = raffle_txn_res["txn_succeeded"]
 
         if not job_cancelled:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -900,9 +920,10 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        results_stored = self._raffle_txn(
+        raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, func_args, txn_event
         )
+        results_stored = raffle_txn_res["txn_succeeded"]
 
         if not results_stored:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -970,9 +991,10 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        job_completed = self._raffle_txn(
+        raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, [], txn_event
         )
+        job_completed = raffle_txn_res["txn_succeeded"]
 
         if not job_completed:
             LOG.exception(f"{txn_event} failed with all credentials.")
@@ -1462,16 +1484,17 @@ class Job:
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
             )
 
-        escrow_created = self._raffle_txn(
+        raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, func_args, txn_event
         )
+        escrow_created = raffle_txn_res["txn_succeeded"]
 
         if not escrow_created:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
         return escrow_created
 
-    def _raffle_txn(self, multi_creds, txn_func, txn_args, txn_event):
+    def _raffle_txn(self, multi_creds, txn_func, txn_args, txn_event) -> RaffleTxn:
         """Takes in multiple credentials, loops through each and performs the given transaction.
 
         Args:
@@ -1486,6 +1509,7 @@ class Job:
 
         """
         txn_succeeded = False
+        tx_receipt = None
 
         for gas_payer, gas_payer_priv in multi_creds:
             txn_info = {
@@ -1495,7 +1519,7 @@ class Job:
                 "hmt_server_addr": self.hmt_server_addr,
             }
             try:
-                handle_transaction_with_retry(
+                tx_receipt = handle_transaction_with_retry(
                     txn_func, self.retry, *txn_args, **txn_info
                 )
                 self.gas_payer = gas_payer
@@ -1507,4 +1531,4 @@ class Job:
                     f"{txn_event} failed with {gas_payer} and {gas_payer_priv} due to {e}."
                 )
 
-        return txn_succeeded
+        return {"txn_succeeded": txn_succeeded, "tx_receipt": tx_receipt}
