@@ -1,6 +1,8 @@
 import time
 import logging
-
+from typing import Tuple, Optional
+from web3.contract import Contract
+from web3.types import TxReceipt
 
 logger = logging.getLogger("hmt_escrow.job")
 
@@ -70,3 +72,21 @@ def get_hmt_balance(wallet_addr, token_addr, w3):
     ]
     contract = w3.eth.contract(abi=abi, address=token_addr)
     return contract.functions.balanceOf(wallet_addr).call()
+
+
+def parse_transfer_transaction(
+    hmtoken_contract: Contract, tx_receipt: Optional[TxReceipt]
+) -> Tuple[bool, Optional[int]]:
+    hmt_transferred = False
+    tx_balance = None
+    if not tx_receipt:
+        return hmt_transferred, tx_balance
+
+    transfer_event = hmtoken_contract.events.Transfer().processReceipt(tx_receipt)
+    print(f"transfer_event {transfer_event}")
+    hmt_transferred = bool(transfer_event)
+
+    if hmt_transferred:
+        tx_balance = transfer_event[0].get("args", {}).get("_value")
+
+    return hmt_transferred and tx_balance is not None, tx_balance
