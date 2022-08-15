@@ -14,7 +14,7 @@ sphinx = "*"
 web3 = "==5.24.0"
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"
 
 [pipenv]
 allow_prereleases = true
