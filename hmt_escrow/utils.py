@@ -51,7 +51,7 @@ def with_retry(fn, retries=3, delay=5, backoff=2):
 
 
 def get_hmt_balance(wallet_addr, token_addr, w3):
-    """ Get hmt balance
+    """Get hmt balance
 
     Args:
         wallet_addr: wallet address
