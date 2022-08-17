@@ -44,10 +44,10 @@ WEB3_TIMEOUT = int(os.getenv("WEB3_TIMEOUT", 240))
 
 
 class Retry(object):
-    """ Retry class holding retry parameters """
+    """Retry class holding retry parameters"""
 
     def __init__(self, retries=0, delay=5, backoff=2):
-        """ Inits
+        """Inits
 
         Args:
             retries: number of retries
@@ -148,9 +148,9 @@ def handle_transaction(txn_func, *args, **kwargs) -> TxReceipt:
 def handle_transaction_with_retry(
     txn_func, retry=Retry(), *args, **kwargs
 ) -> TxReceipt:
-    """ Handle transaction
+    """Handle transaction
 
-    Same as ``handle_transaction`` but with retry and backoff 
+    Same as ``handle_transaction`` but with retry and backoff
 
     Args:
         txn_func: the transaction function to be handled.

@@ -36,13 +36,13 @@ ESCROW_PUBLIC_RESULTS_URL = os.getenv("ESCROW_PUBLIC_RESULTS_URL", ESCROW_ENDPOI
 
 
 class StorageClientError(Exception):
-    """ Raises when some error happens when interacting with storage. """
+    """Raises when some error happens when interacting with storage."""
 
     pass
 
 
 class StorageFileNotFoundError(StorageClientError):
-    """ Raises when some error happens when file is not found by its key. """
+    """Raises when some error happens when file is not found by its key."""
 
     pass
 
@@ -62,7 +62,7 @@ def _connect_s3():
 
 
 def get_bucket(public: bool = False) -> str:
-    """ Retrieves correct bucket according to ACL visibility.
+    """Retrieves correct bucket according to ACL visibility.
 
     Args:
           public(bool): whether the public bucket should be retrieved or internal one.
@@ -74,7 +74,7 @@ def get_bucket(public: bool = False) -> str:
 
 
 def get_public_bucket_url(key: str) -> str:
-    """ Retrieves public bucket URL
+    """Retrieves public bucket URL
 
     Args:
         key(str): File key uploaded in storage
@@ -91,7 +91,7 @@ def get_public_bucket_url(key: str) -> str:
 
 
 def get_key_from_url(url: str) -> str:
-    """ Retrieve key from storage URL.
+    """Retrieve key from storage URL.
 
     Args:
         url(str): File URL to point where it is stored
@@ -110,7 +110,7 @@ def get_key_from_url(url: str) -> str:
 
 
 def download_from_storage(key: str, public: bool = False) -> bytes:
-    """ Downloads data from storage if exists.
+    """Downloads data from storage if exists.
 
     Args:
          key(str): file key to find it in storage to be downloaded.

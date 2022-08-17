@@ -130,10 +130,10 @@ class Encryption:
         return msg + tag
 
     def decrypt(
-        self,
-        data: bytes,
-        private_key: eth_datatypes.PrivateKey,
-        shared_mac_data: bytes = b"") -> bytes:
+            self,
+            data: bytes,
+            private_key: eth_datatypes.PrivateKey,
+            shared_mac_data: bytes = b"") -> bytes:
         """
         Decrypt data with ECIES method using the given private key
         1) generate shared-secret = kdf( ecdhAgree(myPrivKey, msg[1:65]) )
@@ -249,8 +249,7 @@ class Encryption:
 
     def generate_private_key(self) -> eth_datatypes.PrivateKey:
         """ Generates a new SECP256K1 private key and return it """
-        key = ec.generate_private_key(self.ELLIPTIC_CURVE)
-        # key = cast(ec.EllipticCurvePrivateKeyWithSerialization, priv_key)
+        key = ec.generate_private_key(curve=self.ELLIPTIC_CURVE)
         big_key = int_to_big_endian(key.private_numbers().private_value)
         padded_key = self._pad32(big_key)
         return eth_keys.PrivateKey(padded_key)
