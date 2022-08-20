@@ -206,22 +206,24 @@ HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
 Escrow Factory - 0x558cd800f9F0B02f3B149667bDe003284c867E94
 KVStore - 0x32e27177BA6Ea91cf28dfd91a0Da9822A4b74EcF
 HMToken - 0x0376D26246Eb35FF4F9924cF13E6C05fd0bD7Fb4
-
-## Moonbeam deployment (Not Yet Verified)
 ```
-Escrow Factory - 0x3C5a2966A1b5eBF9f4b2B372857C4deD545Bed45
-KVStore - 0xC1e779E71E6bf7Ded0dDdCb6e221404f497CeE8e
-HMToken - 0xa1d4836243DfA3259e28b8A9D11377455B935632
+## Moonbeam deployment
+
+```
+Escrow Factory - 0x98108c28B7767a52BE38B4860832dd4e11A7ecad
+HMToken - 0x3b25BC1dC591D24d60560d0135D6750A561D4764
+KVStore - 0x6617d21ab0f16A7079e2811Cf9306CAe7018bDd9
 ```
 
 ## Moonbase Alpha deployment
 ```
-Escrow Factory - 0xeD26cc8A4eC4ade08BC7bc53951af9146F52347F
-KVStore - 0x7666373b9E8E8A23340d3c5C6b08Da3d813D4aaC
-HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
+Escrow Factory - 0x3Cd0B117Be4CC1e31c8d7d1eD8b32208a2820902
+HMToken - 0xe4C8eC5d057EacF40060b2174627a4941a5c8127
+KVStore - 0x64009ca5fb4b34769F7240c6073FEc34bf5b64E3
 ```
 
 ## Maintainers
 
-Polygon : [foufrix](https://github.com/foufrix)
+Polygon : [foufrix](https://github.com/foufrix)<br>
+Moonbeam: [menezesphill](https://github.com/menezesphill)
 
