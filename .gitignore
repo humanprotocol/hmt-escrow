@@ -28,6 +28,8 @@ wheels/
 # Deploying
 
 deployed-hmtoken/
+deployed-escrow-factory/
+deployed-kvstore/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

@@ -2,16 +2,19 @@ const fs = require('fs');
 
 const path = require('path');
 
-const HMToken = artifacts.require('./HMToken.sol');
+const EscrowFactory = artifacts.require('./EscrowFactory.sol');
 
-const ADDRESS_OUTPUT_FILENAME = './deployed-hmtoken/hmt.address.json';
+const ADDRESS_INPUT_FILENAME = './deployed-hmtoken/hmt.address.json';
+const ADDRESS_OUTPUT_FILENAME = './deployed-escrow-factory/escrow-factory.address.json';
 
 module.exports = (deployer) => {
+  const { address } = JSON.parse(fs.readFileSync(ADDRESS_INPUT_FILENAME).toString());
+
   deployer
-    .deploy(HMToken, 1000000000, 'Human Token', 18, 'HMT')
+    .deploy(EscrowFactory, address)
     .then(() => {
       const fileContent = {
-        address: HMToken.address,
+        address: EscrowFactory.address,
       };
 
       try {
@@ -24,7 +27,7 @@ module.exports = (deployer) => {
         if (err) {
           console.error(`unable to write address to output file: ${ADDRESS_OUTPUT_FILENAME}`);
         } else {
-          console.log(`deployed hmt token address stored in ${ADDRESS_OUTPUT_FILENAME}`);
+          console.log(`deployed escrow factory address stored in ${ADDRESS_OUTPUT_FILENAME}`);
         }
       });
     });
