@@ -233,8 +233,24 @@ KVStore - 0x2210c93c4fad2d8113035f6ec6e25d47be012604
 HMToken - 0x2A78BA72f52Af2CC90c9389DbE0d2C4B10055b81
 ```
 
+## Binance Smart Chain deployment
+
+```
+Escrow Factory - 0xc88bC422cAAb2ac8812de03176402dbcA09533f4
+HMToken - 0x0d501B743F22b641B8C8dfe00F1AAb881D57DDC7
+KVStore - 0x8340412Ed68BcF53a7Da72BFFc1E2E74CfdE74D0
+```
+
+## Binance Smart Chain Testnet deployment
+
+```
+Escrow Factory - 0x161228DaAB6F935548E2B98f6cedC9FF648C781d
+HMToken - 0x1f613bc2f4e741EA96d30A5957fF7fA6916acDD6
+KVStore - 0x7676F326f1e30E96a76B7F1a860d56A9ac988a7d
+```
+
 ## Maintainers
 
-Polygon : [foufrix](https://github.com/foufrix)<br>
-Moonbeam: [menezesphill](https://github.com/menezesphill)
-
+* Polygon : [foufrix](https://github.com/foufrix)
+* Moonbeam: [menezesphill](https://github.com/menezesphill)
+* Binance Smart Chain: [leetdev](https://github.com/leetdev)
