@@ -8,7 +8,6 @@ contract Escrow {
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
     event Pending(string manifest, string hash);
-    event BulkTransfer(uint256 indexed _txId, uint256 _bulkCount);
     
     enum EscrowStatuses {Launched, Pending, Partial, Paid, Complete, Cancelled}
     EscrowStatuses public status;
@@ -20,8 +19,6 @@ contract Escrow {
 
     uint256 public reputationOracleStake;
     uint256 public recordingOracleStake;
-    uint256 private constant BULK_MAX_VALUE = 1000000000 * (10 ** 18);
-    uint32  private constant BULK_MAX_COUNT = 100;
 
     address public eip20;
 
@@ -148,16 +145,12 @@ contract Escrow {
         uint256 _txId
     ) public trusted notBroke notLaunched notPaid notExpired returns (bool)
     {
-        require(_recipients.length == _amounts.length, "Amount of recipients and values don't match");
-        require(_recipients.length < BULK_MAX_COUNT, "Too many recipients");
-
         uint256 balance = getBalance();
         bulkPaid = false;
         uint256 aggregatedBulkAmount = 0;
         for (uint256 i; i < _amounts.length; i++) {
             aggregatedBulkAmount += _amounts[i];
         }
-        require(aggregatedBulkAmount < BULK_MAX_VALUE, "Bulk value too high");
 
         if (balance < aggregatedBulkAmount) {
             return bulkPaid;
@@ -172,14 +165,13 @@ contract Escrow {
 
         (uint256 reputationOracleFee, uint256 recordingOracleFee) = finalizePayouts(_amounts);
         HMTokenInterface token = HMTokenInterface(eip20);
-
-
-        for (uint i = 0; i < _recipients.length; ++i) {
-            token.transfer(_recipients[i], finalAmounts[i]);
+        if (
+            token.transferBulk(_recipients, finalAmounts, _txId) ==
+            _recipients.length
+        ) {
+            delete finalAmounts;
+            bulkPaid = token.transfer(reputationOracle, reputationOracleFee) && token.transfer(recordingOracle, recordingOracleFee);
         }
-
-        delete finalAmounts;
-        bulkPaid = token.transfer(reputationOracle, reputationOracleFee) && token.transfer(recordingOracle, recordingOracleFee);
 
         balance = getBalance();
         if (bulkPaid) {
@@ -190,7 +182,6 @@ contract Escrow {
                 status = EscrowStatuses.Paid;
             }
         }
-        emit BulkTransfer(_txId, _recipients.length);
         return bulkPaid;
     }
 

@@ -118,7 +118,7 @@ het/secrets.json
 
 # Generated stuff
 # ================================================
-.DS_Store
+src
 .vscode
 docker-compose
 build/

@@ -38,23 +38,8 @@ module.exports = {
       network_id: '1287',
     },
     skale: {
-      provider: () => new HDWalletProvider(MNEMONIC, 'https://humanprotocol-integration.skale.network', 0, 10),
-      network_id: '344435',
-    },
-    mumbai: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mumbai.infura.io/v3/${INFURA_TOKEN}`),
-      network_id: 80001,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true,
-    },
-    polygon: {
-      provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mainnet.infura.io/v3/${INFURA_TOKEN}`),
-      network_id: 137,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true,
-      // check gasPrice here https://polygonscan.com/gastracker for deployment
+      provider: () => new HDWalletProvider(PRIV_KEY, 'https://staging-v2.skalenodes.com/v1/stocky-pleione'),
+      network_id: '1250011826715177',
     },
   },
   compilers: {

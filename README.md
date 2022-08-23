@@ -2,11 +2,13 @@
 
 # Help Wanted!
 
-Human Protocol’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
+HCaptcha’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
 
-Reward sizes are guided by the rules below and payable in USDC. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
+Reward sizes are guided by the rules below and payable in USD via PayPal. If you prefer, you may also elect to have your reward donated to a registered charity of your choice that accepts online donations, subject to approval of the charity.
 
-Read more on our [bug bounty page](https://www.humanprotocol.org/bug-bounty-program?lng=en-US)
+    - Larger or Critical: $100 - $500
+    - Small: up to $100
+
 ## Installation
 
 ### Manual
@@ -159,13 +161,13 @@ Versioning should follow the [semver](https://semver.org/) versioning methodolog
 
 ## Have a question?
 
-Join our [Telegram](https://hmt.ai/telegram) channel, we will gladly answer your questions.
+Join our [Telegram](https://t.me/hcaptchachat) channel, we will gladly answer your questions.
 
 ## Found a bug or a feature request?
 
-Please search for any existing issues at our [Issues](https://github.com/humanprotocol/hmt-contracts/issues) page before submitting your own. If you submit your own, please follow our `Bug Request` and `Feature Request` templates.
+Please search for any existing issues at our [Issues](https://github.com/IntuitionMachines/hmt-contracts/issues) page before submitting your own. If you submit your own, please follow our `Bug Request` and `Feature Request` templates.
 
-Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties) and [Bounty Issues](https://github.com/humanprotocol/hmt-escrow/issues?q=is%3Aopen+is%3Aissue+label%3Abounty).
+Also check our [Bug Bounty Program](https://github.com/hCaptcha/bounties) and [Bounty Issues](https://github.com/hCaptcha/hmt-escrow/issues?q=is%3Aopen+is%3Aissue+label%3Abounty).
 
 ## Contributions
 
@@ -190,38 +192,4 @@ When a stable 1.0 version of the escrow factory contract is released, this secti
 The docker-compose.yml references a default minio username and password for development. minio as used here is an internal cache for low-privilege, publicly readable, encrypted data. Including these default credentials for development is intentional. 
 
 When deploying to a production environment you are expected to set your own credentials based on the rules applied to minio access within your cluster.
-
-
-## Polygon deployment
-```
-Escrow Factory - 0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794
-Escrow Factory polygon-escrow-bulk branch https://github.com/humanprotocol/hmt-escrow/tree/polygon-escrow-bulk - 0xF09f451eC04cAb1b1FAe98C86F45291B00E52b03
-KVStore - 0x6334dB76037bb6d4bc21901433E870b22ACa1F9a
-HMToken - 0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf
-```
-
-## Polygon Mumbai Testnet
-
-```
-Escrow Factory - 0x558cd800f9F0B02f3B149667bDe003284c867E94
-KVStore - 0x32e27177BA6Ea91cf28dfd91a0Da9822A4b74EcF
-HMToken - 0x0376D26246Eb35FF4F9924cF13E6C05fd0bD7Fb4
-
-## Moonbeam deployment (Not Yet Verified)
-```
-Escrow Factory - 0x3C5a2966A1b5eBF9f4b2B372857C4deD545Bed45
-KVStore - 0xC1e779E71E6bf7Ded0dDdCb6e221404f497CeE8e
-HMToken - 0xa1d4836243DfA3259e28b8A9D11377455B935632
-```
-
-## Moonbase Alpha deployment
-```
-Escrow Factory - 0xeD26cc8A4eC4ade08BC7bc53951af9146F52347F
-KVStore - 0x7666373b9E8E8A23340d3c5C6b08Da3d813D4aaC
-HMToken - 0x7002651DCa24281b9715E8239991EcbBd3E56135
-```
-
-## Maintainers
-
-Polygon : [foufrix](https://github.com/foufrix)
 

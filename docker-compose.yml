@@ -2,10 +2,10 @@ version: '2'
 services:
 
   job:
-    image: humanprotocol/hmt-escrow:latest
+    image: skale/hmt-escrow:skale-0.9.2
     build: .
     environment:
-      - HMT_ETH_SERVER=http://ganache:8545
+      - HMT_ETH_SERVER=https://staging-v2.skalenodes.com/v1/stocky-pleione
       - HET_WAIT_FOR_SERVER=http://het:8000
       - GAS_LIMIT=6700000
       - IPFS_HOST=ipfs
@@ -19,6 +19,7 @@ services:
       - ESCROW_AWS_DEFAULT_REGION=us-west-2
       - DEBUG=true
       - USE_ESCROW_S3_STORAGE=True
+      - PRIV_KEY=3e4da933deecae77aed4618e0848145365486c65503efc76017a540275666ca6
     depends_on:
       - minio
       - ganache
@@ -30,8 +31,7 @@ services:
       - eth_kvstore_addr:/deployed-kvstore
       - ./minio:/data
       - .:/work
-      - ./deployed-hmtoken:/deployed-hmtoken
-    command: sh -c "rm /deployed-hmtoken/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; cd /work && npm install && npm run test; ./bin/wait_then_run"
+    command: sh -c "curl --retry 10 --retry-connrefused --retry-max-time 10 https://staging-v2.skalenodes.com/v1/stocky-pleione; cd /work && npm install && npm run compile;npm run test;bash ./bin/wait_then_run"
 
   ganache:
     image: trufflesuite/ganache-cli:latest
@@ -40,13 +40,14 @@ services:
       - 8545:8545
 
   kvstore:
-    image: hcaptcha/eth-kvstore
+    build: https://github.com/AzizBardi/eth-kvstore.git
     links:
       - ganache
     environment:
       - ETH_HOST=ganache
       - ETH_PORT=8545
       - ADDRESS_OUTPUT_FILENAME=/deployed/ethkvstore.address.json
+      - MNEMONIC=3e4da933deecae77aed4618e0848145365486c65503efc76017a540275666ca6      
     volumes:
       - eth_kvstore_addr:/deployed
 
@@ -55,7 +56,7 @@ services:
     command: daemon --offline
     ports:
       - 5001:5001
-  
+
   minio:
     image: minio/minio:RELEASE.2020-04-28T23-56-56Z
     ports:
