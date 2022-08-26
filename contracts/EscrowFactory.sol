@@ -1,22 +1,27 @@
 pragma solidity 0.6.2;
 import "./Escrow.sol";
-
+import "./Staking.sol";
 
 contract EscrowFactory {
     // all Escrows will have this duration.
     uint256 constant STANDARD_DURATION = 8640000;
-
+    Staking public stakingContract;
     uint256 public counter;
     mapping(address => uint256) public escrowCounters;
     address public lastEscrow;
     address public eip20;
+    uint256 stakeAmountToEscrow = 100;
     event Launched(address eip20, address escrow);
 
-    constructor(address _eip20) public {
+    constructor(address _eip20, address sContract) public {
         eip20 = _eip20;
+        stakingContract = Staking(_sContract);
     }
 
     function createEscrow(address[] memory trustedHandlers) public returns (address) {
+        uint256 sAmount = stakingContract.getStakedAmount(msg.sender);
+        require( sAmount >= stakeAmountToEscrow, "should stake more to createEscrow");
+        
         Escrow escrow = new Escrow(eip20, msg.sender, STANDARD_DURATION, trustedHandlers);
         counter++;
         escrowCounters[address(escrow)] = counter;
