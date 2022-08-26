@@ -13,14 +13,14 @@ contract EscrowFactory {
     uint256 stakeAmountToEscrow = 100;
     event Launched(address eip20, address escrow);
 
-    constructor(address _eip20, address sContract) public {
+    constructor(address _eip20, address _sContract) public {
         eip20 = _eip20;
         stakingContract = Staking(_sContract);
     }
 
     function createEscrow(address[] memory trustedHandlers) public returns (address) {
         uint256 sAmount = stakingContract.getStakedAmount(msg.sender);
-        require( sAmount >= stakeAmountToEscrow, "should stake more to createEscrow");
+        require( sAmount >= stakeAmountToEscrow, "should stake more to create Escrow");
         
         Escrow escrow = new Escrow(eip20, msg.sender, STANDARD_DURATION, trustedHandlers);
         counter++;
