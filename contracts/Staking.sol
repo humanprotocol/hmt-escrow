@@ -4,7 +4,8 @@ pragma solidity 0.6.2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./SafeMath.sol";
 
 
 contract Staking is Ownable{
@@ -12,8 +13,8 @@ contract Staking is Ownable{
 
     // Info of each user.
     struct UserInfo {
-        uint256 amount;            // How many tokens the user has provided.
-        uint256 lastStakeTime;         // Reward debt. See explanation below.
+        uint256 amount;
+        uint256 lastStakeTime;
         bool validator;
         uint256 voteCount;
         mapping(address => bool) votedAddresses;
@@ -34,7 +35,7 @@ contract Staking is Ownable{
     constructor(
         address _token,
         address _rewardPool
-    ) {
+    ) public {
         stakingToken = IERC20(_token);
         rewardPool = _rewardPool;
     }
