@@ -12,6 +12,7 @@ contract EscrowFactory {
     mapping(address => uint256) public escrowCounters;
     address public lastEscrow;
     address public eip20;
+    // only users that staked over 100 tokens, can create escrow 
     uint256 stakeAmountToEscrow = 100;
     event Launched(address eip20, address escrow);
 
@@ -21,6 +22,7 @@ contract EscrowFactory {
     }
 
     function createEscrow(address[] memory trustedHandlers) public returns (address) {
+        //check whether msg.sender staked enough token to create escrow
         uint256 sAmount = stakingContract.getStakedAmount(msg.sender);
         require( sAmount >= stakeAmountToEscrow, "should stake more to create Escrow");
         
