@@ -38,6 +38,12 @@ function createConfiguration() {
           "utf8"
         ),
       },
+      "Staking.sol": {
+        content: fs.readFileSync(
+          path.resolve(__dirname, contracts_path, "Staking.sol"),
+          "utf8"
+        ),
+      },
     },
     settings: {
       outputSelection: {
