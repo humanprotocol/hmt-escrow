@@ -8,13 +8,13 @@ verify_ssl = true
 [packages]
 boto3 = "*"
 cryptography = "*"
-hmt-basemodels = "*"
+hmt-basemodels = "==0.1.18"
 py-solc-x = "*"
 sphinx = "*"
-web3 = "*"
+web3 = "==5.24.0"
 
 [requires]
-python_version = "3.8"
+python_version = "3.10"
 
 [pipenv]
 allow_prereleases = true

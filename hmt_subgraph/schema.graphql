@@ -1,0 +1,93 @@
+type LaunchedEscrow @entity {
+  id: ID!
+  eip20: Bytes! # address
+  from: Bytes! # address
+}
+
+type ISEvent @entity {
+  id: ID!
+  count: BigInt!
+  _url: String! # string
+  _hash: String! # string
+}
+
+type PEvent @entity {
+  id: ID!
+  count: BigInt!
+  _url: String! # string
+  _hash: String! # string
+}
+
+type BulkTransferEvent @entity {
+  id: ID!
+  escrow: Bytes! # address 
+  bulkCount: BigInt!
+  txId: BigInt!
+  
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type EscrowStatistics @entity {
+  id: ID!
+  intermediateStorageEventCount: BigInt!
+  pendingEventCount: BigInt!
+  bulkTransferEventCount: BigInt!
+}
+
+
+type HMTransferEvent @entity {
+  id: ID!
+  token: Bytes! # address 
+  from: Bytes! # address
+  to: Bytes! # address
+  value: BigInt!
+  
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type HMBulkTransferEvent @entity {
+  id: ID!
+  
+  bulkCount: BigInt!
+  txId: BigInt!
+  
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type HMApprovalEvent @entity {
+  id: ID!
+  token: Bytes! #address
+  owner: Bytes! #address
+  spender: Bytes! #address
+  value: BigInt!
+
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type HMBulkApprovalEvent @entity {
+  id: ID!
+
+  bulkCount: BigInt!
+  txId: BigInt!
+
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+type HMTokenStatistics @entity {
+  id: ID!
+  transferEventCount: BigInt!
+  bulkTransferEventCount: BigInt!
+  approvalEventCount: BigInt!
+  bulkApprovalEventCount: BigInt!
+  token: Bytes! # token address
+}
