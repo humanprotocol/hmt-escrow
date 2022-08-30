@@ -1,17 +1,23 @@
 const EscrowFactoryAbstraction = artifacts.require('EscrowFactory');
 const HMTokenAbstraction = artifacts.require('HMToken');
+const StakingAbstraction = artifacts.require('Staking');
 
 let EscrowFactoryTest;
 let HMT;
+let STC;
 
 contract('EscrowFactory', (accounts) => {
   const reputationOracle = accounts[2];
   const recordingOracle = accounts[3];
   const trustedHandlers = [reputationOracle, recordingOracle];
+  const rewardPool = accounts[4];
 
   beforeEach(async () => {
     HMT = await HMTokenAbstraction.new('100', 'Human Token', 4, 'HMT', { from: accounts[0] });
-    EscrowFactoryTest = await EscrowFactoryAbstraction.new(HMT.address, { from: accounts[0] });
+    STC = await StakingAbstraction.new(HMT.address, rewardPool, { from: accounts[0] });
+    await HMT.approve(STC.address, '100',  { from: accounts[0] });
+    await STC.deposit('100',  { from: accounts[0] });
+    EscrowFactoryTest = await EscrowFactoryAbstraction.new(HMT.address, STC.address, { from: accounts[0] });
   });
 
   it('sets eip20 address given to constructor', async () => {
