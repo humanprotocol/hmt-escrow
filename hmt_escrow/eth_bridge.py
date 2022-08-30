@@ -23,6 +23,9 @@ LOG = logging.getLogger("hmt_escrow.eth_bridge")
 HMTOKEN_ADDR = Web3.toChecksumAddress(
     os.getenv("HMTOKEN_ADDR", "0x4C18A2E51edC5043e9c4B6b0757990A4Ac13797f")
 )
+STAKING_ADDR = Web3.toChecksumAddress(
+    os.getenv("STAKING_ADDR", "0x71981e8f2E7b609F1c2F448AcE44012C11905465")
+)
 
 CONTRACT_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), "contracts")
 CONTRACTS = compile_files(
@@ -32,6 +35,7 @@ CONTRACTS = compile_files(
         "{}/HMToken.sol".format(CONTRACT_FOLDER),
         "{}/HMTokenInterface.sol".format(CONTRACT_FOLDER),
         "{}/SafeMath.sol".format(CONTRACT_FOLDER),
+        "{}/Staking.sol".format(CONTRACT_FOLDER),
     ]
 )
 
@@ -220,6 +224,26 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR, hmt_server_addr: str = None) -> Contr
     contract = w3.eth.contract(address=hmtoken_addr, abi=contract_interface["abi"])
     return contract
 
+def get_staking(staking_addr=STAKING_ADDR, hmt_server_addr: str = None) -> Contract:
+    """Retrieve the staking contract from a given address.
+
+    >>> type(get_staking())
+    <class 'web3._utils.datatypes.Contract'>
+
+    Args:
+        hmt_server_addr (str): infura API address.
+
+    Returns:
+        Contract: returns the staking solidity contract.
+
+    """
+    w3 = get_w3(hmt_server_addr)
+    contract_interface = get_contract_interface(
+        "{}/Staking.sol:Staking".format(CONTRACT_FOLDER)
+    )
+    contract = w3.eth.contract(address=staking_addr, abi=contract_interface["abi"])
+    return contract
+
 
 def get_escrow(escrow_addr: str, hmt_server_addr: str = None) -> Contract:
     """Retrieve the Escrow contract from a given address.
@@ -312,6 +336,7 @@ def deploy_factory(
     gas_payer = credentials["gas_payer"]
     gas_payer_priv = credentials["gas_payer_priv"]
     hmtoken_address = HMTOKEN_ADDR if hmtoken_addr is None else hmtoken_addr
+    staking_address = STAKING_ADDR if staking_addr is None else staking_addr
 
     w3 = get_w3(hmt_server_addr)
     contract_interface = get_contract_interface(
@@ -322,7 +347,7 @@ def deploy_factory(
     )
 
     txn_func = factory.constructor
-    func_args = [hmtoken_address]
+    func_args = [hmtoken_address, staking_address]
     txn_info = {
         "gas_payer": gas_payer,
         "gas_payer_priv": gas_payer_priv,

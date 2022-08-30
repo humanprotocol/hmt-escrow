@@ -22,6 +22,7 @@ from hmt_escrow.eth_bridge import (
     handle_transaction_with_retry,
     Retry,
     HMTOKEN_ADDR,
+    STAKING_ADDR,
 )
 from hmt_escrow.storage import download, upload, get_public_bucket_url, get_key_from_url
 
@@ -264,6 +265,7 @@ class Job:
         self.multi_credentials = self._validate_multi_credentials(multi_credentials)
         self.hmt_server_addr = hmt_server_addr
         self.hmtoken_addr = HMTOKEN_ADDR if hmtoken_addr is None else hmtoken_addr
+        self.staking_addr = STAKING_ADDR if staking_addr is None else staking_addr
         self.gas = gas_limit or GAS_LIMIT
 
         # Initialize a new Job.
