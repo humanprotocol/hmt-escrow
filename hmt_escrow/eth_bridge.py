@@ -224,26 +224,6 @@ def get_hmtoken(hmtoken_addr=HMTOKEN_ADDR, hmt_server_addr: str = None) -> Contr
     contract = w3.eth.contract(address=hmtoken_addr, abi=contract_interface["abi"])
     return contract
 
-def get_staking(staking_addr=STAKING_ADDR, hmt_server_addr: str = None) -> Contract:
-    """Retrieve the staking contract from a given address.
-
-    >>> type(get_staking())
-    <class 'web3._utils.datatypes.Contract'>
-
-    Args:
-        hmt_server_addr (str): infura API address.
-
-    Returns:
-        Contract: returns the staking solidity contract.
-
-    """
-    w3 = get_w3(hmt_server_addr)
-    contract_interface = get_contract_interface(
-        "{}/Staking.sol:Staking".format(CONTRACT_FOLDER)
-    )
-    contract = w3.eth.contract(address=staking_addr, abi=contract_interface["abi"])
-    return contract
-
 
 def get_escrow(escrow_addr: str, hmt_server_addr: str = None) -> Contract:
     """Retrieve the Escrow contract from a given address.
@@ -318,6 +298,7 @@ def deploy_factory(
     gas: int = GAS_LIMIT,
     hmt_server_addr: str = None,
     hmtoken_addr: str = None,
+    staking_addr: str = None,
     **credentials,
 ) -> str:
     """Deploy an EscrowFactory solidity contract to the ethereum network.

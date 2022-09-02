@@ -170,6 +170,7 @@ class Job:
         retry: Retry = None,
         hmt_server_addr: str = None,
         hmtoken_addr: str = None,
+        staking_addr: str = None,
         gas_limit: int = GAS_LIMIT,
     ):
         """Initializes a Job instance with values from a Manifest class and
