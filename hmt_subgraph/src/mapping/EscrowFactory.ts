@@ -9,6 +9,7 @@ export function handleLaunched(event: Launched): void {
   // Entity fields can be set based on event parameters
   entity.eip20 = event.params.eip20;
   entity.from = event.transaction.from;
+  entity.timestamp = event.block.timestamp;
 
   // Entities can be written to the store with `.save()`
   entity.save();
