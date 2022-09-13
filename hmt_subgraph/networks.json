@@ -22,5 +22,17 @@
       "address": "0x4dCf5ac4509888714dd43A5cCc46d7ab389D9c23",
       "startBlock": 7200306
     }
+  },
+  {
+    "name": "moonbeam",
+    "description": "Human subgraph on Moonbeam network",
+    "EscrowFactory": {
+      "address": "0x98108c28B7767a52BE38B4860832dd4e11A7ecad",
+      "startBlock": 1145429
+    },
+    "HMToken": {
+      "address": "0x3b25BC1dC591D24d60560d0135D6750A561D4764",
+      "startBlock": 1105853
+    }
   }
 ]
