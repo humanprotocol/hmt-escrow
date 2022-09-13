@@ -99,8 +99,8 @@ describe("EscrowStatistics entity", () => {
   });
 
   test("Should properly calculate BulkTransfser event in statistics", () => {
-    let bulkEvent1 = createBulkTransferEvent(1, 5);
-    let bulkEvent2 = createBulkTransferEvent(2, 4);
+    let bulkEvent1 = createBulkTransferEvent(1, 5, BigInt.fromI32(11));
+    let bulkEvent2 = createBulkTransferEvent(2, 4, BigInt.fromI32(11));
 
     handleBulkTransfer(bulkEvent1);
     handleBulkTransfer(bulkEvent2);
@@ -122,6 +122,91 @@ describe("EscrowStatistics entity", () => {
       STATISTICS_ENTITY_ID,
       "bulkTransferEventCount",
       "2"
+    );
+
+    clearStore();
+  });
+});
+
+describe("Escrow entity", () => {
+  test("Should properly index bulk transfers", () => {
+    let bulk1 = createBulkTransferEvent(1, 2, BigInt.fromI32(10));
+    let bulk2 = createBulkTransferEvent(3, 4, BigInt.fromI32(11));
+
+    handleBulkTransfer(bulk1);
+    handleBulkTransfer(bulk2);
+
+    const id1 = `${bulk1.transaction.hash.toHex()}-${bulk1.logIndex.toString()}-${
+      bulk1.block.timestamp
+    }`;
+    const id2 = `${bulk2.transaction.hash.toHex()}-${bulk2.logIndex.toString()}-${
+      bulk2.block.timestamp
+    }`;
+
+    // Bulk 1
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id1,
+      "timestamp",
+      bulk1.block.timestamp.toString()
+    );
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id1,
+      "block",
+      bulk1.block.number.toString()
+    );
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id1,
+      "bulkCount",
+      bulk1.params._bulkCount.toString()
+    );
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id1,
+      "txId",
+      bulk1.params._txId.toString()
+    );
+
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id1,
+      "transaction",
+      bulk1.transaction.hash.toHexString()
+    );
+
+    // Bulk 2
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id2,
+      "timestamp",
+      bulk2.block.timestamp.toString()
+    );
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id2,
+      "block",
+      bulk2.block.number.toString()
+    );
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id2,
+      "bulkCount",
+      bulk2.params._bulkCount.toString()
+    );
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id2,
+      "txId",
+      bulk2.params._txId.toString()
+    );
+
+    assert.fieldEquals(
+      "BulkTransferEvent",
+      id2,
+      "transaction",
+      bulk2.transaction.hash.toHexString()
     );
 
     clearStore();

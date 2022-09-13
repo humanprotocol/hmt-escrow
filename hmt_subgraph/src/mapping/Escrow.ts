@@ -32,7 +32,7 @@ export function handleIntermediateStorage(event: IntermediateStorage): void {
   let entity = new ISEvent(id);
 
   // Entity fields can be set based on event parameters
-  entity.timestamp = event.block.number;
+  entity.timestamp = event.block.timestamp;
   entity._url = event.params._url;
   entity._hash = event.params._hash;
 
@@ -64,7 +64,7 @@ export function handlePending(event: Pending): void {
   // Entity fields can be set based on event parameters
   entity._url = event.params.manifest;
   entity._hash = event.params.hash;
-  entity.timestamp = event.block.number;
+  entity.timestamp = event.block.timestamp;
   entity.save();
 
   let statsEntity = EscrowStatistics.load(STATISTICS_ENTITY_ID);
