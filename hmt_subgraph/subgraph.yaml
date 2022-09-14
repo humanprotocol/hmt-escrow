@@ -50,6 +50,7 @@ dataSources:
         - event: BulkTransfer(indexed uint256,uint256)
           handler: handleBulkTransfer
         - event: Transfer(indexed address,indexed address,uint256)
+
           handler: handleTransfer
       file: ./src/mapping/hm-token.ts
 templates:

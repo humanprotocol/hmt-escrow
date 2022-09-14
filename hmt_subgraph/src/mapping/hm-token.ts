@@ -36,9 +36,9 @@ export function handleTransfer(event: Transfer): void {
   let entity = new HMTransferEvent(id);
 
   entity.token = event.address;
-  entity.from = event.transaction.from;
-  entity.to = event.transaction.to;
-  entity.value = event.transaction.value;
+  entity.from = event.params._from;
+  entity.to = event.params._to;
+  entity.value = event.params._value;
 
   entity.block = event.block.number;
   entity.timestamp = event.block.timestamp;
