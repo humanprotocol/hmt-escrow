@@ -35,3 +35,6 @@ jobs:
       - run: node ./scripts/generatenetworkssubgraphs.js moonbeam
       - run: npm run codegen
       - run: graph deploy --product hosted-service humanprotocol/moonbeam
+      - run: node ./scripts/generatenetworkssubgraphs.js bsc
+      - run: npm run codegen
+      - run: graph deploy --product hosted-service humanprotocol/bsc
