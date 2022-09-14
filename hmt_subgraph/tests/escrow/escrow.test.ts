@@ -27,11 +27,13 @@ describe("Generic Entity case", () => {
     const intermediateStorageEvent = new ISEvent(DUMMY_ID);
     intermediateStorageEvent.timestamp = BigInt.fromI32(10000);
     intermediateStorageEvent._url = "test.com";
+    intermediateStorageEvent.count = BigInt.fromI32(1);
     intermediateStorageEvent._hash = "testhash";
 
     intermediateStorageEvent.save();
 
     assert.fieldEquals("ISEvent", DUMMY_ID, "timestamp", "10000");
+    assert.fieldEquals("ISEvent", DUMMY_ID, "count", "1");
     assert.fieldEquals("ISEvent", DUMMY_ID, "_url", "test.com");
     assert.fieldEquals("ISEvent", DUMMY_ID, "_hash", "testhash");
 
@@ -99,11 +101,8 @@ describe("EscrowStatistics entity", () => {
   });
 
   test("Should properly calculate BulkTransfser event in statistics", () => {
-    let bulkEvent1 = createBulkTransferEvent(1, 5, BigInt.fromI32(11));
-    let bulkEvent2 = createBulkTransferEvent(2, 4, BigInt.fromI32(11));
-
-    handleBulkTransfer(bulkEvent1);
-    handleBulkTransfer(bulkEvent2);
+    handleBulkTransfer(createBulkTransferEvent(1, 5, BigInt.fromI32(11)));
+    handleBulkTransfer(createBulkTransferEvent(2, 4, BigInt.fromI32(11)));
 
     assert.fieldEquals(
       "EscrowStatistics",

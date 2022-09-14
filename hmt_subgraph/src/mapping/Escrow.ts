@@ -12,13 +12,14 @@ import {
 import { BigInt } from "@graphprotocol/graph-ts";
 export const STATISTICS_ENTITY_ID = "escrow-statistics-id";
 
-function constructStatsEntity(): EscrowStatistics {
+export function constructStatsEntity(): EscrowStatistics {
   const entity = new EscrowStatistics(STATISTICS_ENTITY_ID);
 
   entity.intermediateStorageEventCount = BigInt.fromI32(0);
   entity.pendingEventCount = BigInt.fromI32(0);
   entity.bulkTransferEventCount = BigInt.fromI32(0);
   entity.totalEventCount = BigInt.fromI32(0);
+  entity.totalEscrowCount = BigInt.fromI32(0);
 
   return entity;
 }

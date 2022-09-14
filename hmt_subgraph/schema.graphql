@@ -3,6 +3,7 @@ type LaunchedEscrow @entity {
   eip20: Bytes! # address
   from: Bytes! # address
   timestamp: BigInt!
+  count: BigInt
 }
 
 type ISEvent @entity {
@@ -10,6 +11,7 @@ type ISEvent @entity {
   timestamp: BigInt!
   _url: String! # string
   _hash: String! # string
+  count: BigInt
 }
 
 type PEvent @entity {
@@ -17,6 +19,7 @@ type PEvent @entity {
   timestamp: BigInt!
   _url: String! # string
   _hash: String! # string
+  count: BigInt
 }
 
 type BulkTransferEvent @entity {
@@ -27,6 +30,7 @@ type BulkTransferEvent @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  count: BigInt
 }
 
 type EscrowStatistics @entity {
@@ -35,29 +39,29 @@ type EscrowStatistics @entity {
   pendingEventCount: BigInt!
   bulkTransferEventCount: BigInt!
   totalEventCount: BigInt!
+  totalEscrowCount: BigInt!
 }
 
 type HMTransferEvent @entity {
   id: ID!
   token: Bytes! # address
-  from: Bytes! # address
-  to: Bytes! # address
-  value: BigInt!
-
+  from: Bytes # address
+  to: Bytes # address
+  value: BigInt
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  count: BigInt
 }
 
 type HMBulkTransferEvent @entity {
   id: ID!
-
   bulkCount: BigInt!
   txId: BigInt!
-
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  count: BigInt
 }
 
 type HMApprovalEvent @entity {
@@ -69,22 +73,25 @@ type HMApprovalEvent @entity {
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  count: BigInt
 }
 
 type HMBulkApprovalEvent @entity {
   id: ID!
-
   bulkCount: BigInt!
   txId: BigInt!
-
   block: BigInt!
   timestamp: BigInt!
   transaction: Bytes!
+  count: BigInt
 }
 
 type HMTokenStatistics @entity {
   id: ID!
   totalTransferEventCount: BigInt!
+  totalApprovalEventCount: BigInt!
+  totalBulkApprovalEventCount: BigInt!
+  totalBulkTransferEventCount: BigInt!
   totalValueTransfered: BigInt!
   token: Bytes! # token address
 }

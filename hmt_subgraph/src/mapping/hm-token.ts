@@ -19,6 +19,9 @@ function constructStatsEntity(tokenAddress: Address): HMTokenStatistics {
   const entity = new HMTokenStatistics(HMT_STATISTICS_ENTITY_ID);
 
   entity.totalTransferEventCount = BigInt.fromI32(0);
+  entity.totalApprovalEventCount = BigInt.fromI32(0);
+  entity.totalBulkApprovalEventCount = BigInt.fromI32(0);
+  entity.totalBulkTransferEventCount = BigInt.fromI32(0);
   entity.totalValueTransfered = BigInt.fromI32(0);
   entity.token = tokenAddress;
 
@@ -33,21 +36,21 @@ export function handleTransfer(event: Transfer): void {
   let entity = new HMTransferEvent(id);
 
   entity.token = event.address;
-  entity.from = event.params._from;
-  entity.to = event.params._to;
-  entity.value = event.params._value;
+  entity.from = event.transaction.from;
+  entity.to = event.transaction.to;
+  entity.value = event.transaction.value;
 
   entity.block = event.block.number;
   entity.timestamp = event.block.timestamp;
   entity.transaction = event.transaction.hash;
-
-  entity.save();
 
   let statsEntity = HMTokenStatistics.load(HMT_STATISTICS_ENTITY_ID);
 
   if (!statsEntity) {
     statsEntity = constructStatsEntity(event.address);
   }
+  //@ts-ignore
+  entity.count = statsEntity.totalTransferEventCount + BigInt.fromI32(1);
 
   //@ts-ignore
   statsEntity.totalTransferEventCount += BigInt.fromI32(1);
@@ -55,6 +58,8 @@ export function handleTransfer(event: Transfer): void {
   statsEntity.totalValueTransfered += event.params._value;
 
   statsEntity.save();
+
+  entity.save();
 }
 
 export function handleBulkTransfer(event: BulkTransfer): void {
@@ -69,6 +74,18 @@ export function handleBulkTransfer(event: BulkTransfer): void {
   entity.block = event.block.number;
   entity.timestamp = event.block.timestamp;
   entity.transaction = event.transaction.hash;
+
+  let statsEntity = HMTokenStatistics.load(HMT_STATISTICS_ENTITY_ID);
+  if (!statsEntity) {
+    statsEntity = constructStatsEntity(event.address);
+  }
+  //@ts-ignore
+  entity.count = statsEntity.totalBulkTransferEventCount + BigInt.fromI32(1);
+
+  //@ts-ignore
+  statsEntity.totalBulkTransferEventCount += BigInt.fromI32(1);
+
+  statsEntity.save();
 
   entity.save();
 }
@@ -89,6 +106,18 @@ export function handleApproval(event: Approval): void {
   entity.timestamp = event.block.timestamp;
   entity.transaction = event.transaction.hash;
 
+  let statsEntity = HMTokenStatistics.load(HMT_STATISTICS_ENTITY_ID);
+  if (!statsEntity) {
+    statsEntity = constructStatsEntity(event.address);
+  }
+  //@ts-ignore
+  entity.count = statsEntity.totalApprovalEventCount + BigInt.fromI32(1);
+
+  //@ts-ignore
+  statsEntity.totalApprovalEventCount += BigInt.fromI32(1);
+
+  statsEntity.save();
+
   entity.save();
 }
 
@@ -105,6 +134,18 @@ export function handleBulkApproval(event: BulkApproval): void {
   entity.block = event.block.number;
   entity.timestamp = event.block.timestamp;
   entity.transaction = event.transaction.hash;
+
+  let statsEntity = HMTokenStatistics.load(HMT_STATISTICS_ENTITY_ID);
+  if (!statsEntity) {
+    statsEntity = constructStatsEntity(event.address);
+  }
+  //@ts-ignore
+  entity.count = statsEntity.totalBulkApprovalEventCount + BigInt.fromI32(1);
+
+  //@ts-ignore
+  statsEntity.totalBulkApprovalEventCount += BigInt.fromI32(1);
+
+  statsEntity.save();
 
   entity.save();
 }

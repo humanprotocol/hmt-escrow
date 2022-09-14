@@ -8,7 +8,6 @@ import {
 
 import {
   handleApproval,
-  handleBulkTransfer,
   handleTransfer,
   HMT_STATISTICS_ENTITY_ID,
 } from "../../src/mapping/hm-token";
@@ -112,6 +111,7 @@ describe("HMToken entity", () => {
       "transaction",
       transfer1.transaction.hash.toHexString()
     );
+    assert.fieldEquals("HMTransferEvent", id1, "count", "1");
 
     // Trasnfer 2
     assert.fieldEquals("HMTransferEvent", id2, "timestamp", "11");
@@ -151,6 +151,7 @@ describe("HMToken entity", () => {
       "transaction",
       transfer2.transaction.hash.toHexString()
     );
+    assert.fieldEquals("HMTransferEvent", id2, "count", "2");
 
     clearStore();
   });
@@ -218,6 +219,7 @@ describe("HMToken entity", () => {
       "transaction",
       approval1.transaction.hash.toHexString()
     );
+    assert.fieldEquals("HMApprovalEvent", id1, "count", "1");
 
     // Trasnfer 2
     assert.fieldEquals("HMApprovalEvent", id2, "timestamp", "11");
@@ -257,7 +259,7 @@ describe("HMToken entity", () => {
       "transaction",
       approval2.transaction.hash.toHexString()
     );
-
+    assert.fieldEquals("HMApprovalEvent", id2, "count", "2");
     clearStore();
   });
 });
