@@ -37,20 +37,20 @@ export function handleIntermediateStorage(event: IntermediateStorage): void {
   entity._url = event.params._url;
   entity._hash = event.params._hash;
 
-  entity.save();
-
   let statsEntity = EscrowStatistics.load(STATISTICS_ENTITY_ID);
 
   if (!statsEntity) {
     statsEntity = constructStatsEntity();
   }
-
+  //@ts-ignore
+  entity.count = statsEntity.intermediateStorageEventCount + BigInt.fromI32(1);
   //@ts-ignore
   statsEntity.intermediateStorageEventCount += BigInt.fromI32(1);
   //@ts-ignore
   statsEntity.totalEventCount += BigInt.fromI32(1);
 
   statsEntity.save();
+  entity.save();
 }
 
 export function handlePending(event: Pending): void {
@@ -66,7 +66,6 @@ export function handlePending(event: Pending): void {
   entity._url = event.params.manifest;
   entity._hash = event.params.hash;
   entity.timestamp = event.block.timestamp;
-  entity.save();
 
   let statsEntity = EscrowStatistics.load(STATISTICS_ENTITY_ID);
 
@@ -75,10 +74,13 @@ export function handlePending(event: Pending): void {
   }
 
   //@ts-ignore
+  entity.count = statsEntity.pendingEventCount + BigInt.fromI32(1);
+  //@ts-ignore
   statsEntity.pendingEventCount += BigInt.fromI32(1);
   //@ts-ignore
   statsEntity.totalEventCount += BigInt.fromI32(1);
 
+  entity.save();
   statsEntity.save();
 }
 
@@ -96,17 +98,18 @@ export function handleBulkTransfer(event: BulkTransfer): void {
   entity.timestamp = event.block.timestamp;
   entity.transaction = event.transaction.hash;
 
-  entity.save();
   let statsEntity = EscrowStatistics.load(STATISTICS_ENTITY_ID);
 
   if (!statsEntity) {
     statsEntity = constructStatsEntity();
   }
-
+  //@ts-ignore
+  entity.count = statsEntity.bulkTransferEventCount + BigInt.fromI32(1);
   //@ts-ignore
   statsEntity.bulkTransferEventCount += BigInt.fromI32(1);
   //@ts-ignore
   statsEntity.totalEventCount += BigInt.fromI32(1);
 
   statsEntity.save();
+  entity.save();
 }
