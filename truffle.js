@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config();
 
 const { INFURA_TOKEN, MNEMONIC, PRIV_KEY, ETH_HOST, ETH_PORT } = process.env;
 const HDWalletProvider = require('truffle-hdwallet-provider');
@@ -12,7 +12,7 @@ module.exports = {
     development: {
       host: ETH_HOST || '127.0.0.1',
       port: ETH_PORT || 8545,
-      network_id: '*'
+      network_id: '*',
     },
     live: {
       provider: () => new HDWalletProvider(MNEMONIC, `https://mainnet.infura.io/v3/${INFURA_TOKEN}`, 0, 10),
@@ -31,7 +31,7 @@ module.exports = {
       network_id: '4',
       networkCheckTimeout: '100000',
       gas: 0x989680,
-      gasPrice: 200000000000
+      gasPrice: 200000000000,
     },
     moonbase: {
       provider: () => new PrivateKeyProvider(PRIV_KEY, 'https://rpc.testnet.moonbeam.network', 1287),
@@ -56,6 +56,20 @@ module.exports = {
       skipDryRun: true,
       // check gasPrice here https://polygonscan.com/gastracker for deployment
     },
+    bsc: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://bsc-dataseed1.binance.org', 0, 10),
+      network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    bscTestnet: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://data-seed-prebsc-1-s1.binance.org:8545', 0, 10),
+      network_id: 97,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
   },
   compilers: {
     solc: {
@@ -64,10 +78,10 @@ module.exports = {
         // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
           enabled: true,
-          runs: 200
+          runs: 200,
         },
-        evmVersion: "constantinople"
-      }
-    }
-  }
+        evmVersion: "constantinople",
+      },
+    },
+  },
 };
