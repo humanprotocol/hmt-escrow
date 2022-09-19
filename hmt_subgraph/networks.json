@@ -48,7 +48,7 @@
     }
   },
   {
-    "name": "bsctest",
+    "name": "chapel",
     "description": "Human subgraph on Binance Smart Chain testnet",
     "EscrowFactory": {
       "address": "0x161228DaAB6F935548E2B98f6cedC9FF648C781d",

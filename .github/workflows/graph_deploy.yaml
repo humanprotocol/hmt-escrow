@@ -38,6 +38,6 @@ jobs:
       - run: node ./scripts/generatenetworkssubgraphs.js bsc
       - run: npm run codegen
       - run: graph deploy --product hosted-service humanprotocol/bsc
-      - run: node ./scripts/generatenetworkssubgraphs.js bsctest
+      - run: node ./scripts/generatenetworkssubgraphs.js chapel
       - run: npm run codegen
       - run: graph deploy --product hosted-service humanprotocol/bsctest
