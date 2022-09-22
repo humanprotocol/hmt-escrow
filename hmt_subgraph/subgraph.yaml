@@ -8,7 +8,7 @@ dataSources:
     network: matic
     source:
       abi: EscrowFactory
-      address: '0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794'
+      address: "0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794"
       startBlock: 25426565
     mapping:
       kind: ethereum/events
@@ -28,7 +28,7 @@ dataSources:
     network: matic
     source:
       abi: HMToken
-      address: '0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf'
+      address: "0xc748B2A084F8eFc47E086ccdDD9b7e67aEb571Bf"
       startBlock: 20181700
     mapping:
       kind: ethereum/events
@@ -50,6 +50,7 @@ dataSources:
         - event: BulkTransfer(indexed uint256,uint256)
           handler: handleBulkTransfer
         - event: Transfer(indexed address,indexed address,uint256)
+
           handler: handleTransfer
       file: ./src/mapping/hm-token.ts
 templates:
