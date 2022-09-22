@@ -237,4 +237,3 @@ HMToken - 0x2A78BA72f52Af2CC90c9389DbE0d2C4B10055b81
 
 Polygon : [foufrix](https://github.com/foufrix)<br>
 Moonbeam: [menezesphill](https://github.com/menezesphill)
-
