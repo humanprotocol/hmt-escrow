@@ -10,7 +10,7 @@ contract EscrowFactory {
     mapping(address => uint256) public escrowCounters;
     address public lastEscrow;
     address public eip20;
-    event Launched(address eip20, address escrow, uint256 counter);
+    event Launched(address eip20, address escrow);
 
     constructor(address _eip20) public {
         eip20 = _eip20;
@@ -21,7 +21,7 @@ contract EscrowFactory {
         counter++;
         escrowCounters[address(escrow)] = counter;
         lastEscrow = address(escrow);
-        emit Launched(eip20, lastEscrow, counter);
+        emit Launched(eip20, lastEscrow);
         return lastEscrow;
     }
 
