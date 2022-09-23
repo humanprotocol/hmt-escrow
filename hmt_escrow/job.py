@@ -335,12 +335,14 @@ class Job:
         # Use factory to deploy a new escrow contract.
         trusted_handlers = [addr for addr, priv_key in self.multi_credentials]
 
-        txn_success = self._create_escrow(trusted_handlers)
+        txn = self._create_escrow(trusted_handlers)
 
-        if not txn_success:
+        if not txn["txn_succeeded"]:
             raise Exception("Unable to create escrow")
 
-        job_addr = self._last_escrow_addr()
+        tx_receipt = txn["tx_receipt"]
+        events = self.factory_contract.events.Launched().processReceipt(tx_receipt)
+        job_addr = events[0].get("args", {}).get("escrow", "")
         LOG.info("Job's escrow contract deployed to:{}".format(job_addr))
         self.job_contract = get_escrow(job_addr, self.hmt_server_addr)
 
@@ -1407,34 +1409,7 @@ class Job:
             {"from": self.gas_payer, "gas": Wei(self.gas)}
         )
 
-    def _last_escrow_addr(self) -> str:
-        """Gets the last deployed escrow contract address of the initialized factory contract.
-
-        >>> from test.hmt_escrow.utils import manifest
-        >>> credentials = {
-        ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-        ... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
-        ... }
-        >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
-        >>> factory_addr = deploy_factory(**credentials)
-        >>> job = Job(credentials, manifest, factory_addr)
-        >>> job.launch(rep_oracle_pub_key)
-        True
-        >>> job._last_escrow_addr() == job.job_contract.address
-        True
-
-        Args:
-            gas (int): maximum amount of gas the caller is ready to pay.
-
-        Returns:
-            str: returns an escrow contract address.
-
-        """
-        return self.factory_contract.functions.lastEscrow().call(
-            {"from": self.gas_payer, "gas": Wei(self.gas)}
-        )
-
-    def _create_escrow(self, trusted_handlers=[]) -> bool:
+    def _create_escrow(self, trusted_handlers=[]) -> RaffleTxn:
         """Launches a new escrow contract to the ethereum network.
 
         >>> from test.hmt_escrow.utils import manifest
@@ -1477,8 +1452,10 @@ class Job:
         func_args = [trusted_handlers]
 
         try:
-            handle_transaction_with_retry(txn_func, self.retry, *func_args, **txn_info)
-            return True
+            tx_receipt = handle_transaction_with_retry(
+                txn_func, self.retry, *func_args, **txn_info
+            )
+            return {"txn_succeeded": True, "tx_receipt": tx_receipt}
         except Exception as e:
             LOG.info(
                 f"{txn_event} failed with main credentials: {self.gas_payer}, {self.gas_payer_priv} due to {e}. Using secondary ones..."
@@ -1487,12 +1464,11 @@ class Job:
         raffle_txn_res = self._raffle_txn(
             self.multi_credentials, txn_func, func_args, txn_event
         )
-        escrow_created = raffle_txn_res["txn_succeeded"]
 
-        if not escrow_created:
+        if not raffle_txn_res["txn_succeeded"]:
             LOG.exception(f"{txn_event} failed with all credentials.")
 
-        return escrow_created
+        return raffle_txn_res
 
     def _raffle_txn(self, multi_creds, txn_func, txn_args, txn_event) -> RaffleTxn:
         """Takes in multiple credentials, loops through each and performs the given transaction.
