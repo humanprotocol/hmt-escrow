@@ -95,3 +95,12 @@ type HMTokenStatistics @entity {
   totalValueTransfered: BigInt!
   token: Bytes! # token address
 }
+
+type EventDayData @entity {
+  id: ID!
+  timestamp: Int!
+  dailyBulkTransferEvents: BigInt!
+  dailyIntermediateStorageEvents: BigInt!
+  dailyPendingEvents: BigInt!
+  dailyEscrowAmounts: BigInt!
+}
