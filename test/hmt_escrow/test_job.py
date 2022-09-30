@@ -560,7 +560,7 @@ class JobTestCase(unittest.TestCase):
             "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
             get_w3(),
         )
-        print(amount)
+
         self.assertGreater(amount, 10000)
 
 

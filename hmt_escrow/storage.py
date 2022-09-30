@@ -29,6 +29,13 @@ ESCROW_PUBLIC_BUCKETNAME = os.getenv(
 ESCROW_AWS_ACCESS_KEY_ID = os.getenv("ESCROW_AWS_ACCESS_KEY_ID", "minio")
 ESCROW_AWS_SECRET_ACCESS_KEY = os.getenv("ESCROW_AWS_SECRET_ACCESS_KEY", "minio123")
 
+ESCROW_RESULTS_AWS_S3_ACCESS_KEY_ID = os.getenv(
+    "ESCROW_RESULTS_AWS_S3_ACCESS_KEY_ID", ""
+)
+ESCROW_RESULTS_AWS_S3_SECRET_ACCESS_KEY = os.getenv(
+    "ESCROW_RESULTS_AWS_S3_SECRET_ACCESS_KEY", ""
+)
+
 ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
 
 ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
@@ -47,22 +54,29 @@ class StorageFileNotFoundError(StorageClientError):
     pass
 
 
-def _connect_s3():
+def _connect_s3(use_public_bucket=False):
     try:
-        return boto3.client(
-            "s3",
-            aws_access_key_id=ESCROW_AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=ESCROW_AWS_SECRET_ACCESS_KEY,
-            endpoint_url=ESCROW_ENDPOINT_URL,
-            region_name=ESCROW_AWS_REGION,
-        )
+        if use_public_bucket:
+            return boto3.client(
+                "s3",
+                aws_access_key_id=ESCROW_RESULTS_AWS_S3_ACCESS_KEY_ID,
+                aws_secret_access_key=ESCROW_RESULTS_AWS_S3_SECRET_ACCESS_KEY,
+            )
+        else:
+            return boto3.client(
+                "s3",
+                aws_access_key_id=ESCROW_AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=ESCROW_AWS_SECRET_ACCESS_KEY,
+                endpoint_url=ESCROW_ENDPOINT_URL,
+                region_name=ESCROW_AWS_REGION,
+            )
     except Exception as e:
         LOG.error(f"Connection with S3 failed because of: {e}")
         raise e
 
 
 def get_bucket(public: bool = False) -> str:
-    """Retrieves correct bucket according to ACL visibility.
+    """Retrieves correct bucket (private/public).
 
     Args:
           public(bool): whether the public bucket should be retrieved or internal one.
@@ -172,8 +186,8 @@ def download(key: str, private_key: bytes, public: bool = False) -> Dict:
 def upload(
     msg: Dict,
     public_key: bytes,
-    encrypt_data: Optional[bool] = True,
-    use_public_bucket: Optional[bool] = False,
+    encrypt_data=True,
+    use_public_bucket=False,
 ) -> Tuple[str, str]:
     """Upload and encrypt a string for later retrieval.
     This can be manifest files, results, or anything that's been already
@@ -203,21 +217,19 @@ def upload(
     hash_ = hashlib.sha1(content).hexdigest()
     key = f"s3{hash_}"
 
-    # If encryption is on, even if usage of public bucket is true, encrypted data is always private
-    is_public = use_public_bucket is True and encrypt_data is False
-    bucket_name = get_bucket(public=is_public)
+    # Get private or public bucket name
+    bucket_name = get_bucket(public=use_public_bucket)
 
-    bucket_kwargs: Dict[str, Union[str, bytes]] = {"Key": key, "Bucket": bucket_name}
+    # If encryption is on, use crypto.encrypt function, else use utf-8 encoded artifact
+    body = crypto.encrypt(public_key, artifact) if encrypt_data is True else content
+    bucket_kwargs: Dict[str, Union[str, bytes]] = {
+        "Body": body,
+        "Bucket": bucket_name,
+        "Key": key,
+    }
 
-    if encrypt_data is True:
-        # If encryption is enabled, the bucket is private and data is encrypted
-        bucket_kwargs.update({"Body": crypto.encrypt(public_key, artifact)})
-    else:
-        # If encryption is off, file will be publicly readable
-        bucket_kwargs.update({"ACL": "public-read", "Body": content})
-
-    BOTO3_CLIENT = _connect_s3()
-    BOTO3_CLIENT.put_object(**bucket_kwargs)
+    boto3_client = _connect_s3(use_public_bucket)
+    boto3_client.put_object(**bucket_kwargs)
 
     LOG.debug(f"Uploaded to S3, key: {key}")
     return hash_, key

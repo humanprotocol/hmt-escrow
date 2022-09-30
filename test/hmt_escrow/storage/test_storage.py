@@ -28,52 +28,23 @@ class StorageTest(unittest.TestCase):
         self.pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
         self.priv_key = b"28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
 
+    @patch("hmt_escrow.storage.ESCROW_PUBLIC_BUCKETNAME", ESCROW_TEST_PUBLIC_BUCKETNAME)
     @patch("hmt_escrow.storage.ESCROW_BUCKETNAME", ESCROW_TEST_BUCKETNAME)
-    def test_upload_to_private_bucket_when_encryption_on(self):
+    def test_upload_to_private_bucket(self):
         """
-        Tests uploading file to storage to private bucket when encryption is on, no matter the decision to use public
-        bucket.
+        Tests uploading file to storage to private bucket when encryption is on.
         """
 
         s3_client_mock = MagicMock()
         with patch('hmt_escrow.storage._connect_s3') as mock_s3:
             mock_s3.return_value = s3_client_mock
 
-            # Uploads file with encryption on and choice not to use public bucket
             upload(self.get_manifest(), self.pub_key, encrypt_data=True, use_public_bucket=False)
 
             mock_s3.assert_called()
             self.assertIn('Bucket', s3_client_mock.put_object.call_args.kwargs.keys())
 
-            # With encryption on, bucket MUST be the private one
-            self.assertEqual(s3_client_mock.put_object.call_args.kwargs['Bucket'], ESCROW_TEST_BUCKETNAME)
-
-            s3_client_mock.reset_mock()
-
-            # Uploads file with encryption on and choice to use public bucket
-            upload(self.get_manifest(), self.pub_key, encrypt_data=True, use_public_bucket=True)
-
-            mock_s3.assert_called()
-            self.assertIn('Bucket', s3_client_mock.put_object.call_args.kwargs.keys())
-
-            # With encryption on, bucket MUST be the private one
-            self.assertEqual(s3_client_mock.put_object.call_args.kwargs['Bucket'], ESCROW_TEST_BUCKETNAME)
-
-    @patch("hmt_escrow.storage.ESCROW_BUCKETNAME", ESCROW_TEST_BUCKETNAME)
-    def test_upload_to_private_bucket_when_encryption_off(self):
-        """ Tests uploading file to storage to private bucket when encryption is off. """
-
-        s3_client_mock = MagicMock()
-        with patch('hmt_escrow.storage._connect_s3') as mock_s3:
-            mock_s3.return_value = s3_client_mock
-
-            # Uploads file with encryption on
-            upload(self.get_manifest(), self.pub_key, encrypt_data=False, use_public_bucket=False)
-
-            mock_s3.assert_called()
-            self.assertIn('Bucket', s3_client_mock.put_object.call_args.kwargs.keys())
-
-            # With encryption on, bucket MUST be the private one
+            # With use_public_bucket False, bucket MUST be the private one
             self.assertEqual(s3_client_mock.put_object.call_args.kwargs['Bucket'], ESCROW_TEST_BUCKETNAME)
 
     @patch("hmt_escrow.storage.ESCROW_PUBLIC_BUCKETNAME", ESCROW_TEST_PUBLIC_BUCKETNAME)
@@ -84,19 +55,18 @@ class StorageTest(unittest.TestCase):
         with patch('hmt_escrow.storage._connect_s3') as mock_s3:
             mock_s3.return_value = s3_client_mock
 
-            # Uploads file with encryption off
-            upload(self.get_manifest(), self.pub_key, encrypt_data=False, use_public_bucket=True)
+            upload(self.get_manifest(), self.pub_key, encrypt_data=True, use_public_bucket=True)
 
             mock_s3.assert_called()
 
             self.assertIn('Bucket', s3_client_mock.put_object.call_args.kwargs.keys())
 
-            # With encryption on, bucket MUST be the private one
+            # With use_public_bucket True, bucket MUST be the public one
             self.assertIn(s3_client_mock.put_object.call_args.kwargs['Bucket'], ESCROW_TEST_PUBLIC_BUCKETNAME)
 
-    def test_upload_with_encryption_option(self):
+    def test_upload_with_enabled_encryption_option(self):
         """
-        Tests whether data must be persisted in storage encrypted or plain.
+        Tests data persisted in storage is encrypted.
         """
         s3_client_mock = MagicMock()
         with patch('hmt_escrow.storage._connect_s3') as mock_s3:
@@ -112,9 +82,14 @@ class StorageTest(unittest.TestCase):
             # Data to be uploaded must be encrypted
             uploaded_content = crypto.decrypt(self.priv_key, s3_client_mock.put_object.call_args.kwargs['Body'])
             self.assertEqual(json.dumps(data, sort_keys=True), uploaded_content)
-
-            s3_client_mock.reset_mock()
-
+    
+    def test_upload_with_disabled_encryption_option(self):
+        """
+        Tests data persisted in storage is plain.
+        """
+        s3_client_mock = MagicMock()
+        with patch('hmt_escrow.storage._connect_s3') as mock_s3:
+            mock_s3.return_value = s3_client_mock
             # Encryption off.
             data = self.get_manifest()
             upload(data, self.pub_key, encrypt_data=False)

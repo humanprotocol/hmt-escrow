@@ -83,7 +83,8 @@ def parse_transfer_transaction(
         return hmt_transferred, tx_balance
 
     transfer_event = hmtoken_contract.events.Transfer().processReceipt(tx_receipt)
-    print(f"transfer_event {transfer_event}")
+    logger.info(f"Transfer_event {transfer_event}.")
+
     hmt_transferred = bool(transfer_event)
 
     if hmt_transferred:
