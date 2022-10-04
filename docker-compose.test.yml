@@ -35,7 +35,7 @@ services:
       /bin/sh -c "
       /usr/bin/mc config host add myminio http://minio-test:9000 dev devdevdev;
       /usr/bin/mc mb myminio/manifests;
-      /usr/bin/mc policy set public myminio/manifests;
+      /usr/bin/mc anonymous set public myminio/manifests;
       /usr/bin/mc cp /tmp/manifests/docker-manifest.json myminio/manifests;
       "
 
@@ -56,6 +56,8 @@ services:
   recording-oracle-test:
     build:
       context: ./recording-oracle
+    extra_hosts:
+      - host.docker.internal:host-gateway
     ports:
       - 3005:3005
     environment:

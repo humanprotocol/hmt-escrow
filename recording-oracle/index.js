@@ -53,7 +53,7 @@ app.post('/job/results', async function(req, res) {
     }
 
     const manifestUrl = await Escrow.methods.manifestUrl().call({ from: account.address });
-    const manifestResponse = await axios.get(manifestUrl);
+    const manifestResponse = await axios.get(convertUrl(manifestUrl));
     const {fortunes_requested: fortunesRequested, reputation_oracle_url: reputationOracleUrl} = manifestResponse.data;
 
     if (!storage.getEscrow(escrowAddress)) {
@@ -74,7 +74,7 @@ app.post('/job/results', async function(req, res) {
       // a cron job might check how much annotations are in work
       // if this is full - then just push them to the reputation oracle
 
-      await axios.post(reputationOracleUrl, { escrowAddress, fortunes });
+      await axios.post(convertUrl(reputationOracleUrl), { escrowAddress, fortunes });
       storage.cleanFortunes(escrowAddress);
     }
 
@@ -86,6 +86,10 @@ app.post('/job/results', async function(req, res) {
     res.status(500).send(err);
   }
 });
+
+function convertUrl(url){
+  return url.replace('localhost', 'host.docker.internal');
+}
 
 app.listen(port, () => {
   console.log(`Recording Oracle server listening port ${port}`);

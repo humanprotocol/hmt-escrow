@@ -38,12 +38,15 @@ services:
   recording-oracle:
     build:
       context: ./recording-oracle
-    network_mode: "host"
+    extra_hosts:
+      - host.docker.internal:host-gateway
     environment:
       ETH_PRIVATE_KEY: 486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e
-      ETH_HTTP_SERVER: http://localhost:8547
+      ETH_HTTP_SERVER: http://ganache:8545
       PORT: 3005
     command: ["yarn", "start"]
+    ports:
+      - 3005:3005
 
   reputation-oracle:
     build:
