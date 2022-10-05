@@ -249,7 +249,7 @@ KVStore - 0x8340412Ed68BcF53a7Da72BFFc1E2E74CfdE74D0
 
 Polygon : [foufrix](https://github.com/foufrix)<br>
 Moonbeam: [menezesphill](https://github.com/menezesphill)
-=======
+
 ```
 Escrow Factory - 0x161228DaAB6F935548E2B98f6cedC9FF648C781d
 HMToken - 0x1f613bc2f4e741EA96d30A5957fF7fA6916acDD6
