@@ -13,7 +13,9 @@ Read more on our [bug bounty page](https://www.humanprotocol.org/bug-bounty-prog
 
 You need few essential system requirements to successfully install our Python 3 package.
 
-### Annoying testing feature
+### Annoying testing feature>>>>>>> parent of 5180eed... revert bsc
+261
+
 Rightly or Wrongly we tried to use doctests for the vast majority of testing in this project
 . As a result you may have to remove the raise_on_error=True in the module you are testing
 to get good feedback on what's broken.
@@ -55,7 +57,9 @@ Credentials must follow the following format:
 ```
 >>> credentials = {
 ... 	"gas_payer": "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5"
+... 	"gas_payer_priv": "28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e>>>>>>> parent of 5180eed... revert bsc
+261
+818263f0eb898f1c8e5"
 ... }
 >>> rep_oracle_pub_key = b"2dbc2c2c86052702e7c219339514b2e8bd4687ba1236c478ad41b43330b08488c12c8c1797aa181f3a4596a1bd8a0c18344ea44d6655f61fa73e56e743f79e0d"
 ```
@@ -233,7 +237,27 @@ KVStore - 0x2210c93c4fad2d8113035f6ec6e25d47be012604
 HMToken - 0x2A78BA72f52Af2CC90c9389DbE0d2C4B10055b81
 ```
 
-## Maintainers
+## Binance Smart Chain deployment
+
+```
+Escrow Factory - 0xc88bC422cAAb2ac8812de03176402dbcA09533f4
+HMToken - 0x0d501B743F22b641B8C8dfe00F1AAb881D57DDC7
+KVStore - 0x8340412Ed68BcF53a7Da72BFFc1E2E74CfdE74D0
+```
+
+## Binance Smart Chain Testnet deployment
 
 Polygon : [foufrix](https://github.com/foufrix)<br>
 Moonbeam: [menezesphill](https://github.com/menezesphill)
+
+```
+Escrow Factory - 0x161228DaAB6F935548E2B98f6cedC9FF648C781d
+HMToken - 0x1f613bc2f4e741EA96d30A5957fF7fA6916acDD6
+KVStore - 0x7676F326f1e30E96a76B7F1a860d56A9ac988a7d
+```
+
+## Maintainers
+
+* Polygon : [foufrix](https://github.com/foufrix)
+* Moonbeam: [menezesphill](https://github.com/menezesphill)
+* Binance Smart Chain: [leetdev](https://github.com/leetdev)
