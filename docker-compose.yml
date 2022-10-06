@@ -1,11 +1,16 @@
 version: '3.7'
 
 services:
-  # ganache:
-  #   image: trufflesuite/ganache-cli:v6.12.2
-  #   command: node /app/ganache-core.docker.cli.js --noVMErrorsOnRPCResponse --db=/ganache_data -m goat -i 1337 --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000 -v
-  #   ports:
-  #     - 8547:8545
+  nginx:
+    image: nginx
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
+    hostname: nginx
+    container_name: nginx
+    volumes:
+    - ./nginx-configs/:/etc/nginx/conf.d/:ro
+    ports:
+    - "80:80"
 
   minio:
     image: minio/minio:RELEASE.2022-05-26T05-48-41Z
@@ -24,6 +29,12 @@ services:
   launcher:
     build:
       context: ./launcher
+    environment:
+      HMT_ADDRESS: ${HMT_ADDRESS}
+      ESCROW_FACTORY_ADDRESS: ${ESCROW_FACTORY_ADDRESS}
+      REC_ORACLE_ADDRESS: ${REC_ORACLE_ADDRESS}
+      REP_ORACLE_ADDRESS: ${REP_ORACLE_ADDRESS}
+      EXCHANGE_ORACLE_ADDRESS: ${EXCHANGE_ORACLE_ADDRESS}
     ports:
       - 3000:3000
     command: ["yarn", "start-prod"]
@@ -40,8 +51,8 @@ services:
       context: ./recording-oracle
     network_mode: "host"
     environment:
-      ETH_PRIVATE_KEY: 486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e
-      ETH_HTTP_SERVER: https://matic-mumbai.chainstacklabs.com
+      ETH_PRIVATE_KEY: ${RECORDING_ORACLE_PRIVATE_KEY}
+      ETH_HTTP_SERVER: ${RPC}
       PORT: 3005
     command: ["yarn", "start"]
 
@@ -51,10 +62,10 @@ services:
     ports:
       - 3006:3006
     environment:
-      ETH_PRIVATE_KEY: 657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8
-      ETH_HTTP_SERVER: https://matic-mumbai.chainstacklabs.com
-      MINIO_HOST: http://fortune-polygon-mumbai-469537466.us-east-2.elb.amazonaws.com/minio
-      MINIO_PORT: 9000
+      ETH_PRIVATE_KEY: ${REPUTATION_ORACLE_PRIVATE_KEY}
+      ETH_HTTP_SERVER: ${RPC}
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PORT: ${MINIO_PORT}
       MINIO_ACCESS_KEY: ${MINIO_USER}
       MINIO_SECRET_KEY: ${MINIO_PASS}
       MINIO_BUCKET_NAME: job-results
