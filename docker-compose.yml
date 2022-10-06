@@ -8,7 +8,7 @@ services:
     hostname: nginx
     container_name: nginx
     volumes:
-    - ./nginx-configs/:/etc/nginx/conf.d/:ro
+    - ./nginx-config/:/etc/nginx/conf.d/:ro
     ports:
     - "80:80"
 
