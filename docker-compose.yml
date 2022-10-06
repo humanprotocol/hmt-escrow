@@ -29,6 +29,8 @@ services:
   launcher:
     build:
       context: ./launcher
+      args:
+        PUBLIC_URL: ${LAUNCHER_PUBLIC_URL}
     environment:
       HMT_ADDRESS: ${HMT_ADDRESS}
       ESCROW_FACTORY_ADDRESS: ${ESCROW_FACTORY_ADDRESS}
@@ -37,17 +39,15 @@ services:
       EXCHANGE_ORACLE_ADDRESS: ${EXCHANGE_ORACLE_ADDRESS}
     ports:
       - 3000:3000
-    volumes:
-      - ./.env-launcher:/usr/src/app/src/.env
     command: ["yarn", "start-prod"]
 
   exchange:
     build:
       context: ./exchange
+      args:
+        PUBLIC_URL: ${EXCHANGE_PUBLIC_URL}
     ports:
       - 3001:3000
-    volumes:
-      - ./.env-exchange:/usr/src/app/src/.env
     command: ["yarn", "start-prod"]
 
   recording-oracle:
