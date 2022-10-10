@@ -7,6 +7,7 @@
     "build": "npm run compile && graph build",
     "quickstart:matic": "npm run compile && node ./scripts/generatenetworkssubgraphs.js matic && graph create --node http://localhost:8020/ posix4e/humansubgraph",
     "quickstart:rinkeby": "npm run compile && node ./scripts/generatenetworkssubgraphs.js rinkeby && graph create --node http://localhost:8020/ posix4e/humansubgraph",
+    "quickstart:mumbai": "npm run compile && node ./scripts/generatenetworkssubgraphs.js mumbai && graph create --node http://localhost:8020/ posix4e/humansubgraph",
     "deploy": "npm run compile && graph deploy --node https://api.thegraph.com/deploy/ posix4e/humansubgraph",
     "test": "graph test",
     "create-local": "npm run compile && graph create --node http://localhost:8020/ posix4e/humansubgraph",

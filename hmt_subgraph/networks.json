@@ -58,5 +58,17 @@
       "address": "0x1f613bc2f4e741EA96d30A5957fF7fA6916acDD6",
       "startBlock": 21889809
     }
+  },
+  {
+    "name": "mumbai",
+    "description": "Human subgraph on Polygon Mumbai testnet",
+    "EscrowFactory": {
+      "address": "0x558cd800f9F0B02f3B149667bDe003284c867E94",
+      "startBlock": 26086172
+    },
+    "HMToken": {
+      "address": "0x0376D26246Eb35FF4F9924cF13E6C05fd0bD7Fb4",
+      "startBlock": 26086128
+    }
   }
 ]
