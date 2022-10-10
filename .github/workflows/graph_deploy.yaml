@@ -41,3 +41,6 @@ jobs:
       - run: node ./scripts/generatenetworkssubgraphs.js chapel
       - run: npm run codegen
       - run: graph deploy --product hosted-service humanprotocol/bsctest
+      - run: node ./scripts/generatenetworkssubgraphs.js mumbai
+      - run: npm run codegen
+      - run: graph deploy --product hosted-service humanprotocol/mumbai
