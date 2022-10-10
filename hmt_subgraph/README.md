@@ -21,10 +21,10 @@ npm install
 npm run quickstart:matic
 ```
 
-2. Generate & deploy on rinkeby
+2. Generate & deploy on goerli
 
 ```bash
-npm run quickstart:rinkeby
+npm run quickstart:goerli
 ```
 
 You can access it on `http://localhost:8020/`
@@ -55,7 +55,8 @@ npm test
 Following networks are supported : 
 
 - Polygon/matic
-- Rinkeby
+- Goerli
+- Polygon Mumbai (testnet)
 
 ### Add a new network
 
@@ -74,4 +75,6 @@ Currently deploying to:
 
 - main branch -> https://thegraph.com/hosted-service/subgraph/humanprotocol/polygon
 
-- rinkeby branch -> https://thegraph.com/hosted-service/subgraph/humanprotocol/rinkeby
+- goerli branch -> https://thegraph.com/hosted-service/subgraph/humanprotocol/goerli
+
+- mumbai branch -> https://thegraph.com/hosted-service/subgraph/humanprotocol/mumbai

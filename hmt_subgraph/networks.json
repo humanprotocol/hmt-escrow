@@ -24,8 +24,8 @@
     }
   },
   {
-    "name": "rinkeby",
-    "description": "Human subgraph on rinkeby network",
+    "name": "goerli",
+    "description": "Human subgraph on goerli network",
     "EscrowFactory": {
       "address": "0x925B24444511c86F4d4E63141D8Be0A025E2dca4",
       "startBlock": 8180730
