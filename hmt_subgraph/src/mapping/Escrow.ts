@@ -10,6 +10,11 @@ import {
   PEvent,
 } from "../../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
+import {
+  updateIntermediateStorageEventDayData,
+  updatePendingEventDayData,
+  updateBulkTransferEventDayData,
+} from "./utils/dayUpdates";
 export const STATISTICS_ENTITY_ID = "escrow-statistics-id";
 
 export function constructStatsEntity(): EscrowStatistics {
@@ -23,6 +28,7 @@ export function constructStatsEntity(): EscrowStatistics {
 
   return entity;
 }
+
 export function handleIntermediateStorage(event: IntermediateStorage): void {
   // Entities can be loaded from the store using a string ID; this ID
   // needs to be unique across all entities of the same type
@@ -51,6 +57,8 @@ export function handleIntermediateStorage(event: IntermediateStorage): void {
 
   statsEntity.save();
   entity.save();
+
+  updateIntermediateStorageEventDayData(event);
 }
 
 export function handlePending(event: Pending): void {
@@ -82,6 +90,8 @@ export function handlePending(event: Pending): void {
 
   entity.save();
   statsEntity.save();
+
+  updatePendingEventDayData(event);
 }
 
 export function handleBulkTransfer(event: BulkTransfer): void {
@@ -112,4 +122,6 @@ export function handleBulkTransfer(event: BulkTransfer): void {
 
   statsEntity.save();
   entity.save();
+
+  updateBulkTransferEventDayData(event);
 }

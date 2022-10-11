@@ -102,3 +102,12 @@ type Holder @entity {
   address: Bytes!
   balance: BigInt!
 }
+
+type EventDayData @entity {
+  id: ID!
+  timestamp: Int!
+  dailyBulkTransferEvents: BigInt!
+  dailyIntermediateStorageEvents: BigInt!
+  dailyPendingEvents: BigInt!
+  dailyEscrowAmounts: BigInt!
+}
