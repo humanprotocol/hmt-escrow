@@ -184,12 +184,9 @@ function updateHolders(
     ? holder.balance.plus(value)
     : holder.balance.minus(value);
 
-  if (
-    (isNew && !holder.balance.isZero()) ||
-    (!isNew && balanceBeforeTransfer.isZero())
-  ) {
+  if (balanceBeforeTransfer.isZero() && !holder.balance.isZero()) {
     count = 1;
-  } else if (holder.balance.isZero()) {
+  } else if (!balanceBeforeTransfer.isZero() && holder.balance.isZero()) {
     count = -1;
   }
 

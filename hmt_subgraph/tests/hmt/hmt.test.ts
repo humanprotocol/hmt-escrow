@@ -262,7 +262,6 @@ describe("HMToken entity", () => {
   });
 });
 
-
 describe("HMToken entity", () => {
   test("Should properly calculate holders in statistics", () => {
     let transfer1 = createTransferEvent(
@@ -277,11 +276,10 @@ describe("HMToken entity", () => {
       2,
       BigInt.fromI32(10)
     );
-    
 
     handleTransfer(transfer1);
     handleTransfer(transfer2);
-  
+
     assert.fieldEquals(
       "HMTokenStatistics",
       HMT_STATISTICS_ENTITY_ID,
@@ -318,7 +316,6 @@ describe("HMToken entity", () => {
     handleTransfer(transfer2);
     handleTransfer(transfer3);
 
-   
     assert.fieldEquals(
       "HMTokenStatistics",
       HMT_STATISTICS_ENTITY_ID,
@@ -328,4 +325,64 @@ describe("HMToken entity", () => {
 
     clearStore();
   });
+});
+
+test("Should properly calculate holders in statistics", () => {
+  let transfer1 = createTransferEvent(
+    "0x0000000000000000000000000000000000000000",
+    "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+    10,
+    BigInt.fromI32(10)
+  );
+
+  let transfer2 = createTransferEvent(
+    "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+    "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+    0,
+    BigInt.fromI32(10)
+  );
+
+  handleTransfer(transfer1);
+  handleTransfer(transfer2);
+
+  assert.fieldEquals(
+    "HMTokenStatistics",
+    HMT_STATISTICS_ENTITY_ID,
+    "holders",
+    "1"
+  );
+
+  let transfer3 = createTransferEvent(
+    "0x0000000000000000000000000000000000000000",
+    "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+    10,
+    BigInt.fromI32(10)
+  );
+
+  handleTransfer(transfer3);
+
+  assert.fieldEquals(
+    "HMTokenStatistics",
+    HMT_STATISTICS_ENTITY_ID,
+    "holders",
+    "2"
+  );
+
+  let transfer4 = createTransferEvent(
+    "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+    "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+    10,
+    BigInt.fromI32(10)
+  );
+
+  handleTransfer(transfer4);
+
+  assert.fieldEquals(
+    "HMTokenStatistics",
+    HMT_STATISTICS_ENTITY_ID,
+    "holders",
+    "1"
+  );
+
+  clearStore();
 });
