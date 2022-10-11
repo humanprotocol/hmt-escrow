@@ -94,7 +94,7 @@ type HMTokenStatistics @entity {
   totalBulkTransferEventCount: BigInt!
   totalValueTransfered: BigInt!
   token: Bytes! # token address
-  holders: Int!
+  holders: BigInt!
 }
 
 type Holder @entity {

@@ -1,4 +1,5 @@
 import { Address, BigInt, store } from "@graphprotocol/graph-ts";
+
 import {
   Approval,
   Transfer,
@@ -24,7 +25,7 @@ function constructStatsEntity(tokenAddress: Address): HMTokenStatistics {
   entity.totalBulkApprovalEventCount = BigInt.fromI32(0);
   entity.totalBulkTransferEventCount = BigInt.fromI32(0);
   entity.totalValueTransfered = BigInt.fromI32(0);
-  entity.holders = 0;
+  entity.holders = BigInt.fromI32(0);
   entity.token = tokenAddress;
 
   return entity;
@@ -64,7 +65,7 @@ export function handleTransfer(event: Transfer): void {
   statsEntity.totalValueTransfered += event.params._value;
 
   //@ts-ignore
-  statsEntity.holders += diffHolders as i32;
+  statsEntity.holders += BigInt.fromI32(diffHolders as i32);
 
   statsEntity.save();
 
@@ -190,7 +191,6 @@ function updateHolders(
     count = 1;
   } else if (holder.balance.isZero()) {
     count = -1;
-    store.remove("Holder", id);
   }
 
   holder.save();
