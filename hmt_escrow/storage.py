@@ -39,7 +39,7 @@ ESCROW_RESULTS_AWS_S3_SECRET_ACCESS_KEY = os.getenv(
 ESCROW_AWS_REGION = os.getenv("ESCROW_AWS_REGION", "us-west-2")
 
 ESCROW_ENDPOINT_URL = os.getenv("ESCROW_ENDPOINT_URL", "http://minio:9000")
-ESCROW_PUBLIC_RESULTS_URL = os.getenv("ESCROW_PUBLIC_RESULTS_URL", ESCROW_ENDPOINT_URL)
+ESCROW_PUBLIC_BUCKETNAME = os.getenv("ESCROW_PUBLIC_BUCKETNAME", ESCROW_ENDPOINT_URL)
 
 
 class StorageClientError(Exception):
@@ -96,12 +96,7 @@ def get_public_bucket_url(key: str) -> str:
     Returns:
         str: Bucket public URL
     """
-    base_url = (
-        ESCROW_PUBLIC_RESULTS_URL[:-1]
-        if ESCROW_PUBLIC_RESULTS_URL.endswith("/")
-        else ESCROW_PUBLIC_RESULTS_URL
-    )
-    return f"{base_url}/{key}"
+    return "https://{0}.s3.amazonaws.com/{1}".format(ESCROW_PUBLIC_BUCKETNAME, key)
 
 
 def get_key_from_url(url: str) -> str:
@@ -113,7 +108,7 @@ def get_key_from_url(url: str) -> str:
     Returns:
         str: file key in storage.
     """
-    if url.startswith("http"):
+    if url.startswith("https"):
         # URL is fully qualified URL. Let's split it and try to retrieve key from last part of it.
         key = url.split("/")[-1]
         assert key.startswith("s3")
