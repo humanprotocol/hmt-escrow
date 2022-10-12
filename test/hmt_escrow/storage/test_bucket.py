@@ -10,8 +10,7 @@ ESCROW_RESULTS_AWS_S3_ACCESS_KEY_ID = "ESCROW_RESULTS_AWS_S3_ACCESS_KEY_ID"
 ESCROW_RESULTS_AWS_S3_SECRET_ACCESS_KEY = "ESCROW_RESULTS_AWS_S3_SECRET_ACCESS_KEY"
 ESCROW_AWS_ACCESS_KEY_ID = "ESCROW_AWS_ACCESS_KEY_ID"
 ESCROW_AWS_SECRET_ACCESS_KEY = "ESCROW_AWS_SECRET_ACCESS_KEY"
-
-ESCROW_TEST_PUBLIC_RESULTS_URL = 'http://my-public-bucket.s3.amazon.com'
+ESCROW_PUBLIC_BUCKETNAME = "my-public-bucket"
 
 
 class BucketTest(unittest.TestCase):
@@ -27,11 +26,11 @@ class BucketTest(unittest.TestCase):
         bucket_name = get_bucket(public=True)
         self.assertEqual(bucket_name, ESCROW_TEST_PUBLIC_BUCKETNAME)
 
-    @patch("hmt_escrow.storage.ESCROW_PUBLIC_RESULTS_URL", ESCROW_TEST_PUBLIC_RESULTS_URL)
+    @patch("hmt_escrow.storage.ESCROW_PUBLIC_BUCKETNAME", ESCROW_PUBLIC_BUCKETNAME)
     def test_public_bucket_url_retrieval(self):
         """ Tests whether bucket public URL is retrieved correctly. """
         key = 's3aaa'
-        expected_url = f'{ESCROW_TEST_PUBLIC_RESULTS_URL}/{key}'
+        expected_url = f"https://{ESCROW_PUBLIC_BUCKETNAME}.s3.amazonaws.com/{key}"
 
         url = get_public_bucket_url(key)
         self.assertEqual(url, expected_url)
@@ -41,7 +40,7 @@ class BucketTest(unittest.TestCase):
         expected_key = 's3aaa'
 
         # Qualified URL must be parsed and key retrieved
-        url = f'{ESCROW_TEST_PUBLIC_RESULTS_URL}/{expected_key}'
+        url = f"https://{ESCROW_PUBLIC_BUCKETNAME}.s3.amazonaws.com/{expected_key}"
         key = get_key_from_url(url)
         self.assertEqual(key, expected_key)
 
