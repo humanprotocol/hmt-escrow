@@ -52,12 +52,15 @@ services:
   recording-oracle:
     build:
       context: ./recording-oracle
-    network_mode: "host"
+    extra_hosts:
+      - host.docker.internal:host-gateway
     environment:
       ETH_PRIVATE_KEY: ${RECORDING_ORACLE_PRIVATE_KEY}
       ETH_HTTP_SERVER: ${RPC}
       PORT: 3005
     command: ["yarn", "start"]
+    ports:
+      - 3005:3005
 
   reputation-oracle:
     build:
