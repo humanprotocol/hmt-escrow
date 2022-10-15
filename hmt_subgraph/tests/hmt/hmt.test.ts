@@ -43,7 +43,6 @@ describe("HMToken entity", () => {
       "totalValueTransfered",
       "3"
     );
-
     clearStore();
   });
 });
@@ -111,7 +110,6 @@ describe("HMToken entity", () => {
       "transaction",
       transfer1.transaction.hash.toHexString()
     );
-    assert.fieldEquals("HMTransferEvent", id1, "count", "1");
 
     // Trasnfer 2
     assert.fieldEquals("HMTransferEvent", id2, "timestamp", "11");
@@ -262,4 +260,129 @@ describe("HMToken entity", () => {
     assert.fieldEquals("HMApprovalEvent", id2, "count", "2");
     clearStore();
   });
+});
+
+describe("HMToken entity", () => {
+  test("Should properly calculate holders in statistics", () => {
+    let transfer1 = createTransferEvent(
+      "0x0000000000000000000000000000000000000000",
+      "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+      1,
+      BigInt.fromI32(10)
+    );
+    let transfer2 = createTransferEvent(
+      "0x0000000000000000000000000000000000000000",
+      "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+      2,
+      BigInt.fromI32(10)
+    );
+
+    handleTransfer(transfer1);
+    handleTransfer(transfer2);
+
+    assert.fieldEquals(
+      "HMTokenStatistics",
+      HMT_STATISTICS_ENTITY_ID,
+      "holders",
+      "2"
+    );
+
+    clearStore();
+  });
+});
+
+describe("HMToken entity", () => {
+  test("Should properly calculate holders in statistics", () => {
+    let transfer1 = createTransferEvent(
+      "0x0000000000000000000000000000000000000000",
+      "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+      10,
+      BigInt.fromI32(10)
+    );
+    let transfer2 = createTransferEvent(
+      "0x0000000000000000000000000000000000000000",
+      "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+      10,
+      BigInt.fromI32(10)
+    );
+    let transfer3 = createTransferEvent(
+      "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+      "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+      10,
+      BigInt.fromI32(10)
+    );
+
+    handleTransfer(transfer1);
+    handleTransfer(transfer2);
+    handleTransfer(transfer3);
+
+    assert.fieldEquals(
+      "HMTokenStatistics",
+      HMT_STATISTICS_ENTITY_ID,
+      "holders",
+      "1"
+    );
+
+    clearStore();
+  });
+});
+
+test("Should properly calculate holders in statistics", () => {
+  let transfer1 = createTransferEvent(
+    "0x0000000000000000000000000000000000000000",
+    "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+    10,
+    BigInt.fromI32(10)
+  );
+
+  let transfer2 = createTransferEvent(
+    "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+    "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+    0,
+    BigInt.fromI32(10)
+  );
+
+  handleTransfer(transfer1);
+  handleTransfer(transfer2);
+
+  assert.fieldEquals(
+    "HMTokenStatistics",
+    HMT_STATISTICS_ENTITY_ID,
+    "holders",
+    "1"
+  );
+
+  let transfer3 = createTransferEvent(
+    "0x0000000000000000000000000000000000000000",
+    "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+    10,
+    BigInt.fromI32(10)
+  );
+
+  handleTransfer(transfer3);
+
+  assert.fieldEquals(
+    "HMTokenStatistics",
+    HMT_STATISTICS_ENTITY_ID,
+    "holders",
+    "2"
+  );
+
+  let transfer4 = createTransferEvent(
+    "0x92a2eEF7Ff696BCef98957a0189872680600a959",
+    "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
+    10,
+    BigInt.fromI32(10)
+  );
+
+  handleTransfer(transfer4);
+
+  assert.fieldEquals(
+    "HMTokenStatistics",
+    HMT_STATISTICS_ENTITY_ID,
+    "holders",
+    "1"
+  );
+
+  clearStore();
 });

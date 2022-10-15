@@ -1,4 +1,5 @@
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Address, BigInt, store } from "@graphprotocol/graph-ts";
+
 import {
   Approval,
   Transfer,
@@ -11,6 +12,7 @@ import {
   HMBulkApprovalEvent,
   HMApprovalEvent,
   HMTokenStatistics,
+  Holder,
 } from "../../generated/schema";
 
 export const HMT_STATISTICS_ENTITY_ID = "hmt-statistics-id";
@@ -23,6 +25,7 @@ function constructStatsEntity(tokenAddress: Address): HMTokenStatistics {
   entity.totalBulkApprovalEventCount = BigInt.fromI32(0);
   entity.totalBulkTransferEventCount = BigInt.fromI32(0);
   entity.totalValueTransfered = BigInt.fromI32(0);
+  entity.holders = BigInt.fromI32(0);
   entity.token = tokenAddress;
 
   return entity;
@@ -44,6 +47,10 @@ export function handleTransfer(event: Transfer): void {
   entity.timestamp = event.block.timestamp;
   entity.transaction = event.transaction.hash;
 
+  const diffHolders =
+    updateHolders(event.params._from, event.params._value, false) +
+    updateHolders(event.params._to, event.params._value, true);
+
   let statsEntity = HMTokenStatistics.load(HMT_STATISTICS_ENTITY_ID);
 
   if (!statsEntity) {
@@ -56,6 +63,9 @@ export function handleTransfer(event: Transfer): void {
   statsEntity.totalTransferEventCount += BigInt.fromI32(1);
   //@ts-ignore
   statsEntity.totalValueTransfered += event.params._value;
+
+  //@ts-ignore
+  statsEntity.holders += BigInt.fromI32(diffHolders as i32);
 
   statsEntity.save();
 
@@ -148,4 +158,39 @@ export function handleBulkApproval(event: BulkApproval): void {
   statsEntity.save();
 
   entity.save();
+}
+
+function updateHolders(
+  holderAddress: Address,
+  value: BigInt,
+  increase: boolean
+): number {
+  if (
+    holderAddress.toHexString() == "0x0000000000000000000000000000000000000000"
+  )
+    return 0;
+  let count = 0;
+  let id = holderAddress.toHex();
+  let holder = Holder.load(id);
+  const isNew = holder == null ? true : false;
+
+  if (holder == null) {
+    holder = new Holder(id);
+    holder.address = holderAddress;
+    holder.balance = BigInt.fromI32(0);
+  }
+  const balanceBeforeTransfer = holder.balance;
+  holder.balance = increase
+    ? holder.balance.plus(value)
+    : holder.balance.minus(value);
+
+  if (balanceBeforeTransfer.isZero() && !holder.balance.isZero()) {
+    count = 1;
+  } else if (!balanceBeforeTransfer.isZero() && holder.balance.isZero()) {
+    count = -1;
+  }
+
+  holder.save();
+
+  return count;
 }
