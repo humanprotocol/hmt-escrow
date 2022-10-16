@@ -28,11 +28,11 @@
     "description": "Human subgraph on goerli network",
     "EscrowFactory": {
       "address": "0xaAe6a2646C1F88763E62e0cD08aD050Ea66AC46F",
-      "startBlock": 8180730
+      "startBlock": 7755458
     },
     "HMToken": {
-      "address": "0x4dCf5ac4509888714dd43A5cCc46d7ab389D9c23",
-      "startBlock": 7200306
+      "address": "0xd3A31D57FDD790725d0F6B78095F62E8CD4ab317",
+      "startBlock": 7755449
     }
   },
   {
