@@ -1,4 +1,4 @@
-name: job runner server tests
+name: job launcher server tests
 
 on:
   push:
@@ -19,11 +19,8 @@ jobs:
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
-
-
       - name: Run tests
         timeout-minutes: 25
         run: |
