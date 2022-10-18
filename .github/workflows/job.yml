@@ -22,10 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Run tests
-        timeout-minutes: 35
-        run: |
-          ./bin/stop
-          docker-compose build
-          docker-compose run job
-          docker-compose run job ./bin/generate-docs
+      - run: ./bin/stop
+      - run: docker-compose build
+      - run: docker-compose run job
+      - run: docker-compose run job ./bin/generate-docs

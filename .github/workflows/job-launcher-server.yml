@@ -20,9 +20,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        timeout-minutes: 25
-        run: |
-          docker-compose build
-          docker-compose run api 'npm install && npm test'
+      - uses: actions/checkout@v3
+      - run: docker-compose build
+      - run: docker-compose run api npm test
