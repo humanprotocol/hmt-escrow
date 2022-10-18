@@ -122,3 +122,5 @@ coverage/
 coverage.json
 minio/
 .git
+job-launch-server/
+job-launch-client/
