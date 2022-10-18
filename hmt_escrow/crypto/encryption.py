@@ -73,10 +73,12 @@ class Encryption:
         """
         return data[:1] == b"\x04"
 
-    def encrypt(self,
-                data: bytes,
-                public_key: eth_datatypes.PublicKey,
-                shared_mac_data: bytes = b"") -> bytes:
+    def encrypt(
+        self,
+        data: bytes,
+        public_key: eth_datatypes.PublicKey,
+        shared_mac_data: bytes = b"",
+    ) -> bytes:
         """
         Encrypt data with ECIES method to the given public key
         1) generate r = random value
@@ -100,8 +102,7 @@ class Encryption:
             key_material = self._process_key_exchange(ephemeral, public_key)
         except exceptions.InvalidPublicKey as exc:
             raise exceptions.DecryptionError(
-                "Failed to generate shared secret with"
-                f" pubkey {public_key!r}: {exc}"
+                "Failed to generate shared secret with" f" pubkey {public_key!r}: {exc}"
             ) from exc
 
         key = self._get_key_derivation(key_material)
@@ -130,10 +131,11 @@ class Encryption:
         return msg + tag
 
     def decrypt(
-            self,
-            data: bytes,
-            private_key: eth_datatypes.PrivateKey,
-            shared_mac_data: bytes = b"") -> bytes:
+        self,
+        data: bytes,
+        private_key: eth_datatypes.PrivateKey,
+        shared_mac_data: bytes = b"",
+    ) -> bytes:
         """
         Decrypt data with ECIES method using the given private key
         1) generate shared-secret = kdf( ecdhAgree(myPrivKey, msg[1:65]) )
@@ -154,17 +156,15 @@ class Encryption:
             raise exceptions.DecryptionError("wrong ecies header")
 
         #  1) generate shared-secret = kdf( ecdhAgree(myPrivKey, msg[1:65]) )
-        shared = data[1:1 + self.PUBLIC_KEY_LEN]
+        shared = data[1 : 1 + self.PUBLIC_KEY_LEN]
 
         try:
             key_material = self._process_key_exchange(
-                private_key,
-                eth_keys.PublicKey(shared)
+                private_key, eth_keys.PublicKey(shared)
             )
         except exceptions.InvalidPublicKey as exc:
             raise exceptions.DecryptionError(
-                "Failed to generate shared secret with"
-                f" pubkey {shared!r}: {exc}"
+                "Failed to generate shared secret with" f" pubkey {shared!r}: {exc}"
             ) from exc
 
         key = self._get_key_derivation(key_material)
@@ -173,12 +173,11 @@ class Encryption:
         key_enc, key_mac = key[:k_len], key[k_len:]
 
         key_mac = hashlib.sha256(key_mac).digest()
-        tag = data[-self.KEY_LEN:]
+        tag = data[-self.KEY_LEN :]
 
         # 2) Verify tag
         expected_tag = self._hmac_sha256(
-            key_mac,
-            data[1 + self.PUBLIC_KEY_LEN: -self.KEY_LEN] + shared_mac_data
+            key_mac, data[1 + self.PUBLIC_KEY_LEN : -self.KEY_LEN] + shared_mac_data
         )
 
         # Whether same tag byte
@@ -190,16 +189,16 @@ class Encryption:
         block_size = algo.block_size // 8
 
         data_start = 1 + self.PUBLIC_KEY_LEN
-        data_slice = data[data_start: data_start + block_size]
+        data_slice = data[data_start : data_start + block_size]
 
         cipher_context = Cipher(algo, self.MODE(data_slice)).decryptor()
-        ciphertext = data[data_start + block_size: -self.KEY_LEN]
+        ciphertext = data[data_start + block_size : -self.KEY_LEN]
 
         return cipher_context.update(ciphertext) + cipher_context.finalize()
 
-    def _process_key_exchange(self,
-                              private_key: eth_datatypes.PrivateKey,
-                              public_key: eth_datatypes.PublicKey) -> bytes:
+    def _process_key_exchange(
+        self, private_key: eth_datatypes.PrivateKey, public_key: eth_datatypes.PublicKey
+    ) -> bytes:
         """
         Performs a key exchange operation using the
         ECDH (Elliptic-curve Diffie–Hellman) algorithm.
@@ -224,18 +223,16 @@ class Encryption:
         Returns:
             Key material resulted of the exchange between two keys, assuming
                 that they derive the same key material
-        """""
+        """ ""
         private_key_int = int(t.cast(int, private_key))
-        ec_private_key = ec.derive_private_key(private_key_int,
-                                               self.ELLIPTIC_CURVE)
+        ec_private_key = ec.derive_private_key(private_key_int, self.ELLIPTIC_CURVE)
 
         public_key_bytes = b"\x04" + public_key.to_bytes()
 
         try:
             # either of these can raise a ValueError:
             elliptic_pub_nums = ec.EllipticCurvePublicKey.from_encoded_point(
-                self.ELLIPTIC_CURVE,
-                public_key_bytes
+                self.ELLIPTIC_CURVE, public_key_bytes
             )
             ec_pub_key = elliptic_pub_nums.public_numbers().public_key()
 
@@ -248,7 +245,7 @@ class Encryption:
             raise exceptions.InvalidPublicKey(str(error)) from error
 
     def generate_private_key(self) -> eth_datatypes.PrivateKey:
-        """ Generates a new SECP256K1 private key and return it """
+        """Generates a new SECP256K1 private key and return it"""
         key = ec.generate_private_key(curve=self.ELLIPTIC_CURVE)
         big_key = int_to_big_endian(key.private_numbers().private_value)
         padded_key = self._pad32(big_key)
@@ -300,11 +297,11 @@ class Encryption:
             ctx.update(key_material)
             key += ctx.digest()
 
-        return key[:self.KEY_LEN]
+        return key[: self.KEY_LEN]
 
     @staticmethod
     def _hmac_sha256(key: bytes, msg: bytes) -> bytes:
-        """ Generates hash MAC using SHA256 Hash Algorithm """
+        """Generates hash MAC using SHA256 Hash Algorithm"""
         mac = hmac.HMAC(key, hashes.SHA256())
         mac.update(msg)
         return mac.finalize()
