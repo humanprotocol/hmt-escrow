@@ -9,7 +9,7 @@ from test.hmt_escrow.utils import manifest
 
 
 class EncryptionServiceTest(unittest.TestCase):
-    """ Encryption Seric test. """
+    """Encryption Seric test."""
 
     def setUp(self) -> None:
         self.encryption = Encryption()
@@ -22,15 +22,15 @@ class EncryptionServiceTest(unittest.TestCase):
         self.bad_public_key = priv_key_alt.public_key
 
         self.manifest = manifest
-        self.data = json.dumps(self.manifest.serialize()).encode('utf-8')
+        self.data = json.dumps(self.manifest.serialize()).encode("utf-8")
 
     def test_private_key_generation(self):
-        """ Tests private key generation. """
+        """Tests private key generation."""
         key = self.encryption.generate_private_key()
         self.assertIsInstance(key, eth_keys.PrivateKey)
 
     def test_generate_public_key_from_private_key(self):
-        """ Tests public key generated from a private key."""
+        """Tests public key generated from a private key."""
         key = self.encryption.generate_private_key()
         key_bytes = key.to_bytes()
 
@@ -38,20 +38,20 @@ class EncryptionServiceTest(unittest.TestCase):
         self.assertIsInstance(pub_key, eth_keys.PublicKey)
 
     def test_is_encrypted(self):
-        """ Tests verification whether some data is already encrypted. """
-        data = 'some data to be encrypted'.encode('utf-8')
+        """Tests verification whether some data is already encrypted."""
+        data = "some data to be encrypted".encode("utf-8")
         self.assertEqual(self.encryption.is_encrypted(data), False)
 
         encrypted = self.encryption.encrypt(data, self.public_key)
         self.assertEqual(self.encryption.is_encrypted(encrypted), True)
 
     def test_encrypt(self):
-        """ Tests encryption of a data using a public key. """
+        """Tests encryption of a data using a public key."""
         encrypted = self.encryption.encrypt(self.data, self.public_key)
         self.assertEqual(self.encryption.is_encrypted(encrypted), True)
 
     def test_decrypt(self):
-        """ Testes decryption of a data using correct private key. """
+        """Testes decryption of a data using correct private key."""
         # Encrypted with a certain public key
         encrypted = self.encryption.encrypt(self.data, self.bad_public_key)
 
@@ -60,7 +60,7 @@ class EncryptionServiceTest(unittest.TestCase):
             # to decrypt data
             self.encryption.decrypt(encrypted, self.private_key)
 
-        self.assertEqual(str(error.exception), 'Failed to verify tag')
+        self.assertEqual(str(error.exception), "Failed to verify tag")
 
         # Now encrypting and decrypting with correct keys
         encrypted = self.encryption.encrypt(self.data, self.public_key)

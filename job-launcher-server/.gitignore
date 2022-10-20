@@ -1,0 +1,32 @@
+# compiled output
+dist
+pgdata
+pgadmin-data
+/node_modules
+.lintstagedrc
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+
+# IDE - VSCode
+.vscode/*
+
+# OS
+.DS_Store
+
+# env
+.env.*
+
+ganache/build
+hmt.address.json

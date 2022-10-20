@@ -397,7 +397,7 @@ class Job:
         )
         reputation_oracle = str(self.serialized_manifest["reputation_oracle_addr"])
         recording_oracle = str(self.serialized_manifest["recording_oracle_addr"])
-        hmt_amount = int(self.amount * 10 ** 18)
+        hmt_amount = int(self.amount * 10**18)
         hmtoken_contract = get_hmtoken(self.hmtoken_addr, self.hmt_server_addr)
 
         tx_balance = None
@@ -641,7 +641,7 @@ class Job:
 
         for eth_addr, amount in payouts:
             eth_addrs.append(eth_addr)
-            hmt_amounts.append(int(amount * 10 ** 18))
+            hmt_amounts.append(int(amount * 10**18))
 
         func_args = [eth_addrs, hmt_amounts, url, hash_, 1]
 
