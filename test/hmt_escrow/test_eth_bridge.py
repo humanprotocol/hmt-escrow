@@ -45,16 +45,6 @@ class EthBridgeTestCase(unittest.TestCase):
     def test_get_factory(self):
         self.assertIsNotNone(get_factory(self.job.factory_contract.address))
 
-    def test_get_pub_key_from_address(self):
-        with self.assertRaises(ValueError):
-            get_pub_key_from_addr("badaddress")
-        os.environ["GAS_PAYER"] = self.credentials["gas_payer"]
-        os.environ["GAS_PAYER_PRIV"] = self.credentials["gas_payer_priv"]
-        set_pub_key_at_addr(self.rep_oracle_pub_key)
-        self.assertEqual(
-            get_pub_key_from_addr(os.environ["GAS_PAYER"]), self.rep_oracle_pub_key
-        )
-
     def test_set_pub_key_at_address(self):
         os.environ["GAS_PAYER"] = self.credentials["gas_payer"]
         os.environ["GAS_PAYER_PRIV"] = self.credentials["gas_payer_priv"]
