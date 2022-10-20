@@ -8,8 +8,6 @@ services:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
       - GAS_LIMIT=6700000
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
       - ETH_HOST=ganache
       - ETH_PORT=8545
       - ESCROW_BUCKETNAME=escrow-results
@@ -28,10 +26,7 @@ services:
         condition: service_healthy
     links:
       - ganache
-      - ipfs
-      - kvstore
     volumes:
-      - eth_kvstore_addr:/deployed-kvstore
       - ./minio:/data
       - .:/work
       - ./deployed-hmtoken:/deployed-hmtoken
@@ -48,23 +43,6 @@ services:
       timeout: 5s
       retries: 5
 
-  kvstore:
-    image: hcaptcha/eth-kvstore
-    links:
-      - ganache
-    environment:
-      - ETH_HOST=ganache
-      - ETH_PORT=8545
-      - ADDRESS_OUTPUT_FILENAME=/deployed/ethkvstore.address.json
-    volumes:
-      - eth_kvstore_addr:/deployed
-
-  ipfs:
-    image: ipfs/go-ipfs:v0.4.22
-    command: daemon --offline
-    ports:
-      - 5001:5001
-  
   minio:
     image: minio/minio:RELEASE.2020-04-28T23-56-56Z
     ports:
@@ -155,7 +133,6 @@ services:
     command: sh -c "npm run start"
 
 volumes:
-  eth_kvstore_addr:
   pgdata:
   pgadmin-data:
   ganache:
