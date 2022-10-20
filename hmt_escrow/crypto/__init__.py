@@ -9,8 +9,7 @@ from .exceptions import *
 encryption = Encryption()
 
 SHARED_MAC_DATA: bytes = os.getenv(
-    "SHARED_MAC",
-    "9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350"
+    "SHARED_MAC", "9da0d3721774843193737244a0f3355191f66ff7321e83eae83f7f746eb34350"
 ).encode("ascii")
 
 
@@ -45,11 +44,9 @@ def encrypt(public_key: bytes, msg: str) -> bytes:
     """
     pub_key = eth_keys.PublicKey(codecs.decode(public_key, "hex"))
     msg_bytes = msg.encode("utf-8")
-    return encryption.encrypt(msg_bytes,
-                              pub_key,
-                              shared_mac_data=SHARED_MAC_DATA)
+    return encryption.encrypt(msg_bytes, pub_key, shared_mac_data=SHARED_MAC_DATA)
 
 
 def is_encrypted(msg: bytes) -> bool:
-    """ Returns whether message is already encrypted. """
+    """Returns whether message is already encrypted."""
     return encryption.is_encrypted(msg)

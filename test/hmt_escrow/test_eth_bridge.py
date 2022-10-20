@@ -7,7 +7,7 @@ from hmt_escrow.eth_bridge import (
     get_escrow,
     get_pub_key_from_addr,
     handle_transaction,
-    set_pub_key_at_addr
+    set_pub_key_at_addr,
 )
 from test.hmt_escrow.utils import create_job
 
@@ -26,7 +26,7 @@ class EthBridgeTestCase(unittest.TestCase):
 
         self.assertTrue(self.job.launch(self.rep_oracle_pub_key))
         gas = 4712388
-        hmt_amount = int(self.job.amount * 10 ** 18)
+        hmt_amount = int(self.job.amount * 10**18)
         hmtoken_contract = get_hmtoken()
         txn_func = hmtoken_contract.functions.transfer
         func_args = [self.job.job_contract.address, hmt_amount]
@@ -44,17 +44,6 @@ class EthBridgeTestCase(unittest.TestCase):
 
     def test_get_factory(self):
         self.assertIsNotNone(get_factory(self.job.factory_contract.address))
-
-    def test_get_pub_key_from_address(self):
-        with self.assertRaises(ValueError):
-            get_pub_key_from_addr("badaddress")
-        os.environ["GAS_PAYER"] = self.credentials["gas_payer"]
-        os.environ["GAS_PAYER_PRIV"] = self.credentials["gas_payer_priv"]
-        set_pub_key_at_addr(self.rep_oracle_pub_key)
-        self.assertEqual(
-            get_pub_key_from_addr(os.environ["GAS_PAYER"]),
-            self.rep_oracle_pub_key
-        )
 
     def test_set_pub_key_at_address(self):
         os.environ["GAS_PAYER"] = self.credentials["gas_payer"]

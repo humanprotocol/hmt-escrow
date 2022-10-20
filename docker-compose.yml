@@ -8,8 +8,6 @@ services:
       - HMT_ETH_SERVER=http://ganache:8545
       - HET_WAIT_FOR_SERVER=http://het:8000
       - GAS_LIMIT=6700000
-      - IPFS_HOST=ipfs
-      - IPFS_PORT=5001
       - ETH_HOST=ganache
       - ETH_PORT=8545
       - ESCROW_BUCKETNAME=escrow-results
@@ -22,42 +20,29 @@ services:
       - DEBUG=true
       - USE_ESCROW_S3_STORAGE=True
     depends_on:
-      - minio
-      - ganache
+      ganache:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     links:
       - ganache
-      - ipfs
-      - kvstore
     volumes:
-      - eth_kvstore_addr:/deployed-kvstore
       - ./minio:/data
       - .:/work
       - ./deployed-hmtoken:/deployed-hmtoken
-    command: sh -c "rm /deployed-hmtoken/hmt.address.json; curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; cd /work && npm install && npm run test; ./bin/wait_then_run"
+    command: sh -c "rm /deployed-hmtoken/hmt.address.json; timeout 60 curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; cd /work && npm install && npm run test; ./bin/wait_then_run"
 
   ganache:
     image: trufflesuite/ganache-cli:latest
     command: node ./build/cli.node.js --noVMErrorsOnRPCResponse -m goat --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000
     ports:
       - 8545:8545
+    healthcheck:
+      test: wget --spider --post-data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' ganache:8545 || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  kvstore:
-    image: hcaptcha/eth-kvstore
-    links:
-      - ganache
-    environment:
-      - ETH_HOST=ganache
-      - ETH_PORT=8545
-      - ADDRESS_OUTPUT_FILENAME=/deployed/ethkvstore.address.json
-    volumes:
-      - eth_kvstore_addr:/deployed
-
-  ipfs:
-    image: ipfs/go-ipfs:v0.4.22
-    command: daemon --offline
-    ports:
-      - 5001:5001
-  
   minio:
     image: minio/minio:RELEASE.2020-04-28T23-56-56Z
     ports:
@@ -68,8 +53,86 @@ services:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
     entrypoint: sh -c 'minio server /data/'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     volumes:
       - ./minio:/data
+  db:
+    container_name: postgres_db
+    image: postgres
+    restart: always
+    environment: 
+      - POSTGRES_USER=hmt
+      - POSTGRES_PASSWORD=qwerty
+      - POSTGRES_DB=hmt
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  jlc:
+    image: jlc
+    build:
+      context: job-launcher-client
+
+  api:
+    build: 
+      context: job-launcher-server
+    depends_on:
+      minio:
+        condition: service_healthy
+      ganache:
+        condition: service_healthy
+    environment: 
+      - DB_TYPE=postgres
+      - POSTGRES_HOST=postgres_db
+      - POSTGRES_USER=hmt
+      - POSTGRES_PASSWORD=qwerty
+      - POSTGRES_DB=hmt
+      - POSTGRES_SYNC=false
+      - JWT_SECRET=secrete
+      - POSTGRES_PORT=5432
+      - POSTMARK_API_KEY=53246f5b-733c-47f0-ad70-52f57723848a
+      - EMAIL_FROM=noreply@hmt.ai
+      - FE_URL=http://localhost:3001
+      - WEB3_CLIENT_NAME=eth
+      - WEB3_PROVIDER_URL=http://ganache:8545
+      - WEB3_OWNER_PRIVATE_KEY=28e516f1e2f99e96a48a23cea1f94ee5f073403a1c68e818263f0eb898f1c8e5
+      - WEB3_OWNER_ADDRESS=0x1413862C2B7054CDbfdc181B83962CB0FC11fD92
+      - WEB3_JOB_LAUNCHER_PRIVATE_KEY=0x486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e
+      - WEB3_JOB_LAUNCHER_ADDRESS=0x61F9F0B31eacB420553da8BCC59DC617279731Ac
+      - WEB3_REQUESTER_PRIVATE_KEY=0x657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8
+      - WEB3_REQUESTER_ADDRESS=0xD979105297fB0eee83F7433fC09279cb5B94fFC6
+      - WEB3_ESCROW_FACTORY_ADDRESS=0x3FF93a3847Cd1fa62DD9BcfE351C4b6BcCcF10cB
+      - WEB3_HMT_TOKEN=0x444c45937D2202118a0FF9c48d491cef527b59dF
+      - RECORDING_ORACLE_ADDRESS=0x031bc0a65bD0cB5e781314D4eC75e418aEe75A22
+      - REPUTATION_ORACLE_ADDRESS=0x031bc0a65bD0cB5e781314D4eC75e418aEe75A22
+      - EXCHANGE_ORACLE_ADDRESS=0x031bc0a65bD0cB5e781314D4eC75e418aEe75A22
+      - RECORDING_ORACLE_URL=http://127.0.0.1:5003
+      - REPUTATION_ORACLE_URL=http://127.0.0.1:5002
+      - EXCHANGE_ORACLE_URL=http://127.0.0.1:5001
+      - RECORDING_ORACLE_STAKE=100
+      - REPUTATION_ORACLE_STAKE=100
+      - JWT_ACCESS_TOKEN_EXPIRES_IN=1000000000
+      - JWT_REFRESH_TOKEN_EXPIRES_IN=1000000000
+      - AWS_ACCESS_KEY_ID=AKIAU6WGWXBX4YQKGL4C
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_REGION=eu-west-3
+      - JOB_LAUNCHER_URL=http://0.0.0.0:3000
+      - HOST=0.0.0.0
+      - PORT=3000
+      - MIGRATIONS_RUN=${MIGRATIONS_RUN}
+    ports: 
+      - "3000:3000"
+    depends_on: 
+      - db
+      - job
+    volumes: 
+      - ./job-launcher-server:/app
+      - /app/node_modules
+    command: sh -c "npm run start"
 
 volumes:
-  eth_kvstore_addr:
+  pgdata:
+  pgadmin-data:
+  ganache:

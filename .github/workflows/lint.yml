@@ -1,0 +1,27 @@
+name: black-job-container
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - master
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+  # Run tests for any PRs.
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Checks
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - run: pip install --upgrade pip
+    - run: pip install black
+    - run: black --diff --check $(git ls-files '*.py')
