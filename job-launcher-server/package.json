@@ -62,7 +62,7 @@
     "pg": "^8.7.3",
     "postmark": "2.7.7",
     "rxjs": "7.3.0",
-    "swagger-ui-express": "4.1.6",
+    "swagger-ui-express": "4.5.0",
     "truffle": "^5.5.22",
     "typeorm": "0.2.37",
     "typeorm-naming-strategies": "2.0.0",
