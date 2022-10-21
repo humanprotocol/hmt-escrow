@@ -1,8 +1,9 @@
 pragma solidity 0.6.2;
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
+import "./Ownable.sol";
 
-contract HMToken is HMTokenInterface {
+contract HMToken is HMTokenInterface, Ownable {
     using SafeMath for uint256;
 
     /* This is a slight change to the ERC20 base standard.
