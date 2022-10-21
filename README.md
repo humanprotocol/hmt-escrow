@@ -2,6 +2,9 @@
 
 Welcome to Fortune, an example HUMAN application that demonstrates how to create and fulfill job requests using the HUMAN protocol.
 
+> **Warning**
+> For running Fortune with docker-compose you need at least version 1.27.0. Check with command `docker-compose --version`
+
 ## How it works
 
 In this specific usecase a job requester is requesting a fortune prediction from a group of workers (Fortune Tellers). Each Fortune Teller will provide their answers, which will then be verified and settled by a group of Oracles.
@@ -49,10 +52,6 @@ At a very high level this project consists of 4 main components (smart contracts
 ## Usage Instructions
 
 There are two options to run the example, use our deployed playground example or run the example locally using Docker.
-
-## ATTENTION WINDOWS WSL USERS
-
-We recommend that Windows users try the Deployed Playground example as the Local example requires 'Host Mode' to be activated in the docker-compose.yml, which unfortunately is not available on Docker for Windows WSL.
 
 ## Deployed Playground
 
@@ -121,7 +120,13 @@ You should see account balance for Worker 1 and 2 has increased by the relevant 
 To run the example locally, you will require Docker. Please see this guide for Docker installation instructions. Once Docker is installed and running, from the root of the project run:
 
 ```
-docker-compose up // Bring up docker env
+cp .env-example .env
+```
+
+Then:
+
+```
+docker-compose up -d --build // Bring up docker env
 ```
 
 To deploy the contracts to the our Local Testnet, in a new window execute:
@@ -166,14 +171,14 @@ To configure Metamask for the Local Testnet example:
 In Metamask, switch to the Job Requester account that you imported above
 
 1. Ensure that you are connected to Fortune Ganache (or whatever you named it above) under Networks in Metamask.
-2. Navigate to http://localhost:3000 to access the Job Launcher
+2. Navigate to http://localhost/launcher to access the Job Launcher
 3. Click on connect to connect your metamask wallet
 4. To begin deploying a new job click on 'Create Escrow', Metamask will ask you to sign this transaction
 5. Assuming the above transaction was successful you will now have a new Escrow address under the "Escrow created" field, this address represents the job, copy it down. Next we must fund the escrow.
 6. Enter the Escrow address in to the search box and click the 'Search Escrow' button. You should now be presented with information about the Escrow, such as the status etc. Enter any amount into the box titled 'Fund the escrow' and click the 'Fund' button.
 7. To complete the job creation process we must add the manifest URL. This URL points to the manifest.json file, which contains job specific data. For this example the data has already been created for you and stored in a local datastore (minio) which can be accessed at http://localhost:9001 (To login you must use the default username: 'dev' and password 'devdevdev')
 8. Once you are logged into the minio dashboard, click on the 'Manage' button, you will be taken to a Summary page for the manifest bucket. From this screen change the 'Access Policy' to 'public' and click 'Set' to confirm changes. We can now exit the minio dashboard and return to the Job creation process.
-9. Navigate back to the job launcher (http://localhost:3000), enter the manifest URL (http://localhost:9000/manifests/manifest.json) into the form and hit 'Setup Escrow'.
+9. Navigate back to the job launcher (http://localhost/launcher), enter the manifest URL (http://localhost/minio/manifests/manifest.json) into the form and hit 'Setup Escrow'.
 
 The job creation is now complete!
 
@@ -200,13 +205,30 @@ cd contracts && yarn && yarn deploy // this commands deploys contracts to the bl
 cd ../tests/ && yarn && yarn test:e2e-backend // this command runs tests
 ```
 
+# Deploy to any EVM network
+**To deploy Fortune for any EVM network the contracts from https://github.com/humanprotocol/hmt-escrow must to be deployed on the target network.** Once the contracts are deployed, in the root folder of this project run the following command:
+```
+cp .env-example .env
+```
+
+Then replace the values in the .env file with the desired config. Then run:
+
+```
+docker-compose up -d --build // Bring up docker env
+```
+
+Since you must be using an existing network you don't need to run a local ETH node, so to remove it run:
+```
+docker rm -f ganache
+```
+
+Now all the services needed for Fortune should be deployed and running.
+
 # Troubleshooting
 
 Error: The tx doesn't have the correct nonce or the transaction freezes.
 
 Fix: If you experience errors such as this when submitting transactions, try resetting Metamask by clicking on the account icon (top right) then Settings > Advanced > Reset Account.
-
-We also recommend that Windows WSL users try the Deployed Playground example as the Local example requires 'Host Mode' to be activated in the docker-compose.yml, which unfortunately is not available on Docker for Windows.
 
 If you encounter any other issues when using the front end, please use the developer console 'Ctrl+Shift+I (Command+Option+I on Mac)' in Chrome/Firefox to diagnose errors when submitting transactions from the front-end.
 

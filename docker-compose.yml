@@ -1,8 +1,20 @@
 version: '3.7'
 
 services:
+  nginx:
+    image: nginx
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
+    hostname: nginx
+    container_name: nginx
+    volumes:
+    - ./nginx-config/:/etc/nginx/conf.d/:ro
+    ports:
+    - "80:80"
+  
   ganache:
     image: trufflesuite/ganache-cli:v6.12.2
+    container_name: ganache
     command: node /app/ganache-core.docker.cli.js --noVMErrorsOnRPCResponse --db=/ganache_data -m goat -i 1337 --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000 -v
     ports:
       - 8547:8545
@@ -13,17 +25,40 @@ services:
       - 9001:9001
       - 9000:9000
     environment:
-      MINIO_ROOT_USER: dev
-      MINIO_ROOT_PASSWORD: devdevdev
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS}
     volumes:
       - ./docker-manifest.json:/tmp/manifests/docker-manifest.json
     entrypoint: 'sh'
     command:
       -c "mkdir -p /data/manifests && cp /tmp/manifests/docker-manifest.json /data/manifests/manifest.json && minio server /data --console-address ':9001'"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+  minio-mc:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 dev devdevdev;
+      /usr/bin/mc mb myminio/manifests;
+      /usr/bin/mc anonymous set public myminio/manifests;
+      "
 
   launcher:
     build:
       context: ./launcher
+      args:
+        PUBLIC_URL: ${LAUNCHER_PUBLIC_URL}
+        HMT_ADDRESS: ${HMT_ADDRESS}
+        ESCROW_FACTORY_ADDRESS: ${ESCROW_FACTORY_ADDRESS}
+        REC_ORACLE_ADDRESS: ${REC_ORACLE_ADDRESS}
+        REP_ORACLE_ADDRESS: ${REP_ORACLE_ADDRESS}
+        EXCHANGE_ORACLE_ADDRESS: ${EXCHANGE_ORACLE_ADDRESS}
     ports:
       - 3000:3000
     command: ["yarn", "start-prod"]
@@ -31,6 +66,8 @@ services:
   exchange:
     build:
       context: ./exchange
+      args:
+        PUBLIC_URL: ${EXCHANGE_PUBLIC_URL}
     ports:
       - 3001:3000
     command: ["yarn", "start-prod"]
@@ -41,8 +78,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
-      ETH_PRIVATE_KEY: 486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e
-      ETH_HTTP_SERVER: http://ganache:8545
+      ETH_PRIVATE_KEY: ${RECORDING_ORACLE_PRIVATE_KEY}
+      ETH_HTTP_SERVER: ${RPC}
       PORT: 3005
     command: ["yarn", "start"]
     ports:
@@ -51,15 +88,17 @@ services:
   reputation-oracle:
     build:
       context: ./reputation-oracle
+    extra_hosts:
+      - host.docker.internal:host-gateway
     ports:
       - 3006:3006
     environment:
-      ETH_PRIVATE_KEY: 657b6497a355a3982928d5515d48a84870f057c4d16923eb1d104c0afada9aa8
-      ETH_HTTP_SERVER: http://ganache:8545
-      MINIO_HOST: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: dev
-      MINIO_SECRET_KEY: devdevdev
+      ETH_PRIVATE_KEY: ${REPUTATION_ORACLE_PRIVATE_KEY}
+      ETH_HTTP_SERVER: ${RPC}
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_USER}
+      MINIO_SECRET_KEY: ${MINIO_PASS}
       MINIO_BUCKET_NAME: job-results
       PORT: 3006
     command: ["yarn", "start"]
