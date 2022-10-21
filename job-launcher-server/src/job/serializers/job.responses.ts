@@ -8,6 +8,9 @@ export interface IJobDto extends IManifestDto {
   recordingOracleAddress: string;
   reputationOracleAddress: string;
   exchangeOracleAddress: string;
+  recordingOracleUrl: string;
+  reputationOracleUrl: string;
+  exchangeOracleUrl: string;
 }
 
 export interface IManifestDto {
@@ -53,6 +56,12 @@ export const jobFormatter = (jobEntity: JobEntity): IJobDto => {
     id: jobEntity.id,
     networkId: jobEntity.networkId,
     status: jobEntity.status,
+    recordingOracleAddress: jobEntity.recordingOracleAddress,
+    reputationOracleAddress: jobEntity.reputationOracleAddress,
+    exchangeOracleAddress: jobEntity.exchangeOracleAddress,
+    recordingOracleUrl: jobEntity.recordingOracleUrl,
+    reputationOracleUrl: jobEntity.reputationOracleUrl,
+    exchangeOracleUrl: jobEntity.exchangeOracleUrl,
     ...manifestFormatter(jobEntity),
   };
 };
