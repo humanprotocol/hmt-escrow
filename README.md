@@ -2,6 +2,9 @@
 
 Welcome to Fortune, an example HUMAN application that demonstrates how to create and fulfill job requests using the HUMAN protocol.
 
+> **Warning**
+> For running Fortune with docker-compose you need at least version 1.27.0. Check with command `docker-compose --version`
+
 ## How it works
 
 In this specific usecase a job requester is requesting a fortune prediction from a group of workers (Fortune Tellers). Each Fortune Teller will provide their answers, which will then be verified and settled by a group of Oracles.
