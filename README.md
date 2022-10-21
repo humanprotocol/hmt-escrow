@@ -219,8 +219,6 @@ Since you must be using an existing network you don't need to run a local ETH no
 docker rm -f ganache
 ```
 
-Log into the minio dashboard (localhost:3001 or [serverIP/domain]:3001) using the credentials from your .env file, click on the ‘Manage’ button, you will be taken to a Summary page for the manifest bucket. From this screen change the ‘Access Policy’ to ‘public’ and click ‘Set’ to confirm changes. 
-
 Now all the services needed for Fortune should be deployed and running.
 
 # Troubleshooting

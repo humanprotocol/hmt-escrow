@@ -32,6 +32,22 @@ services:
     entrypoint: 'sh'
     command:
       -c "mkdir -p /data/manifests && cp /tmp/manifests/docker-manifest.json /data/manifests/manifest.json && minio server /data --console-address ':9001'"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+  minio-mc:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 dev devdevdev;
+      /usr/bin/mc mb myminio/manifests;
+      /usr/bin/mc anonymous set public myminio/manifests;
+      "
 
   launcher:
     build:
