@@ -3,15 +3,20 @@ const fs = require('fs');
 const path = require('path');
 
 const HMToken = artifacts.require('./HMToken.sol');
+const EscrowFactory = artifacts.require('./EscrowFactory.sol');
 
-const ADDRESS_OUTPUT_FILENAME = '/deployed-hmtoken/hmt.address.json';
+const ADDRESS_OUTPUT_FILENAME = './deployed-contracts/contract.addresses.json';
 
-module.exports = (deployer) => {
-  deployer
-    .deploy(HMToken, 1000000000, 'Human Token', 18, 'HMT')
+module.exports = async function (deployer) {
+  await deployer
+    .deploy(HMToken, 1000000000, 'Human Token', 18, 'HMT');
+
+
+  await deployer.deploy(EscrowFactory, HMToken.address)
     .then(() => {
       const fileContent = {
-        address: HMToken.address,
+        HMTAddress: HMToken.address,
+        EscrowFactory: EscrowFactory.address,
       };
 
       try {

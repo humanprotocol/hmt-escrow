@@ -132,7 +132,7 @@ docker-compose up -d --build // Bring up docker env
 To deploy the contracts to the our Local Testnet, in a new window execute:
 
 ```
-cd contracts && yarn && yarn deploy
+cd ../.. && yarn && yarn compile
 ```
 
 At this point we have a Local Testnet running with our contracts deployed to this testnet. The next step is to configure Metamask to work with our Local Testnet.
@@ -144,7 +144,7 @@ To configure Metamask for the Local Testnet example:
 1. Open your Metamask wallet and click on the account icon in the top right. Select Settings > Networks > Add Network. Enter the details below:
 
    - Network Name - any name. We are using `Fortune Ganache` for this example
-   - New RPC URL - http://localhost:8547
+   - New RPC URL - http://localhost:8545
    - Chain ID - `1337` (you may get a warning here that this ID is already in use, it is safe to ignore)
    - Currency Symbol - `ETH`
 
@@ -200,9 +200,9 @@ We have now provided 2 predictions from 2 Workers. Lets check the status of the 
 To run tests please execute the commands below:
 
 ```
-docker-compose -f docker-compose.test.yml up
-cd contracts && yarn && yarn deploy // this commands deploys contracts to the blockchain
-cd ../tests/ && yarn && yarn test:e2e-backend // this command runs tests
+docker-compose -f docker-compose.test.yml up -d
+cd ../.. && yarn && yarn compile // this commands deploys contracts to the blockchain
+cd example/fortune/tests/ && yarn && yarn test:e2e-backend // this command runs tests
 ```
 
 # Deploy to any EVM network

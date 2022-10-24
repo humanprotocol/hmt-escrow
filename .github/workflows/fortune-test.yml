@@ -15,20 +15,19 @@ jobs:
           node-version: 16.13.2
 
       - name: Start containers
+        working-directory: ./examples/fortune
         run: docker-compose -f docker-compose.test.yml up -d --build
 
       - name: Install contract dependencies
-        working-directory: ./contracts
         run: yarn
 
       - name: Deploy contracts
-        working-directory: ./contracts
-        run: yarn deploy
+        run: yarn compile
 
       - name: Install tests dependencies
-        working-directory: ./tests
+        working-directory: ./examples/fortune/tests
         run: yarn
 
       - name: Run tests
-        working-directory: ./tests
+        working-directory: ./examples/fortune/tests
         run: yarn test:e2e-backend

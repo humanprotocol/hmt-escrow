@@ -11,7 +11,7 @@ const addresses = {
 };
 
 const urls = {
-    ethHTTPServer: process.env.ETH_HTTP_SERVER || 'http://localhost:8547',
+    ethHTTPServer: process.env.ETH_HTTP_SERVER || 'http://localhost:8545',
     manifestUrl: process.env.MANIFEST_URL || 'http://minio-test:9000/manifests/docker-manifest.json',
     localManifestUrl: 'http://localhost:9000/manifests/docker-manifest.json',
 };

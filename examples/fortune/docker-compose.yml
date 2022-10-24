@@ -17,7 +17,7 @@ services:
     container_name: ganache
     command: node /app/ganache-core.docker.cli.js --noVMErrorsOnRPCResponse --db=/ganache_data -m goat -i 1337 --hostname 0.0.0.0 --unlock 0x1413862c2b7054cdbfdc181b83962cb0fc11fd92 -g 1000 -v
     ports:
-      - 8547:8545
+      - 8545:8545
 
   minio:
     image: minio/minio:RELEASE.2022-05-26T05-48-41Z
