@@ -120,19 +120,7 @@ You should see account balance for Worker 1 and 2 has increased by the relevant 
 To run the example locally, you will require Docker. Please see this guide for Docker installation instructions. Once Docker is installed and running, from the root of the project run:
 
 ```
-cp .env-example .env
-```
-
-Then:
-
-```
-docker-compose up -d --build // Bring up docker env
-```
-
-To deploy the contracts to the our Local Testnet, in a new window execute:
-
-```
-cd ../.. && yarn && yarn compile
+make local
 ```
 
 At this point we have a Local Testnet running with our contracts deployed to this testnet. The next step is to configure Metamask to work with our Local Testnet.
@@ -197,12 +185,10 @@ We have now provided 2 predictions from 2 Workers. Lets check the status of the 
 
 # Run Tests Locally
 
-To run tests please execute the commands below:
+To run tests please execute the command below:
 
 ```
-docker-compose -f docker-compose.test.yml up -d
-cd ../.. && yarn && yarn compile // this commands deploys contracts to the blockchain
-cd example/fortune/tests/ && yarn && yarn test:e2e-backend // this command runs tests
+make test
 ```
 
 # Deploy to any EVM network
@@ -214,12 +200,7 @@ cp .env-example .env
 Then replace the values in the .env file with the desired config. Then run:
 
 ```
-docker-compose up -d --build // Bring up docker env
-```
-
-Since you must be using an existing network you don't need to run a local ETH node, so to remove it run:
-```
-docker rm -f ganache
+make network
 ```
 
 Now all the services needed for Fortune should be deployed and running.
