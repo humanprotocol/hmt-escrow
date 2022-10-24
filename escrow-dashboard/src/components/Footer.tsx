@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { Stack, Typography } from '@mui/material';
+import { IconButton, Stack, Typography } from '@mui/material';
 
 import smallLogoSvg from 'src/assets/small-logo.svg';
 import GithubIcon from './Icons/GithubIcon';
@@ -37,12 +37,22 @@ const Footer: React.FC = (): React.ReactElement => {
         © {new Date().getFullYear()} HPF. HUMAN Protocol® is a registered
         trademark
       </Typography>
-      <Stack direction="row" spacing={4}>
-        <GithubIcon />
-        <DiscordIcon />
-        <TwitterIcon />
-        <TelegramIcon />
-        <LinkedinIcon />
+      <Stack direction="row" spacing={1}>
+        <IconButton href="https://github.com/humanprotocol">
+          <GithubIcon />
+        </IconButton>
+        <IconButton href="#">
+          <DiscordIcon />
+        </IconButton>
+        <IconButton href="#">
+          <TwitterIcon />
+        </IconButton>
+        <IconButton href="#">
+          <TelegramIcon />
+        </IconButton>
+        <IconButton href="#">
+          <LinkedinIcon />
+        </IconButton>
       </Stack>
     </Box>
   );
