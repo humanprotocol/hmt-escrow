@@ -1,18 +1,15 @@
-name: Node.js CI
+name: Escrow dashboard Node.js Lint
 
 on:
   pull_request:
-
 jobs:
-  build:
-
+  escrowdashlint:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js
         uses: actions/setup-node@v3
       - run: npm install
+        working-directory: ./escrow-dashboard
       - run: npm run lint
-      - run: npm test
-
+        working-directory: ./escrow-dashboard

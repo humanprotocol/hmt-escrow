@@ -62,7 +62,7 @@
     "babel-loader": "8.1.0"
   },
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint --no-eslintrc -c .eslintrc.json src",
     "start": "react-scripts start",
     "start-prod": "serve -s build",
     "build": "react-scripts build",
