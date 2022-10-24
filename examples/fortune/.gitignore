@@ -130,3 +130,5 @@ dmypy.json
 .pyre/
 
 reputation-oracle/data
+
+/tests/e2e-backend/contracts

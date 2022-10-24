@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import EscrowABI from '../contracts/EscrowAbi.json';
+import EscrowFile from '../contracts/Escrow.json';
 import getWeb3 from '../web3';
 
 import './index.css';
 
 const statusesMap = ['Launched', 'Pending', 'Partial', 'Paid', 'Complete', 'Cancelled'];
+const EscrowABI = EscrowFile.abi;
 
 function parseQuery(qs) {
   const result = {};

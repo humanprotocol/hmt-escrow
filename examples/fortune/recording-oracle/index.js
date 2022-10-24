@@ -4,8 +4,8 @@ const Web3 = require('web3');
 const axios = require('axios');
 const cors = require('cors');
 const storage = require('./storage');
-const EscrowABI = require('./contracts/EscrowAbi.json');
-
+const EscrowFile = require('./contracts/Escrow.json');
+const EscrowABI = EscrowFile.abi;
 const app = express();
 const privKey = process.env.ETH_PRIVATE_KEY || '486a0621e595dd7fcbe5608cbbeec8f5a8b5cabe7637f11eccfc7acd408c3a0e'; // ganaches priv key
 const ethHttpServer = process.env.ETH_HTTP_SERVER || 'http://localhost:8545';

@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import EscrowABI from '../contracts/EscrowAbi.json';
-import HMTokenABI from '../contracts/HMTokenABI.json';
+import EscrowFile from '../contracts/Escrow.json';
+import HMTokenFile from '../contracts/HMToken.json';
 import getWeb3 from '../web3';
 import {HMT_ADDRESS, REC_ORACLE_ADDRESS, REP_ORACLE_ADDRESS} from '../constants';
 
 const statusesMap = ['Launched', 'Pending', 'Partial', 'Paid', 'Complete', 'Cancelled'];
+const EscrowABI = EscrowFile.abi;
+const HMTokenABI = HMTokenFile.abi;
 
 export default function Escrow() {
+
   const web3 = getWeb3();
   const [escrow, setEscrow] = useState('');
 
