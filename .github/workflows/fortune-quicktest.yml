@@ -1,0 +1,32 @@
+name: Fortune quick tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Run tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: 16.13.2
+
+      - name: Start containers
+        working-directory: ./examples/fortune
+        run: docker-compose -f docker-compose.test.yml up -d --build
+
+      - name: Install contract dependencies
+        run: yarn
+
+      - name: Deploy contracts
+        run: yarn compile
+
+      - name: Install tests dependencies
+        working-directory: ./examples/fortune/tests
+        run: yarn
+
+      - name: Run tests
+        working-directory: ./examples/fortune/tests
+        run: yarn test
