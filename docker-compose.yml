@@ -29,8 +29,8 @@ services:
     volumes:
       - ./minio:/data
       - .:/work
-      - ./deployed-hmtoken:/deployed-hmtoken
-    command: sh -c "rm /deployed-hmtoken/hmt.address.json; timeout 60 curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; cd /work && npm install && npm run test; ./bin/wait_then_run"
+      - ./deployed-contracts:/deployed-contracts
+    command: sh -c "rm /deployed-contracts/contract.addresses.json; timeout 60 curl --retry 10 --retry-connrefused --retry-max-time 10 http://ganache:8545; cd /work && npm install && npm run test; ./bin/wait_then_run"
 
   ganache:
     image: trufflesuite/ganache-cli:latest
