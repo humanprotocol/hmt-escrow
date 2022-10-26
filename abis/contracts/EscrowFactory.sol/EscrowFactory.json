@@ -1,11 +1,14 @@
 [
   "constructor(address)",
-  "event Launched(address,address)",
+  "event Launched(address,address,uint256)",
   "function counter() view returns (uint256)",
   "function createEscrow(address[]) returns (address)",
   "function eip20() view returns (address)",
   "function escrowCounters(address) view returns (uint256)",
   "function hasEscrow(address) view returns (bool)",
   "function isChild(address) view returns (bool)",
-  "function lastEscrow() view returns (address)"
+  "function lastEscrow() view returns (address)",
+  "function owner() view returns (address)",
+  "function setStaking(address)",
+  "function staking() view returns (address)"
 ]

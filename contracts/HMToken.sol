@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.2;
-import "./HMTokenInterface.sol";
-import "./SafeMath.sol";
-import "./Ownable.sol";
+
+import "./interfaces/HMTokenInterface.sol";
+import "./utils/Ownable.sol";
+import "./utils/SafeMath.sol";
 
 contract HMToken is HMTokenInterface, Ownable {
     using SafeMath for uint256;
@@ -21,103 +22,170 @@ contract HMToken is HMTokenInterface, Ownable {
     uint256 public totalSupply;
 
     uint256 private constant MAX_UINT256 = ~uint256(0);
-    uint256 private constant BULK_MAX_VALUE = 1000000000 * (10 ** 18);
-    uint32  private constant BULK_MAX_COUNT = 100;
+    uint256 private constant BULK_MAX_VALUE = 1000000000 * (10**18);
+    uint32 private constant BULK_MAX_COUNT = 100;
 
     event BulkTransfer(uint256 indexed _txId, uint256 _bulkCount);
     event BulkApproval(uint256 indexed _txId, uint256 _bulkCount);
 
-    mapping (address => uint256) private balances;
-    mapping (address => mapping (address => uint256)) private allowed;
+    mapping(address => uint256) private balances;
+    mapping(address => mapping(address => uint256)) private allowed;
 
     string public name;
     uint8 public decimals;
     string public symbol;
 
-    constructor(uint256 _totalSupply, string memory _name, uint8 _decimals, string memory _symbol) public {
-        totalSupply = _totalSupply * (10 ** uint256(_decimals));
+    constructor(
+        uint256 _totalSupply,
+        string memory _name,
+        uint8 _decimals,
+        string memory _symbol
+    ) {
+        totalSupply = _totalSupply * (10**uint256(_decimals));
         name = _name;
         decimals = _decimals;
         symbol = _symbol;
         balances[msg.sender] = totalSupply;
     }
 
-    function transfer(address _to, uint256 _value) public override returns (bool success) {
+    function transfer(address _to, uint256 _value)
+        public
+        override
+        returns (bool success)
+    {
         success = transferQuiet(_to, _value);
         require(success, "Transfer didn't succeed");
         return success;
     }
 
-    function transferFrom(address _spender, address _to, uint256 _value) public override returns (bool success) {
+    function transferFrom(
+        address _spender,
+        address _to,
+        uint256 _value
+    ) public override returns (bool success) {
         uint256 _allowance = allowed[_spender][msg.sender];
         require(_allowance >= _value, "Spender allowance too low");
-        require(_to != address(0), "Can't send tokens to uninitialized address");
+        require(
+            _to != address(0),
+            "Can't send tokens to uninitialized address"
+        );
 
-        balances[_spender] = balances[_spender].sub(_value, "Spender balance too low");
+        balances[_spender] = balances[_spender].sub(
+            _value,
+            "Spender balance too low"
+        );
         balances[_to] = balances[_to].add(_value);
 
-        if (_allowance != MAX_UINT256) { // Special case to approve unlimited transfers
-            allowed[_spender][msg.sender] = allowed[_spender][msg.sender].sub(_value);
+        if (_allowance != MAX_UINT256) {
+            // Special case to approve unlimited transfers
+            allowed[_spender][msg.sender] = allowed[_spender][msg.sender].sub(
+                _value
+            );
         }
 
         emit Transfer(_spender, _to, _value);
         return true;
     }
 
-    function balanceOf(address _owner) public view override returns (uint256 balance) {
+    function balanceOf(address _owner)
+        public
+        view
+        override
+        returns (uint256 balance)
+    {
         return balances[_owner];
     }
 
-    function approve(address _spender, uint256 _value) public override returns (bool success) {
-        require(_spender != address(0), "Token spender is an uninitialized address");
+    function approve(address _spender, uint256 _value)
+        public
+        override
+        returns (bool success)
+    {
+        require(
+            _spender != address(0),
+            "Token spender is an uninitialized address"
+        );
 
         allowed[msg.sender][_spender] = _value;
         emit Approval(msg.sender, _spender, _value); //solhint-disable-line indent, no-unused-vars
         return true;
     }
 
-    function increaseApproval(address _spender, uint _delta) public returns (bool success) {
-        require(_spender != address(0), "Token spender is an uninitialized address");
+    function increaseApproval(address _spender, uint256 _delta)
+        public
+        returns (bool success)
+    {
+        require(
+            _spender != address(0),
+            "Token spender is an uninitialized address"
+        );
 
-        uint _oldValue = allowed[msg.sender][_spender];
-        if (_oldValue.add(_delta) < _oldValue || _oldValue.add(_delta) >= MAX_UINT256) { // Truncate upon overflow.
+        uint256 _oldValue = allowed[msg.sender][_spender];
+        if (
+            _oldValue.add(_delta) < _oldValue ||
+            _oldValue.add(_delta) >= MAX_UINT256
+        ) {
+            // Truncate upon overflow.
             allowed[msg.sender][_spender] = MAX_UINT256.sub(1);
         } else {
-            allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(_delta);
+            allowed[msg.sender][_spender] = allowed[msg.sender][_spender].add(
+                _delta
+            );
         }
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
-    function decreaseApproval(address _spender, uint _delta) public returns (bool success) {
-        require(_spender != address(0), "Token spender is an uninitialized address");
+    function decreaseApproval(address _spender, uint256 _delta)
+        public
+        returns (bool success)
+    {
+        require(
+            _spender != address(0),
+            "Token spender is an uninitialized address"
+        );
 
-        uint _oldValue = allowed[msg.sender][_spender];
-        if (_delta > _oldValue) { // Truncate upon overflow.
+        uint256 _oldValue = allowed[msg.sender][_spender];
+        if (_delta > _oldValue) {
+            // Truncate upon overflow.
             allowed[msg.sender][_spender] = 0;
         } else {
-            allowed[msg.sender][_spender] = allowed[msg.sender][_spender].sub(_delta);
+            allowed[msg.sender][_spender] = allowed[msg.sender][_spender].sub(
+                _delta
+            );
         }
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         return true;
     }
 
-    function allowance(address _owner, address _spender) public view override returns (uint256 remaining) {
+    function allowance(address _owner, address _spender)
+        public
+        view
+        override
+        returns (uint256 remaining)
+    {
         return allowed[_owner][_spender];
     }
 
-    function transferBulk(address[] memory _tos, uint256[] memory _values, uint256 _txId) public override returns (uint256 _bulkCount) {
-        require(_tos.length == _values.length, "Amount of recipients and values don't match");
+    function transferBulk(
+        address[] memory _tos,
+        uint256[] memory _values,
+        uint256 _txId
+    ) public override returns (uint256 _bulkCount) {
+        require(
+            _tos.length == _values.length,
+            "Amount of recipients and values don't match"
+        );
         require(_tos.length < BULK_MAX_COUNT, "Too many recipients");
 
         uint256 _bulkValue = 0;
-        for (uint j = 0; j < _tos.length; ++j) {
+        for (uint256 j = 0; j < _tos.length; ++j) {
             _bulkValue = _bulkValue.add(_values[j]);
         }
         require(_bulkValue < BULK_MAX_VALUE, "Bulk value too high");
 
         bool _success;
-        for (uint i = 0; i < _tos.length; ++i) {
+        for (uint256 i = 0; i < _tos.length; ++i) {
             _success = transferQuiet(_tos[i], _values[i]);
             if (_success) {
                 _bulkCount = _bulkCount.add(1);
@@ -127,18 +195,25 @@ contract HMToken is HMTokenInterface, Ownable {
         return _bulkCount;
     }
 
-    function approveBulk(address[] memory _spenders, uint256[] memory _values, uint256 _txId) public returns (uint256 _bulkCount) {
-        require(_spenders.length == _values.length, "Amount of spenders and values don't match");
+    function approveBulk(
+        address[] memory _spenders,
+        uint256[] memory _values,
+        uint256 _txId
+    ) public returns (uint256 _bulkCount) {
+        require(
+            _spenders.length == _values.length,
+            "Amount of spenders and values don't match"
+        );
         require(_spenders.length < BULK_MAX_COUNT, "Too many spenders");
 
         uint256 _bulkValue = 0;
-        for (uint j = 0; j < _spenders.length; ++j) {
+        for (uint256 j = 0; j < _spenders.length; ++j) {
             _bulkValue = _bulkValue.add(_values[j]);
         }
         require(_bulkValue < BULK_MAX_VALUE, "Bulk value too high");
 
         bool _success;
-        for (uint i = 0; i < _spenders.length; ++i) {
+        for (uint256 i = 0; i < _spenders.length; ++i) {
             _success = increaseApproval(_spenders[i], _values[i]);
             if (_success) {
                 _bulkCount = _bulkCount.add(1);
@@ -149,7 +224,10 @@ contract HMToken is HMTokenInterface, Ownable {
     }
 
     // Like transfer, but fails quietly.
-    function transferQuiet(address _to, uint256 _value) internal returns (bool success) {
+    function transferQuiet(address _to, uint256 _value)
+        internal
+        returns (bool success)
+    {
         if (_to == address(0)) return false; // Preclude burning tokens to uninitialized address.
         if (_to == address(this)) return false; // Preclude sending tokens to the contract.
         if (balances[msg.sender] < _value) return false;

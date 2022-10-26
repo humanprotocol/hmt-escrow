@@ -1,5 +1,5 @@
 [
-  "constructor(address,address,uint256,address[])",
+  "constructor(address,address,address,uint256,address[])",
   "event BulkTransfer(uint256 indexed,uint256)",
   "event IntermediateStorage(string,string)",
   "event Pending(string,string)",
@@ -17,6 +17,7 @@
   "function finalResultsHash() view returns (string)",
   "function finalResultsUrl() view returns (string)",
   "function getBalance() view returns (uint256)",
+  "function getStatus() view returns (uint8)",
   "function launcher() view returns (address)",
   "function manifestHash() view returns (string)",
   "function manifestUrl() view returns (string)",
@@ -25,6 +26,7 @@
   "function reputationOracle() view returns (address)",
   "function reputationOracleStake() view returns (uint256)",
   "function setup(address,address,uint256,uint256,string,string)",
+  "function staking() view returns (address)",
   "function status() view returns (uint8)",
   "function storeResults(string,string)"
 ]

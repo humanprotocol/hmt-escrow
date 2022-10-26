@@ -1,0 +1,11 @@
+[
+  "constructor(address,address,uint256)",
+  "event RewardAdded(address indexed,address indexed,uint256)",
+  "function addReward(address,address,uint256)",
+  "function distributeReward(address)",
+  "function eip20() view returns (address)",
+  "function fees() view returns (uint256)",
+  "function getRewards(address) view returns (tuple(address,address,uint256)[])",
+  "function rewards(address,uint256) view returns (address, address, uint256)",
+  "function staking() view returns (address)"
+]
