@@ -7,6 +7,6 @@ COPY package.json yarn.lock ./
 RUN apk add python3 make gcc g++
 RUN yarn
 
-COPY contracts ./contracts
+COPY build/contracts ./build/contracts
 COPY index.js .
 COPY storage.js .
