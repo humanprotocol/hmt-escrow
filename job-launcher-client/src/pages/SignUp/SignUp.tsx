@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { ISignUpSchema, SignUpView } from './SignUpView';
 import { useSignUpUserMutation } from '../../services/redux/api/authApi';
+import { Backdrop } from '../../components/Backdrop';
 
 export const SignUp: React.FC = () => {
   const [signUp, { isLoading, isError, error, isSuccess }] =
@@ -34,7 +35,12 @@ export const SignUp: React.FC = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  }, [isSuccess, isError, error]);
 
-  return <SignUpView onSubmitHandler={onSubmitHandler} />;
+  return (
+    <>
+      <SignUpView onSubmitHandler={onSubmitHandler} />
+      <Backdrop open={isLoading} />
+    </>
+  );
 };

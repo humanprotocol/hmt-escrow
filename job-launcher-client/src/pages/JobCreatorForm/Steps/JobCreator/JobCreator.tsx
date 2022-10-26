@@ -3,14 +3,14 @@ import { SubmitHandler } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { makeTxHashSelector } from 'services/redux/selectors/jobs';
+import { useJobCreationFromDashMutation } from 'services/redux/api/jobApi';
+import { Backdrop } from 'components/Backdrop';
+import { transferERC20 } from 'components/Eth/useEth';
+import { setTx } from 'services/redux/slices/jobSlice';
 import { IJobCreatorFormSchema } from './schema';
 
 import { JobCreatorFormView } from './JobCreatorView';
-import { useJobCreationFromDashMutation } from '../../../../services/redux/api/jobApi';
-import { Backdrop } from '../../../../components/Backdrop';
-import { transferERC20 } from '../../../../components/Eth/useEth';
-import { makeTxHashSelector } from '../../../../services/redux/selectors/jobs';
-import { setTx } from '../../../../services/redux/slices/jobSlice';
 
 interface IJobCreatorFormStepOne {
   nextStep: () => void;
@@ -33,7 +33,9 @@ export const JobCreatorFormStepOne: React.FC<IJobCreatorFormStepOne> = ({
     values: IJobCreatorFormSchema
   ) => {
     setValues(values);
+
     transferERC20({ fundAmount: values.price, backdropCallback: handleClose });
+
     handleClose(true);
   };
 
@@ -42,7 +44,7 @@ export const JobCreatorFormStepOne: React.FC<IJobCreatorFormStepOne> = ({
     if (getTxHash) {
       createJob({ ...valuesForm, transactionHash: getTxHash });
     }
-    dispatch(setTx({ hash: null }));
+    dispatch(setTx({ hash: '' }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getTxHash]);
 

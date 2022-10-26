@@ -6,23 +6,18 @@ export interface IJobDetails {
   price: number;
   labels: Array<string>;
   dataUrl: string;
-  networkId?: number;
-  requestType?: string;
-  datasetLength?: number;
   annotationsPerImage: number;
   requesterDescription: string;
   requesterAccuracyTarget: number;
-  // requesterQuestion: string;
-  // requesterQuestionExample: string;
+  networkId?: number;
+  requestType?: string;
+  datasetLength?: number;
 }
 export interface ITx {
-  hash: string | null;
+  hash: string;
 }
 export interface IJob {
   details: IJobDetails;
-  stepTwo: {
-    mount: number;
-  };
   tx: ITx;
 }
 
