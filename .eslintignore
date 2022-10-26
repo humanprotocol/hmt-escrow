@@ -1,0 +1,12 @@
+**/node_modules/*
+**/dist/*
+**/README.md
+**/ganache/*
+**/build/*
+**/cache/*
+**/coverage/*
+**/node_modules/*
+**/truffle.js
+**/cache/*
+**/job-launcher-server/*
+**/job-launcher-client/*
