@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const Web3 = require('web3');
-const EscrowFile = require('./contracts/Escrow.json');
+const EscrowFile = require('./build/contracts/Escrow.json');
 const EscrowABI = EscrowFile.abi;
 const { uploadResults } = require('./s3');
 

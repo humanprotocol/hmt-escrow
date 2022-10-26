@@ -1,5 +1,5 @@
 const Web3 = require('web3');
-const escrowFile = require('./contracts/Escrow.json');
+const escrowFile = require('./build/contracts/Escrow.json');
 const invalidEscrowAbi = require('./contracts/InvalidEscrowAbi.json');
 const { createEscrowFactory, createEscrow, fundEscrow, setupEscrow, setupAgents, sendFortune, calculateRewardAmount } = require('./fixtures');
 const { urls, statusesMap, addresses, escrowFundAmount } = require('./constants');

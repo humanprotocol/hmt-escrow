@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import EscrowFile from '../contracts/Escrow.json';
-import HMTokenFile from '../contracts/HMToken.json';
+import EscrowFile from '../build/contracts/Escrow.json';
+import HMTokenFile from '../build/contracts/HMToken.json';
 import getWeb3 from '../web3';
 import {HMT_ADDRESS, REC_ORACLE_ADDRESS, REP_ORACLE_ADDRESS} from '../constants';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import getWeb3 from "./../web3";
-import factoryFile from "../contracts/EscrowFactory.json";
+import factoryFile from "../build/contracts/EscrowFactory.json";
 import { ESCROW_FACTORY_ADDRESS } from "../constants";
 
 export default function CreateEscrow({ onEscrowCreated }) {
