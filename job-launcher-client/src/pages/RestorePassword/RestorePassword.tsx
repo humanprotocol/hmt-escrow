@@ -2,7 +2,7 @@ import * as React from 'react';
 import { SubmitHandler } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useRestorePasswordMutation } from '../../services/redux/api/authApi';
+import { useRestorePasswordMutation } from 'services/redux/api/authApi';
 import { IRestoreSchema, RestorePasswordView } from './RestorePasswordView';
 
 export const RestorePassword = () => {
