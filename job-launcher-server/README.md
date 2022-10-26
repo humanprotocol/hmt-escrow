@@ -30,9 +30,9 @@ https://www.postgresql.org/download/
 
 Make a note of the postgres username, password and database name. 
 
-3. Ganache
-Ganache is an Ethereum simulator that makes developing and testing Ethereum applications faster, easier, and safer.  To install Ganache see here:
-https://github.com/trufflesuite/ganache#getting-started
+3. Hardhat
+Hardhat is an Ethereum development environment. Compile your contracts and run them on a development network. How to use Hardhat see here:
+https://hardhat.org/hardhat-runner/docs/getting-started#quick-start
 
 4. Postmark 
 Postmark helps deliver and track application email. In a nutshell, the service replaces SMTP (or Sendmail) with a far more reliable, scalable and care-free environment. The Server uses Postmark to send out confirmation emails for new user sign ups and password resets.  Go to www.postmarkapp.com and sign up for a free account.  Once signed up head over to API tokens and note down your Server API Token.

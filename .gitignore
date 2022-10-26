@@ -85,9 +85,6 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# dotenv
-.env
-
 # virtualenv
 .venv
 venv/
@@ -117,14 +114,87 @@ ENV/
 venv*
 het/secrets.json
 
-
 # Generated stuff
 # ================================================
-.DS_Store
-.vscode
 docker-compose
 build/
-node_modules/
-coverage/
-coverage.json
 minio/
+
+# Ignore all Visual Studio Code settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local history for Visual Studio Code
+.history
+
+# Built Visual Studio Code extensions
+*.vsix
+
+# Dependency directory
+node_modules
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Yarn integrity file
+.yarn-integrity
+
+# Optional npm cache directory
+.npm
+
+# Modern Yarn files
+.pnp.*
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Hardhat files
+cache
+artifacts
+.deps
+
+# TypeScript bindings output directory
+typechain-types
+
+# solidity-coverage directory and output file
+coverage
+coverage.json
+
+# xdeployer output directory
+deployments
+
+# Foundry output directory
+forge-artifacts
+
+# Ignore flattened files
+flattened.sol
+
+# Tenderly fork deployment directory
+deployments_tenderly
+
+# Miscellaneous files
+bin
+out
+
+# IDE - VSCode
+.vscode/*
+
+# OS
+.DS_Store

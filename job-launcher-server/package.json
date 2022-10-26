@@ -33,7 +33,12 @@
     "start:production": "cross-env NODE_ENV=${NODE_ENV:=production} node .",
     "start:staging": "cross-env NODE_ENV=${NODE_ENV:=staging} node .",
     "test": "cross-env NODE_ENV=${NODE_ENV:=test} jest --config jest.config.json --detectOpenHandles",
-    "typeorm": "cross-env NODE_ENV=${NODE_ENV:=development} ts-node ./node_modules/.bin/typeorm --config src/ormconfig.ts -t=each"
+    "typeorm": "cross-env NODE_ENV=${NODE_ENV:=development} ts-node ./node_modules/.bin/typeorm --config src/ormconfig.ts -t=each",
+    "hardhat:compile": "hardhat compile",
+    "hardhat:test": "scripts/test",
+    "hardhat:test:e2e": "scripts/e2e",
+    "hardhat:test:gas": "RUN_EVM=true REPORT_GAS=true scripts/test",
+    "hardhat:test:coverage": "scripts/coverage"
   },
   "dependencies": {
     "@nestjs/axios": "0.0.1",
@@ -63,7 +68,6 @@
     "postmark": "2.7.7",
     "rxjs": "7.3.0",
     "swagger-ui-express": "4.1.6",
-    "truffle": "^5.5.22",
     "typeorm": "0.2.37",
     "typeorm-naming-strategies": "2.0.0",
     "uuid": "8.3.2",
@@ -110,6 +114,27 @@
     "ts-jest": "27.0.5",
     "ts-node": "10.2.0",
     "tsc-watch": "4.4.0",
-    "typescript": "4.3.5"
+    "typescript": "4.3.5",
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/providers": "^5.7.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@nomiclabs/hardhat-ethers": "^2.1.1",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@openzeppelin/contracts": "^4.7.3",
+    "@tenderly/hardhat-tenderly": "^1.1.6",
+    "@typechain/ethers-v5": "^10.1.0",
+    "@typechain/hardhat": "^6.1.3",
+    "@types/mocha": "^9.1.1",
+    "chai": "^4.3.6",
+    "dotenv": "^16.0.2",
+    "ethers": "^5.7.0",
+    "hardhat": "^2.11.1",
+    "hardhat-abi-exporter": "^2.10.0",
+    "hardhat-contract-sizer": "^2.6.1",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.7.22",
+    "xdeployer": "^1.1.20"
   }
 }
