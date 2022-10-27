@@ -2,8 +2,8 @@
 
 pragma solidity >=0.6.2;
 
-import "./interfaces/IStaking.sol";
 import "./Escrow.sol";
+import "./interfaces/IStaking.sol";
 
 contract EscrowFactory {
     // all Escrows will have this duration.
@@ -29,26 +29,12 @@ contract EscrowFactory {
         staking = _staking;
     }
 
-    function createEscrow(address[] memory trustedHandlers)
-        public
-        returns (address)
-    {
+    function createEscrow(address[] memory trustedHandlers) public returns (address) {
         require(staking != address(0), "Staking is not configured");
-        bool hasAvailalbeStake = IStaking(staking).hasAvailableStake(
-            msg.sender
-        );
-        require(
-            hasAvailalbeStake == true,
-            "Needs to stake HMT tokens to create an escrow."
-        );
+        bool hasAvailableStake = IStaking(staking).hasAvailableStake(msg.sender);
+        require(hasAvailableStake == true, "Needs to stake HMT tokens to create an escrow.");
 
-        Escrow escrow = new Escrow(
-            eip20,
-            staking,
-            payable(msg.sender),
-            STANDARD_DURATION,
-            trustedHandlers
-        );
+        Escrow escrow = new Escrow(eip20, staking, payable(msg.sender), STANDARD_DURATION, trustedHandlers);
         counter++;
         escrowCounters[address(escrow)] = counter;
         lastEscrow = address(escrow);
