@@ -121,68 +121,6 @@ contract Staking is IStaking {
     }
 
     /**
-     * @dev Return the list of the stakers with pagination.
-     * @param _role Role of the stakers
-     * @param _page Requested page
-     * @param _resultsPerPage Results per page
-     */
-    function getListOfStakers(
-        Stakes.Role _role,
-        uint256 _page,
-        uint256 _resultsPerPage,
-        SortField _sortField
-    )
-        external
-        view
-        override
-        returns (address[] memory, Stakes.Staker[] memory)
-    {
-        require(_page > 0, "Invalid page number");
-        require(_resultsPerPage > 0, "Invalid page size");
-
-        address[] memory _stakersWithRole = stakers[_role];
-
-        quickSortPart(
-            _stakersWithRole,
-            0,
-            _stakersWithRole.length - 1,
-            _sortField
-        );
-
-        uint256 _stakerIndex = (_page - 1) * _resultsPerPage;
-
-        if (
-            _stakersWithRole.length == 0 ||
-            _stakerIndex > _stakersWithRole.length - 1
-        ) {
-            return (new address[](0), new Stakes.Staker[](0));
-        }
-
-        Stakes.Staker[] memory _stakers = new Stakes.Staker[](_resultsPerPage);
-        address[] memory _stakerAddresses = new address[](_resultsPerPage);
-        uint256 _returnCounter = 0;
-
-        uint256 _lastIndex = _page * _resultsPerPage;
-
-        for (_stakerIndex; _stakerIndex < _lastIndex; _stakerIndex++) {
-            if (_stakerIndex < _stakersWithRole.length - 1) {
-                _stakerAddresses[_returnCounter] = _stakersWithRole[
-                    _stakerIndex
-                ];
-                _stakers[_returnCounter] = stakes[
-                    _stakersWithRole[_stakerIndex]
-                ];
-            } else {
-                _stakerAddresses[_returnCounter] = address(0);
-                _stakers[_returnCounter] = Stakes.Staker(_role, 0, 0, 0, 0);
-            }
-            _returnCounter++;
-        }
-
-        return (_stakerAddresses, _stakers);
-    }
-
-    /**
      * @dev Set the minimum stake amount.
      * @param _minimumStake Minimum stake
      */
@@ -627,67 +565,6 @@ contract Staking is IStaking {
             _escrowAddress,
             allocation.closedAt
         );
-    }
-
-    /**
-     * @dev Sort addresses by sort field specified using quick sort algorithm
-     * @param _data Address array
-     * @param _low Lower index of the array part
-     * @param _high Higher index of the array part
-     * @param _sortField Sort field
-     */
-    function quickSortPart(
-        address[] memory _data,
-        uint256 _low,
-        uint256 _high,
-        SortField _sortField
-    ) internal view {
-        if (_sortField == SortField.None) {
-            return;
-        }
-
-        if (_low < _high) {
-            address pivotAddr = _data[(_low + _high) / 2];
-            uint256 pivotAddrVal;
-            if (_sortField == SortField.Stake) {
-                pivotAddrVal = stakes[pivotAddr].tokensStaked;
-            }
-
-            uint256 _low1 = _low;
-            uint256 _high1 = _high;
-            for (;;) {
-                while (true) {
-                    uint256 lowVal;
-                    if (_sortField == SortField.Stake) {
-                        lowVal = stakes[_data[_low1]].tokensStaked;
-                    }
-
-                    if (lowVal >= pivotAddrVal) {
-                        break;
-                    }
-                    _low1++;
-                }
-                while (true) {
-                    uint256 highVal;
-                    if (_sortField == SortField.Stake) {
-                        highVal = stakes[_data[_high1]].tokensStaked;
-                    }
-                    if (highVal <= pivotAddrVal) {
-                        break;
-                    }
-                    _high1--;
-                }
-                if (_low1 >= _high1) {
-                    break;
-                }
-                (_data[_low1], _data[_high1]) = (_data[_high1], _data[_low1]);
-                _low1++;
-                _high1--;
-            }
-            if (_low < _high1) quickSortPart(_data, _low, _high1, _sortField);
-            _high1++;
-            if (_high1 < _high) quickSortPart(_data, _high1, _high, _sortField);
-        }
     }
 
     modifier onlyOwner() {

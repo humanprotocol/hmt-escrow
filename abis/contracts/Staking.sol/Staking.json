@@ -17,7 +17,6 @@
   "function escrowFactory() view returns (address)",
   "function getAllocation(address) view returns (tuple(address,address,uint256,uint256,uint256))",
   "function getAllocationState(address) view returns (uint8)",
-  "function getListOfStakers(uint8,uint256,uint256,uint8) view returns (address[], tuple(uint8,uint256,uint256,uint256,uint256)[])",
   "function getStakedTokens(address) view returns (uint256)",
   "function getStaker(address) view returns (tuple(uint8,uint256,uint256,uint256,uint256))",
   "function hasAvailableStake(address) view returns (bool)",

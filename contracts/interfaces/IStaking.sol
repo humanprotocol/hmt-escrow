@@ -92,11 +92,4 @@ interface IStaking {
     function allocate(address escrowAddress, uint256 _tokens) external;
 
     function closeAllocation(address _escrowAddress) external;
-
-    function getListOfStakers(
-        Stakes.Role _role,
-        uint256 _page,
-        uint256 _resultsPerPage,
-        SortField _sortField
-    ) external view returns (address[] memory, Stakes.Staker[] memory);
 }
