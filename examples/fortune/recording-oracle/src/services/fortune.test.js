@@ -43,7 +43,9 @@ describe('Fortune', () => {
       .send({
         from: account.address,
       });
+  });
 
+  beforeEach(async () => {
     await escrowFactory.methods
       .createEscrow([account.address])
       .send({ from: account.address });
@@ -85,7 +87,21 @@ describe('Fortune', () => {
     expect(err).toBeNull();
   });
 
-  it('Add second fortune', async () => {
+  it('Do not allow two fortunes from the same worker', async () => {
+    let err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 1');
+    expect(storage.getEscrow(escrowAddress)).toBeDefined();
+    expect(storage.getWorkerResult(escrowAddress, worker1)).toBe('fortune 1');
+    expect(storage.getFortunes(escrowAddress).length).toBe(1);
+    expect(err).toBeNull();
+    err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 2');
+    expect(storage.getEscrow(escrowAddress)).toBeDefined();
+    expect(storage.getFortunes(escrowAddress).length).toBe(1);
+    expect(err.message).toBe('0x90F79bf6EB2c4f870365E785982E1f101E93b906 already submitted a fortune');
+  });
 
+  it('Do not allow two fortunes from the same worker', async () => {
+    const err = await addFortune(web3, recordingAccount, worker1, escrowAddress, '');
+    expect(storage.getEscrow(escrowAddress)).toBeUndefined();
+    expect(err.message).toBe('Non-empty fortune is required');
   });
 });
