@@ -8,13 +8,9 @@ module.exports = {
     return escrow;
   },
 
-  getEscrow: (address) => {
-    return storage[address];
-  },
+  getEscrow: address => storage[address],
 
-  getWorkerResult: (escrowAddress, workerAddress) => {
-    return storage[escrowAddress][workerAddress];
-  },
+  getWorkerResult: (escrowAddress, workerAddress) => storage[escrowAddress][workerAddress],
 
   putFortune: (escrowAddress, workerAddress, value) => {
     storage[escrowAddress][workerAddress] = value;
@@ -27,15 +23,16 @@ module.exports = {
       return result;
     }
 
+    // eslint-disable-next-line no-restricted-syntax, prefer-const
     for (let workerAddress of Object.keys(escrow)) {
       result.push({ worker: workerAddress, fortune: escrow[workerAddress] });
     }
-    
+
     return result;
   },
 
   cleanFortunes: (escrowAddress) => {
     const newEscrow = {};
     storage[escrowAddress] = newEscrow;
-  }
-}
+  },
+};

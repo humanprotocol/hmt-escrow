@@ -1,7 +1,7 @@
 {
   "name": "recording-oracle",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "license": "MIT",
   "dependencies": {
     "axios": "^0.25.0",
@@ -11,6 +11,12 @@
     "web3": "^1.7.0"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/index.js",
+    "test": "hardhat node & PID=$! && jest && kill -9 $PID"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.2.2",
+    "hardhat": "^2.12.0",
+    "jest": "^29.2.2"
   }
 }
