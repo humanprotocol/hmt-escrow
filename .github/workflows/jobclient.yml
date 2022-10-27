@@ -1,0 +1,17 @@
+name: job-container-test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./job-launcher-client
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install -g yarn
+      - run: yarn install
+      - run: yarn test
