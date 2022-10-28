@@ -2,32 +2,29 @@ import * as React from 'react';
 import { toast } from 'react-toastify';
 
 import { ethers } from 'ethers';
-import { networkMap } from '../../constants';
-import { AppNetworkContext } from '../App/AppNetworkContext';
+import { ESCROW_STATS_RAW, fetchRawQuery } from '../../queries';
 import { formatHexToNumber } from './helpers';
+import { INetwork } from '../../constants/networkConstants';
 
 const EscrowFactoryABI = require('../../contracts/EscrowFactoryABI.json');
 
-export const useEscrowHook = (
-  escrowFactory: string,
-  setScannerUrl: (url: string) => void
-) => {
-  const [latestEscrow, setLatestEscrow] = React.useState<string>(' ');
-  const [counter, setCounter] = React.useState<string>('0');
-  const { network } = React.useContext(AppNetworkContext);
-
-  const { scanner, scannerUrl } = networkMap[network];
-
-  React.useEffect(() => {
-    if (scannerUrl) {
-      setScannerUrl(scannerUrl);
-    }
-  }, [scannerUrl, setScannerUrl]);
-
-  const address = networkMap[network].defaultFactoryAddr || escrowFactory;
-  const { rpcUrl } = networkMap[network];
-
+export const useEscrowHook = ({
+  scanner,
+  scannerUrl,
+  rpcUrl,
+  defaultFactoryAddr: address,
+  graphqlClientUrl,
+}: INetwork) => {
   const eventsUrl = `${scanner}/address/${address}#events`;
+
+  const [latestEscrow, setLatestEscrow] = React.useState<string>();
+  const [count, setCount] = React.useState<number>();
+  const [pendingEventCount, setPendingEventCount] = React.useState<number>();
+  const [bulkTransferEventCount, setBulkTransferEventCount] =
+    React.useState<number>();
+  const [intermediateStorageEventCount, setIntermediateStorageEventCount] =
+    React.useState<number>();
+  const [totalEventCount, setTotalEventCount] = React.useState<number>();
 
   React.useEffect(() => {
     async function setupEscrow() {
@@ -40,8 +37,27 @@ export const useEscrowHook = (
         setLatestEscrow(lastEscrow);
 
         const { _hex } = await Contract.counter();
-        const count = formatHexToNumber({ hex: _hex, radix: 16 });
-        setCounter(String(count));
+        const counter = formatHexToNumber({ hex: _hex, radix: 16 });
+        setCount(counter);
+
+        try {
+          const { data: { escrowStatistics: stats = {} } = {} } =
+            await fetchRawQuery(graphqlClientUrl, ESCROW_STATS_RAW);
+
+          setPendingEventCount(stats.pendingEventCount);
+          setBulkTransferEventCount(stats.bulkTransferEventCount);
+          setIntermediateStorageEventCount(stats.intermediateStorageEventCount);
+          setTotalEventCount(
+            Number(stats.pendingEventCount) +
+              Number(stats.bulkTransferEventCount) +
+              Number(stats.intermediateStorageEventCount)
+          );
+        } catch (err) {
+          setPendingEventCount(Number.NaN);
+          setBulkTransferEventCount(Number.NaN);
+          setIntermediateStorageEventCount(Number.NaN);
+          setTotalEventCount(Number.NaN);
+        }
       } catch (err) {
         const error: any = err;
         toast.error(error?.message, {
@@ -51,7 +67,18 @@ export const useEscrowHook = (
       }
     }
     setupEscrow();
-  }, [address, rpcUrl]);
+  }, [address, rpcUrl, graphqlClientUrl]);
 
-  return { eventsUrl, latestEscrow, counter, address, scanner, scannerUrl };
+  return {
+    address,
+    eventsUrl,
+    scanner,
+    scannerUrl,
+    latestEscrow,
+    count,
+    pendingEventCount,
+    bulkTransferEventCount,
+    intermediateStorageEventCount,
+    totalEventCount,
+  };
 };

@@ -18,6 +18,6 @@ export const makeTxSelector = createDraftSafeSelector(
 );
 
 export const makeTxHashSelector = createDraftSafeSelector(
-  makeTxSelector,
-  (tx) => tx.hash
+  makeJobsSelector,
+  (job) => job.tx.hash
 );
