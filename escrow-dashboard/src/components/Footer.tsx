@@ -1,12 +1,12 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import { Stack, Typography } from '@mui/material';
+import { Link, IconButton, Stack, Typography } from '@mui/material';
 
 import smallLogoSvg from 'src/assets/small-logo.svg';
 import GithubIcon from './Icons/GithubIcon';
 import DiscordIcon from './Icons/DiscordIcon';
 import TwitterIcon from './Icons/TwitterIcon';
-import TelegramIcon from './Icons/TelegramIcon';
+// import TelegramIcon from './Icons/TelegramIcon';
 import LinkedinIcon from './Icons/LinkedinIcon';
 
 const Footer: React.FC = (): React.ReactElement => {
@@ -24,25 +24,34 @@ const Footer: React.FC = (): React.ReactElement => {
     >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <img src={smallLogoSvg} alt="logo" />
-        <Typography
-          color="text.secondary"
-          variant="caption"
-          ml={2.5}
-          lineHeight={1}
-        >
-          Terms and conditions
-        </Typography>
+        <Link href="https://www.humanprotocol.org/privacy-policy">
+          <Typography
+            color="text.secondary"
+            variant="caption"
+            ml={2.5}
+            lineHeight={1}
+          >
+            Terms and conditions
+          </Typography>
+        </Link>
       </Box>
       <Typography color="text.secondary" variant="caption">
         © {new Date().getFullYear()} HPF. HUMAN Protocol® is a registered
         trademark
       </Typography>
       <Stack direction="row" spacing={4}>
-        <GithubIcon />
-        <DiscordIcon />
-        <TwitterIcon />
-        <TelegramIcon />
-        <LinkedinIcon />
+        <IconButton href="http://hmt.ai/github" target="_blank">
+          <GithubIcon />
+        </IconButton>
+        <IconButton href="http://hmt.ai/discord" target="_blank">
+          <DiscordIcon />
+        </IconButton>
+        <IconButton href="http://hmt.ai/twitter" target="_blank">
+          <TwitterIcon />
+        </IconButton>
+        <IconButton href="http://hmt.ai/linkedin" target="_blank">
+          <LinkedinIcon />
+        </IconButton>
       </Stack>
     </Box>
   );
