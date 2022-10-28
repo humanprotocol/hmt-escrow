@@ -14,4 +14,5 @@ jobs:
           node-version: 18
       - run: npm install -g yarn
       - run: yarn install
+      - run: yarn lint 
       - run: yarn test
