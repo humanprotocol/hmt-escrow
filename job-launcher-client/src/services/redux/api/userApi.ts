@@ -3,7 +3,6 @@ import { setUser } from '../slices/userSlice';
 import { BASE_URL } from './constants';
 import { IUser } from './types';
 
-
 export const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
@@ -23,7 +22,6 @@ export const userApi = createApi({
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log(data, 'setUser');
           dispatch(setUser(data));
         } catch (error) {
           console.log(error);

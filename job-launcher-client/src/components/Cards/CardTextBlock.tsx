@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { Divider, Typography } from '@mui/material';
+import { Box, CircularProgress, Divider, Typography } from '@mui/material';
 
 interface ICardTextBlock {
   title?: string;
-  value: number | string;
+  value?: number | string;
 }
 
 export const CardTextBlock: React.FC<ICardTextBlock> = ({
-  title,
+  title = '',
   value,
 }): React.ReactElement => (
   <>
@@ -16,8 +16,14 @@ export const CardTextBlock: React.FC<ICardTextBlock> = ({
         {title}
       </Typography>
     </Divider>
-    <Typography variant="body2" textAlign="center">
-      {value}
-    </Typography>
+    {value !== undefined ? (
+      <Typography variant="body2" textAlign="center">
+        {Number.isNaN(value) ? <>&nbsp;</> : value}
+      </Typography>
+    ) : (
+      <Box display="flex" justifyContent="center">
+        <CircularProgress size="1.5rem" />
+      </Box>
+    )}
   </>
 );
