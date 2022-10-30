@@ -1,5 +1,4 @@
 import { DynamicModule, Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
 import { IWeb3ModuleAsyncOptions, IWeb3ModuleOptions } from "./interfaces";
 import { Web3CoreModule } from "./web3-core.module";
 

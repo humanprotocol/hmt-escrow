@@ -6,18 +6,16 @@ import { IJobCreateDto } from "../interfaces";
 export class JobCreateDto implements IJobCreateDto {
   @ApiProperty()
   @IsUrl()
-  @Matches (/(s3-|s3\.)?(.*)\.amazonaws\.com/, {
-    message:
-      'URL must be in the correct S3 bucket format',
+  @Matches(/(s3-|s3\.)?(.*)\.amazonaws\.com/, {
+    message: "URL must be in the correct S3 bucket format",
   })
   public dataUrl: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsUrl()
-  @Matches (/(s3-|s3\.)?(.*)\.amazonaws\.com/, {
-    message:
-      'URL must be in the correct S3 bucket file format',
+  @Matches(/(s3-|s3\.)?(.*)\.amazonaws\.com/, {
+    message: "URL must be in the correct S3 bucket file format",
   })
   public groundTruthFileUrl: string;
 

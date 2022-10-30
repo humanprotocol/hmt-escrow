@@ -1,14 +1,14 @@
-const path = require('path');
-const solc = require('solc');
-const fs = require('fs-extra');
+const path = require("path");
+const solc = require("solc");
+const fs = require("fs-extra");
 
-const contracts_path = '../../contracts';
+const contracts_path = "../../contracts";
 /**
  * Makes sure that the build folder is deleted, before every compilation
  * @returns {*} - Path where the compiled sources should be saved.
  */
 function compilingPreperations() {
-  const buildPath = path.resolve(__dirname, '../abis');
+  const buildPath = path.resolve(__dirname, "../abis");
   fs.removeSync(buildPath);
   return buildPath;
 }
@@ -18,32 +18,32 @@ function compilingPreperations() {
  */
 function createConfiguration() {
   return {
-    language: 'Solidity',
+    language: "Solidity",
     sources: {
-      'Escrow.sol': {
+      "Escrow.sol": {
         content: fs.readFileSync(
-          path.resolve(__dirname, contracts_path, 'Escrow.sol'),
-          'utf8',
+          path.resolve(__dirname, contracts_path, "Escrow.sol"),
+          "utf8"
         ),
       },
-      'EscrowFactory.sol': {
+      "EscrowFactory.sol": {
         content: fs.readFileSync(
-          path.resolve(__dirname, contracts_path, 'EscrowFactory.sol'),
-          'utf8',
+          path.resolve(__dirname, contracts_path, "EscrowFactory.sol"),
+          "utf8"
         ),
       },
-      'HMToken.sol': {
+      "HMToken.sol": {
         content: fs.readFileSync(
-          path.resolve(__dirname, contracts_path, 'HMToken.sol'),
-          'utf8',
+          path.resolve(__dirname, contracts_path, "HMToken.sol"),
+          "utf8"
         ),
       },
     },
     settings: {
       outputSelection: {
         // return everything
-        '*': {
-          '*': ['*'],
+        "*": {
+          "*": ["*"],
         },
       },
     },
@@ -57,7 +57,9 @@ function createConfiguration() {
  */
 function compileSources(config) {
   try {
-    return JSON.parse(solc.compile(JSON.stringify(config), { import: getImports }));
+    return JSON.parse(
+      solc.compile(JSON.stringify(config), { import: getImports })
+    );
   } catch (e) {
     console.log(e);
   }
@@ -70,12 +72,12 @@ function compileSources(config) {
  * @returns {*}
  */
 function getImports(dependency) {
-  console.log('Searching for dependency: ', dependency);
+  console.log("Searching for dependency: ", dependency);
 
   return {
     contents: fs.readFileSync(
       path.resolve(__dirname, contracts_path, dependency),
-      'utf8',
+      "utf8"
     ),
   };
 }
@@ -87,13 +89,13 @@ function getImports(dependency) {
 function errorHandling(compiledSources) {
   if (!compiledSources) {
     console.error(
-      '>>>>>>>>>>>>>>>>>>>>>>>> ERRORS <<<<<<<<<<<<<<<<<<<<<<<<\n',
-      'NO OUTPUT',
+      ">>>>>>>>>>>>>>>>>>>>>>>> ERRORS <<<<<<<<<<<<<<<<<<<<<<<<\n",
+      "NO OUTPUT"
     );
   } else if (compiledSources.errors) {
     // something went wrong.
-    console.error('>>>>>>>>>>>>>>>>>>>>>>>> ERRORS <<<<<<<<<<<<<<<<<<<<<<<<\n');
-    compiledSources.errors.map(error => console.log(error.formattedMessage));
+    console.error(">>>>>>>>>>>>>>>>>>>>>>>> ERRORS <<<<<<<<<<<<<<<<<<<<<<<<\n");
+    compiledSources.errors.map((error) => console.log(error.formattedMessage));
   }
 }
 
@@ -107,11 +109,11 @@ function writeOutput(compiled, buildPath) {
   fs.ensureDirSync(buildPath);
 
   for (const contractFileName in compiled.contracts) {
-    const contractName = contractFileName.replace('.sol', '');
-    console.log('Writing: ', `${contractName}.json`);
+    const contractName = contractFileName.replace(".sol", "");
+    console.log("Writing: ", `${contractName}.json`);
     fs.outputJsonSync(
       path.resolve(buildPath, `${contractName}.json`),
-      compiled.contracts[contractFileName][contractName].abi,
+      compiled.contracts[contractFileName][contractName].abi
     );
   }
 }

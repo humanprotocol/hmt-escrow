@@ -34,9 +34,9 @@ task(
 
     for (const account of accounts) {
       console.log(
-        account.address +
-          " " +
-          (await hre.ethers.provider.getBalance(account.address))
+        `${account.address} ${await hre.ethers.provider.getBalance(
+          account.address
+        )}`
       );
     }
   }
@@ -44,16 +44,16 @@ task(
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.9"
+    version: "0.8.9",
   },
   defaultNetwork: "hardhat",
   networks: {
     localhost: {
-        url: "http://localhost:8545"
+      url: "http://localhost:8545",
     },
     hardhat: {
       forking: {
-        url: process.env.ETH_GOERLI_TESTNET_URL || 'http://localhost:8545',
+        url: process.env.ETH_GOERLI_TESTNET_URL || "http://localhost:8545",
       },
     },
     tenderly: {
@@ -92,10 +92,10 @@ const config: HardhatUserConfig = {
       // For Mainnet, Goerli
       mainnet: process.env.ETHERSCAN_API_KEY || "",
       goerli: process.env.ETHERSCAN_API_KEY || "",
-    }
+    },
   },
   mocha: {
-    timeout: 200000
+    timeout: 200000,
   },
 };
 

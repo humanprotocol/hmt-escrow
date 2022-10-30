@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param} from "@nestjs/common";
+import { Controller, Get, HttpCode, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { INetworkDto } from "./interfaces";
 import { NetworkService } from "./network.service";

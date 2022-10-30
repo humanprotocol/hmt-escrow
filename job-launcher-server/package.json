@@ -68,7 +68,6 @@
     "postmark": "2.7.7",
     "rxjs": "7.3.0",
     "swagger-ui-express": "^4.5.0",
-    "truffle": "^5.1.65",
     "typeorm": "0.2.37",
     "typeorm-naming-strategies": "2.0.0",
     "uuid": "8.3.2",

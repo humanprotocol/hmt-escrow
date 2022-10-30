@@ -7,7 +7,7 @@ import { updateEscrowAmountDayData } from "./utils/dayUpdates";
 
 export function handleLaunched(event: Launched): void {
   // Entities only exist after they have been saved to the store;
-  let entity = new LaunchedEscrow(event.params.escrow.toHex());
+  const entity = new LaunchedEscrow(event.params.escrow.toHex());
 
   // Entity fields can be set based on event parameters
   entity.eip20 = event.params.eip20;
@@ -18,9 +18,9 @@ export function handleLaunched(event: Launched): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity();
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.totalEscrowCount + BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalEscrowCount += BigInt.fromI32(1);
 
   statsEntity.save();

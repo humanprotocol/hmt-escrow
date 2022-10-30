@@ -15,13 +15,13 @@ import { createApprovalEvent, createTransferEvent } from "./fixtures";
 
 describe("HMToken entity", () => {
   test("Should properly calculate Transfer event in statistics", () => {
-    let transfer1 = createTransferEvent(
+    const transfer1 = createTransferEvent(
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       1,
       BigInt.fromI32(10)
     );
-    let transfer2 = createTransferEvent(
+    const transfer2 = createTransferEvent(
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       2,
@@ -49,13 +49,13 @@ describe("HMToken entity", () => {
 
 describe("HMToken entity", () => {
   test("Should properly index Transfer events", () => {
-    let transfer1 = createTransferEvent(
+    const transfer1 = createTransferEvent(
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       1,
       BigInt.fromI32(10)
     );
-    let transfer2 = createTransferEvent(
+    const transfer2 = createTransferEvent(
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       2,
@@ -156,13 +156,13 @@ describe("HMToken entity", () => {
 });
 describe("HMToken entity", () => {
   test("Should properly index approval events", () => {
-    let approval1 = createApprovalEvent(
+    const approval1 = createApprovalEvent(
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       1,
       BigInt.fromI32(10)
     );
-    let approval2 = createApprovalEvent(
+    const approval2 = createApprovalEvent(
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       2,
@@ -264,13 +264,13 @@ describe("HMToken entity", () => {
 
 describe("HMToken entity", () => {
   test("Should properly calculate holders in statistics", () => {
-    let transfer1 = createTransferEvent(
+    const transfer1 = createTransferEvent(
       "0x0000000000000000000000000000000000000000",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       1,
       BigInt.fromI32(10)
     );
-    let transfer2 = createTransferEvent(
+    const transfer2 = createTransferEvent(
       "0x0000000000000000000000000000000000000000",
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       2,
@@ -293,19 +293,19 @@ describe("HMToken entity", () => {
 
 describe("HMToken entity", () => {
   test("Should properly calculate holders in statistics", () => {
-    let transfer1 = createTransferEvent(
+    const transfer1 = createTransferEvent(
       "0x0000000000000000000000000000000000000000",
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       10,
       BigInt.fromI32(10)
     );
-    let transfer2 = createTransferEvent(
+    const transfer2 = createTransferEvent(
       "0x0000000000000000000000000000000000000000",
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       10,
       BigInt.fromI32(10)
     );
-    let transfer3 = createTransferEvent(
+    const transfer3 = createTransferEvent(
       "0x92a2eEF7Ff696BCef98957a0189872680600a959",
       "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
       10,
@@ -328,14 +328,14 @@ describe("HMToken entity", () => {
 });
 
 test("Should properly calculate holders in statistics", () => {
-  let transfer1 = createTransferEvent(
+  const transfer1 = createTransferEvent(
     "0x0000000000000000000000000000000000000000",
     "0x92a2eEF7Ff696BCef98957a0189872680600a959",
     10,
     BigInt.fromI32(10)
   );
 
-  let transfer2 = createTransferEvent(
+  const transfer2 = createTransferEvent(
     "0x92a2eEF7Ff696BCef98957a0189872680600a959",
     "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
     0,
@@ -352,7 +352,7 @@ test("Should properly calculate holders in statistics", () => {
     "1"
   );
 
-  let transfer3 = createTransferEvent(
+  const transfer3 = createTransferEvent(
     "0x0000000000000000000000000000000000000000",
     "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
     10,
@@ -368,7 +368,7 @@ test("Should properly calculate holders in statistics", () => {
     "2"
   );
 
-  let transfer4 = createTransferEvent(
+  const transfer4 = createTransferEvent(
     "0x92a2eEF7Ff696BCef98957a0189872680600a959",
     "0xD979105297fB0eee83F7433fC09279cb5B94fFC6",
     10,

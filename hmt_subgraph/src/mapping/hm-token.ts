@@ -36,7 +36,7 @@ export function handleTransfer(event: Transfer): void {
     event.block.timestamp
   }`;
 
-  let entity = new HMTransferEvent(id);
+  const entity = new HMTransferEvent(id);
 
   entity.token = event.address;
   entity.from = event.params._from;
@@ -56,15 +56,15 @@ export function handleTransfer(event: Transfer): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity(event.address);
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.totalTransferEventCount + BigInt.fromI32(1);
 
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalTransferEventCount += BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalValueTransfered += event.params._value;
 
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.holders += BigInt.fromI32(diffHolders as i32);
 
   statsEntity.save();
@@ -77,7 +77,7 @@ export function handleBulkTransfer(event: BulkTransfer): void {
     event.block.timestamp
   }`;
 
-  let entity = new HMBulkTransferEvent(id);
+  const entity = new HMBulkTransferEvent(id);
 
   entity.bulkCount = event.params._bulkCount;
   entity.txId = event.params._txId;
@@ -89,10 +89,10 @@ export function handleBulkTransfer(event: BulkTransfer): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity(event.address);
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.totalBulkTransferEventCount + BigInt.fromI32(1);
 
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalBulkTransferEventCount += BigInt.fromI32(1);
 
   statsEntity.save();
@@ -105,7 +105,7 @@ export function handleApproval(event: Approval): void {
     event.block.timestamp
   }`;
 
-  let entity = new HMApprovalEvent(id);
+  const entity = new HMApprovalEvent(id);
 
   entity.token = event.address;
   entity.owner = event.params._owner;
@@ -120,10 +120,10 @@ export function handleApproval(event: Approval): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity(event.address);
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.totalApprovalEventCount + BigInt.fromI32(1);
 
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalApprovalEventCount += BigInt.fromI32(1);
 
   statsEntity.save();
@@ -136,7 +136,7 @@ export function handleBulkApproval(event: BulkApproval): void {
     event.block.timestamp
   }`;
 
-  let entity = new HMBulkApprovalEvent(id);
+  const entity = new HMBulkApprovalEvent(id);
 
   entity.bulkCount = event.params._bulkCount;
   entity.txId = event.params._txId;
@@ -149,10 +149,10 @@ export function handleBulkApproval(event: BulkApproval): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity(event.address);
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.totalBulkApprovalEventCount + BigInt.fromI32(1);
 
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalBulkApprovalEventCount += BigInt.fromI32(1);
 
   statsEntity.save();
@@ -170,9 +170,9 @@ function updateHolders(
   )
     return 0;
   let count = 0;
-  let id = holderAddress.toHex();
+  const id = holderAddress.toHex();
   let holder = Holder.load(id);
-  const isNew = holder == null ? true : false;
+  const isNew = holder == null;
 
   if (holder == null) {
     holder = new Holder(id);

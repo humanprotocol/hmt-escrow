@@ -22,7 +22,7 @@ export class StorageService {
     const data: any = [];
 
     return new Promise((resolve, reject) => {
-      this.s3 .listObjects(bucketParams, function (err, files) {
+      this.s3.listObjects(bucketParams, function (err, files) {
         if (err) {
           reject(err);
         } else {
@@ -39,20 +39,19 @@ export class StorageService {
 
   async getFileFromUrl(fileUrl: string): Promise<any> {
     const result = new url.URL(fileUrl);
-    const filename = result.pathname.slice(1)
+    const filename = result.pathname.slice(1);
     const bucketName = result.host.split(".")[0];
     const bucketParams = { Bucket: bucketName, Key: filename };
-    let data = {}
 
     return new Promise((resolve, reject) => {
       this.s3.getObject(bucketParams, function (err: any, data: any) {
         if (err) {
           reject(err);
         } else {
-          if (!isJson(JSON.parse(data.Body.toString('utf-8')))) {
-            resolve(JSON.parse(data.Body.toString('utf-8')))
+          if (!isJson(JSON.parse(data.Body.toString("utf-8")))) {
+            resolve(JSON.parse(data.Body.toString("utf-8")));
           } else {
-            reject(new BadGatewayException("Invalid JSON file"))
+            reject(new BadGatewayException("Invalid JSON file"));
           }
         }
       });
@@ -65,7 +64,7 @@ export class StorageService {
     const bucketParams = { Bucket: bucketName };
 
     const permissions: any = await new Promise((resolve, reject) => {
-      this.s3.getBucketAcl(bucketParams, function(err: any, data: any) {
+      this.s3.getBucketAcl(bucketParams, function (err: any, data: any) {
         if (err) {
           reject(err);
         } else if (data) {
@@ -73,10 +72,10 @@ export class StorageService {
         }
       });
     });
-    
-    this.logger.debug("Bucket has following permissions: ", permissions)
-    
-    if (permissions?.Grants[0]?.Permission != 'FULL_CONTROL') {
+
+    this.logger.debug("Bucket has following permissions: ", permissions);
+
+    if (permissions?.Grants[0]?.Permission !== "FULL_CONTROL") {
       return false;
     }
 
@@ -85,12 +84,12 @@ export class StorageService {
 
   async isFileValid(fileUrl: string): Promise<any> {
     const result = new url.URL(fileUrl);
-    const filename = result.pathname.slice(1)
+    const filename = result.pathname.slice(1);
     const bucketName = result.host.split(".")[0];
     const bucketParams = { Bucket: bucketName, Key: filename };
 
     const permissions: any = await new Promise((resolve, reject) => {
-      this.s3.getObjectAcl(bucketParams, function(err: any, data: any) {
+      this.s3.getObjectAcl(bucketParams, function (err: any, data: any) {
         if (err) {
           reject(err);
         } else if (data) {
@@ -98,10 +97,10 @@ export class StorageService {
         }
       });
     });
-    
-    this.logger.debug("File has following permissions: ", permissions)
-    
-    if (permissions?.Grants[0]?.Permission != 'FULL_CONTROL') {
+
+    this.logger.debug("File has following permissions: ", permissions);
+
+    if (permissions?.Grants[0]?.Permission !== "FULL_CONTROL") {
       return false;
     }
 
