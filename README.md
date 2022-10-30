@@ -1,5 +1,5 @@
 # <img height="60px" src="./static/human.svg" alt="human" />
-# Help Wanted!!
+# Help Wanted!
 
 Human Protocol’s bounty program is the easiest way to get a job working with us. Most of our development comes from the founders of hmt-escrow, bounties from open source developers, or developers hired from the bounty program. Take a look at our issues or suggest a new one, and a mod will add it to the bounty program. Read the documentation as it contains information for working with us.
 
