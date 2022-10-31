@@ -1,5 +1,5 @@
 const EscrowFile = require('../build/contracts/Escrow.json');
-const storage = require('../storage');
+const storage = require('./storage');
 const { getManifest } = require('./manifest');
 const { bulkPayout } = require('./reputationClient');
 

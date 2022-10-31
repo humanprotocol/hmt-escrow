@@ -8,7 +8,7 @@ const HMToken = require('../build/contracts/HMToken.json');
 const EscrowFactory = require('../build/contracts/EscrowFactory.json');
 const manifest = require('./manifest');
 const reputationClient = require('./reputationClient');
-const storage = require('../storage');
+const storage = require('./storage');
 const { bulkPayout } = require('./reputationClient');
 const { getManifest } = require('./manifest');
 
