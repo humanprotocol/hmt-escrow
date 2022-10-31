@@ -1,14 +1,14 @@
 #!/bin/bash
 set -exu
 
-HMTOKEN_ADDR_FILE=/deployed-hmtoken/hmt.address.json
+HMTOKEN_ADDR_FILE=/deployed-contracts/contract.addresses.json
 
 until test -f $HMTOKEN_ADDR_FILE; do
   echo "waiting for hmt token file at $HMTOKEN_ADDR_FILE .."
   sleep 2
 done
 
-export HMTOKEN_ADDR=$(cat $HMTOKEN_ADDR_FILE | jq --raw-output '.address')
+export HMTOKEN_ADDR=$(cat $HMTOKEN_ADDR_FILE | jq --raw-output '.HMTAddress')
 
 mkdir -p minio/escrow-results
 mkdir -p minio/escrow-public-results

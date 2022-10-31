@@ -559,7 +559,7 @@ class JobTestCase(unittest.TestCase):
         """Test wallet HMT balance is OK"""
         amount = utils.get_hmt_balance(
             "0x1413862C2B7054CDbfdc181B83962CB0FC11fD92",
-            "0x56B532F1D090E4edb1c92F30d3087771AE6B6992",
+            "0x62aF1B788F279D12E0ad3d18fE403e9Cc2dB9e4C",
             get_w3(),
         )
 
