@@ -95,7 +95,7 @@ function errorHandling(compiledSources) {
   } else if (compiledSources.errors) {
     // something went wrong.
     console.error(">>>>>>>>>>>>>>>>>>>>>>>> ERRORS <<<<<<<<<<<<<<<<<<<<<<<<\n");
-    compiledSources.errors.map(error => console.log(error.formattedMessage));
+    compiledSources.errors.map((error) => console.log(error.formattedMessage));
   }
 }
 
@@ -108,11 +108,11 @@ function errorHandling(compiledSources) {
 function writeOutput(compiled, buildPath) {
   fs.ensureDirSync(buildPath);
 
-  for (let contractFileName in compiled.contracts) {
+  for (const contractFileName in compiled.contracts) {
     const contractName = contractFileName.replace(".sol", "");
-    console.log("Writing: ", contractName + ".json");
+    console.log("Writing: ", `${contractName}.json`);
     fs.outputJsonSync(
-      path.resolve(buildPath, contractName + ".json"),
+      path.resolve(buildPath, `${contractName}.json`),
       compiled.contracts[contractFileName][contractName].abi
     );
   }

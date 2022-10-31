@@ -1,4 +1,6 @@
-pragma solidity 0.6.2;
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.6.2;
 import "./Escrow.sol";
 
 
@@ -17,7 +19,7 @@ contract EscrowFactory {
     }
 
     function createEscrow(address[] memory trustedHandlers) public returns (address) {
-        Escrow escrow = new Escrow(eip20, msg.sender, STANDARD_DURATION, trustedHandlers);
+        Escrow escrow = new Escrow(eip20, payable(msg.sender), STANDARD_DURATION, trustedHandlers);
         counter++;
         escrowCounters[address(escrow)] = counter;
         lastEscrow = address(escrow);

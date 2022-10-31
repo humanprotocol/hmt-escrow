@@ -14,7 +14,7 @@ export class PostmarkService {
   constructor(
     @Inject(ProviderType.POSTMARK)
     private readonly client: ServerClient,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   public sendEmailVerification(userEntity: UserEntity, token: TokenEntity): Promise<Record<string, any>> {

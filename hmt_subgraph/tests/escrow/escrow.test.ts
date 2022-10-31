@@ -43,8 +43,8 @@ describe("Generic Entity case", () => {
 
 describe("EscrowStatistics entity", () => {
   test("Should properly calculate IntermediateStorage event in statistics", () => {
-    let newIS = createISEvent("test.com", "is_hash_1");
-    let newIS1 = createISEvent("test.com", "is_hash_1");
+    const newIS = createISEvent("test.com", "is_hash_1");
+    const newIS1 = createISEvent("test.com", "is_hash_1");
 
     handleIntermediateStorage(newIS);
     handleIntermediateStorage(newIS1);
@@ -72,8 +72,8 @@ describe("EscrowStatistics entity", () => {
   });
 
   test("Should properly calculate Pending event in statistics", () => {
-    let newPending1 = createPendingEvent("test.com", "is_hash_1");
-    let newPending2 = createPendingEvent("test.com", "is_hash_1");
+    const newPending1 = createPendingEvent("test.com", "is_hash_1");
+    const newPending2 = createPendingEvent("test.com", "is_hash_1");
 
     handlePending(newPending1);
     handlePending(newPending2);
@@ -129,8 +129,8 @@ describe("EscrowStatistics entity", () => {
 
 describe("Escrow entity", () => {
   test("Should properly index bulk transfers", () => {
-    let bulk1 = createBulkTransferEvent(1, 2, BigInt.fromI32(10));
-    let bulk2 = createBulkTransferEvent(3, 4, BigInt.fromI32(11));
+    const bulk1 = createBulkTransferEvent(1, 2, BigInt.fromI32(10));
+    const bulk2 = createBulkTransferEvent(3, 4, BigInt.fromI32(11));
 
     handleBulkTransfer(bulk1);
     handleBulkTransfer(bulk2);

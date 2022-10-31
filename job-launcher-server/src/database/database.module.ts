@@ -21,7 +21,7 @@ import { TypeOrmLoggerModule, TypeOrmLoggerService } from "./typeorm";
           password: configService.get<string>("POSTGRES_PASSWORD", "qwerty"),
           database: configService.get<string>("POSTGRES_DB", "hmt"),
           keepConnectionAlive: configService.get<string>("NODE_ENV") === "test",
-          migrationsRun: configService.get<string>("MIGRATIONS_RUN") === "true"
+          migrationsRun: configService.get<string>("MIGRATIONS_RUN") === "true",
         };
       },
     }),

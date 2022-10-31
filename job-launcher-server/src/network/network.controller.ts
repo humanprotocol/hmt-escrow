@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param} from "@nestjs/common";
+import { Controller, Get, HttpCode, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { INetworkDto } from "./interfaces";
 import { NetworkService } from "./network.service";
@@ -11,13 +11,13 @@ export class NetworkController {
 
   @Get("/")
   @HttpCode(200)
-  public getList(): Promise<INetworkDto[]> {
+  public getList(): INetworkDto[] {
     return this.networkService.getList();
   }
 
   @Get("/:id")
   @HttpCode(200)
-  public getById(@Param("id") id: string): Promise<INetworkDto> {
+  public getById(@Param("id") id: string): INetworkDto {
     return this.networkService.getNetworkById(id);
   }
 }

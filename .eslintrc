@@ -23,5 +23,6 @@
     "artifacts": true,
     "contract": true,
     "web3": true
-  }
+  },
+  "ignorePatterns": ["**/hmt_subgraph/*", "**/private-provider.js"]
 }

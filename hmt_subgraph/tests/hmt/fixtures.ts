@@ -9,18 +9,18 @@ export function createTransferEvent(
   value: i32,
   timestamp: BigInt
 ): Transfer {
-  let transferEvent = changetype<Transfer>(newMockEvent());
-  transferEvent.parameters = new Array();
+  const transferEvent = changetype<Transfer>(newMockEvent());
+  transferEvent.parameters = [];
   transferEvent.block.timestamp = timestamp;
-  let fromParam = new ethereum.EventParam(
+  const fromParam = new ethereum.EventParam(
     "_from",
     ethereum.Value.fromAddress(Address.fromString(from))
   );
-  let toParam = new ethereum.EventParam(
+  const toParam = new ethereum.EventParam(
     "_to",
     ethereum.Value.fromAddress(Address.fromString(to))
   );
-  let valueParam = new ethereum.EventParam(
+  const valueParam = new ethereum.EventParam(
     "_value",
     ethereum.Value.fromI32(value)
   );
@@ -38,18 +38,18 @@ export function createApprovalEvent(
   value: i32,
   timestamp: BigInt
 ): Approval {
-  let approvalEvent = changetype<Approval>(newMockEvent());
-  approvalEvent.parameters = new Array();
+  const approvalEvent = changetype<Approval>(newMockEvent());
+  approvalEvent.parameters = [];
   approvalEvent.block.timestamp = timestamp;
-  let ownerParam = new ethereum.EventParam(
+  const ownerParam = new ethereum.EventParam(
     "_spender",
     ethereum.Value.fromAddress(Address.fromString(spender))
   );
-  let spenderParam = new ethereum.EventParam(
+  const spenderParam = new ethereum.EventParam(
     "_owner",
     ethereum.Value.fromAddress(Address.fromString(owner))
   );
-  let valueParam = new ethereum.EventParam(
+  const valueParam = new ethereum.EventParam(
     "_value",
     ethereum.Value.fromI32(value)
   );

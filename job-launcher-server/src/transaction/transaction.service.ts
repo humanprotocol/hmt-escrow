@@ -44,7 +44,7 @@ export class TransactionService {
     const transactionEntity = await this.transactionEntityRepository
       .create({
         ...dto,
-        jobId
+        jobId,
       })
       .save();
 

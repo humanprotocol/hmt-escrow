@@ -15,6 +15,7 @@ import {
   updatePendingEventDayData,
   updateBulkTransferEventDayData,
 } from "./utils/dayUpdates";
+
 export const STATISTICS_ENTITY_ID = "escrow-statistics-id";
 
 export function constructStatsEntity(): EscrowStatistics {
@@ -32,11 +33,11 @@ export function constructStatsEntity(): EscrowStatistics {
 export function handleIntermediateStorage(event: IntermediateStorage): void {
   // Entities can be loaded from the store using a string ID; this ID
   // needs to be unique across all entities of the same type
-  let id = `${event.transaction.hash.toHex()}-${event.logIndex.toString()}-${
+  const id = `${event.transaction.hash.toHex()}-${event.logIndex.toString()}-${
     event.block.timestamp
   }`;
 
-  let entity = new ISEvent(id);
+  const entity = new ISEvent(id);
 
   // Entity fields can be set based on event parameters
   entity.timestamp = event.block.timestamp;
@@ -48,11 +49,11 @@ export function handleIntermediateStorage(event: IntermediateStorage): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity();
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.intermediateStorageEventCount + BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.intermediateStorageEventCount += BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalEventCount += BigInt.fromI32(1);
 
   statsEntity.save();
@@ -68,7 +69,7 @@ export function handlePending(event: Pending): void {
     event.block.timestamp
   }`;
 
-  let entity = new PEvent(id);
+  const entity = new PEvent(id);
 
   // Entity fields can be set based on event parameters
   entity._url = event.params.manifest;
@@ -81,11 +82,11 @@ export function handlePending(event: Pending): void {
     statsEntity = constructStatsEntity();
   }
 
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.pendingEventCount + BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.pendingEventCount += BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalEventCount += BigInt.fromI32(1);
 
   entity.save();
@@ -99,7 +100,7 @@ export function handleBulkTransfer(event: BulkTransfer): void {
     event.block.timestamp
   }`;
 
-  let entity = new BulkTransferEvent(id);
+  const entity = new BulkTransferEvent(id);
 
   entity.escrow = event.address;
   entity.bulkCount = event.params._bulkCount;
@@ -113,11 +114,11 @@ export function handleBulkTransfer(event: BulkTransfer): void {
   if (!statsEntity) {
     statsEntity = constructStatsEntity();
   }
-  //@ts-ignore
+  // @ts-ignore
   entity.count = statsEntity.bulkTransferEventCount + BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.bulkTransferEventCount += BigInt.fromI32(1);
-  //@ts-ignore
+  // @ts-ignore
   statsEntity.totalEventCount += BigInt.fromI32(1);
 
   statsEntity.save();

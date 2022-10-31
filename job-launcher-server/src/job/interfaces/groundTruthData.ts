@@ -1,6 +1,6 @@
 export interface IGroundTruthData {
   images: IGroundTruthDataImage[];
-  annotations: IGroundTruthDataAnnotation[]
+  annotations: IGroundTruthDataAnnotation[];
 }
 
 export interface IGroundTruthDataImage {
@@ -15,5 +15,5 @@ export interface IGroundTruthDataAnnotation {
   annotator_email: string;
   label: string;
   segmentation_url: string;
-  bbox: number[]
+  bbox: number[];
 }
