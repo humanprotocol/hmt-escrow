@@ -11,13 +11,13 @@ export class NetworkController {
 
   @Get("/")
   @HttpCode(200)
-  public getList(): Promise<INetworkDto[]> {
+  public getList(): INetworkDto[] {
     return this.networkService.getList();
   }
 
   @Get("/:id")
   @HttpCode(200)
-  public getById(@Param("id") id: string): Promise<INetworkDto> {
+  public getById(@Param("id") id: string): INetworkDto {
     return this.networkService.getNetworkById(id);
   }
 }

@@ -3,8 +3,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { ConfigService } from "@nestjs/config";
 import { FindConditions, FindManyOptions, FindOneOptions, Repository } from "typeorm";
 import * as crypto from "crypto";
-import EscrowAbi from "../contracts/EscrowAbi.json";
-import EscrowFactoryAbi from "../contracts/EscrowFactoryAbi.json";
+import EscrowAbi from "../../../abis/contracts/Escrow.sol/Escrow.json";
+import EscrowFactoryAbi from "../../../abis/contracts/EscrowFactory.sol/EscrowFactory.json";
 
 import { JobEntity } from "./job.entity";
 import { JobMode, JobRequestType, JobStatus, TransactionStatus, TransactionType } from "../common/decorators";
