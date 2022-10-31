@@ -1,4 +1,4 @@
-pragma solidity 0.6.2;
+pragma solidity >=0.6.2;
 import "./HMTokenInterface.sol";
 import "./SafeMath.sol";
 import "./Ownable.sol";

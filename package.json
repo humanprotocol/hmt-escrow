@@ -16,6 +16,7 @@
     "deploy-local": "npm run compile && graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 humanprotocol/humansubgraph",
     "fix:js": "eslint --fix test/** migrations/**",
     "generateabis": "node scripts/compile.js",
+    "graphtests": "graph test",
     "lint:js": "eslint test/** migrations/**",
     "lint": "npm run lint:js",
     "publish": "truffle publish",
@@ -23,7 +24,7 @@
     "quickstart:goerli": "npm run compile && node ./scripts/generatenetworkssubgraphs.js goerli && graph create --node http://localhost:8020/ humanprotocol/humansubgraph",
     "quickstart:mumbai": "npm run compile && node ./scripts/generatenetworkssubgraphs.js mumbai && graph create --node http://localhost:8020/ humanprotocol/humansubgraph",
     "remove-local": "npm run compile && graph remove --node http://localhost:8020/ humanprotocol/humansubgraph",
-    "test": "graph test && npx truffle test"
+    "test": "npx truffle test"
   },
   "repository": {
     "type": "git",
@@ -44,19 +45,13 @@
     "solc": "^0.6.2",
     "@openzeppelin/contracts": "3.1.0",
     "ethereumjs-wallet": "^1.0.0",
-    "truffle": "^5.5.30",
-    "truffle-hdwallet-provider": "1.0.17",
+    "truffle": "^5.6.3",
+    "truffle-hdwallet-provider": "^1.0.17",
     "web3-provider-engine": "https://github.com/MetaMask/web3-provider-engine.git"
   },
   "devDependencies": {
     "dotenv": "^6.0.0",
     "eslint": "^8.26.0",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-mocha": "^4.11.0",
-    "eslint-plugin-node": "^5.1.0",
-    "eslint-plugin-react": "^7.5.1",
     "solidity-coverage": "^0.8.2"
   }
 }
