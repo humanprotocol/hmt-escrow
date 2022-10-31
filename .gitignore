@@ -165,6 +165,9 @@ yarn-error.log*
 !.yarn/sdks
 !.yarn/versions
 
+# Contract interfaces
+abis/
+
 # Hardhat files
 cache
 artifacts
