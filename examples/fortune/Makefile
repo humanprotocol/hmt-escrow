@@ -15,7 +15,7 @@ copy-contracts:
 	cp -r ../../build ./launcher/src
 	cp -r ../../build ./exchange/src
 	cp -r ../../build ./recording-oracle/src
-	cp -r ../../build ./reputation-oracle
+	cp -r ../../build ./reputation-oracle/src
 test: compile-contracts
 	make copy-contracts
 	docker-compose -f docker-compose.test.yml up -d --build

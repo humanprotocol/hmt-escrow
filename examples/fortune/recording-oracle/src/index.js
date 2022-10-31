@@ -23,8 +23,9 @@ app.use(cors());
 app.post('/job/results', async (req, res) => {
   try {
     const { workerAddress, escrowAddress, fortune } = req.body;
-    const err = await addFortune(workerAddress, escrowAddress, fortune);
+    const err = await addFortune(web3, workerAddress, escrowAddress, fortune);
     if (err) {
+      console.log(err.message);
       return res.status(400).send(err);
     }
 

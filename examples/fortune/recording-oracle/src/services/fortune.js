@@ -7,7 +7,7 @@ const EscrowABI = EscrowFile.abi;
 
 const statusesMap = ['Launched', 'Pending', 'Partial', 'Paid', 'Complete', 'Cancelled'];
 
-async function addFortune(web3, account, workerAddress, escrowAddress, fortune) {
+async function addFortune(web3, workerAddress, escrowAddress, fortune) {
   if (!web3.utils.isAddress(workerAddress)) {
     return { field: 'workerAddress', message: 'Valid ethereum address required' };
   }
@@ -21,14 +21,14 @@ async function addFortune(web3, account, workerAddress, escrowAddress, fortune) 
   const Escrow = new web3.eth.Contract(EscrowABI, escrowAddress);
   const escrowRecOracleAddr = await Escrow.methods.recordingOracle().call();
 
-  if (web3.utils.toChecksumAddress(escrowRecOracleAddr) !== web3.utils.toChecksumAddress(account.address)) {
+  if (web3.utils.toChecksumAddress(escrowRecOracleAddr) !== web3.utils.toChecksumAddress(web3.eth.defaultAccount)) {
     return { field: 'escrowAddress', message: 'The Escrow Recording Oracle address mismatches the current one' };
   }
 
   const escrowStatus = await Escrow.methods.status().call();
 
   if (statusesMap[escrowStatus] !== 'Pending') {
-    return { field: 'escrowAdderss', message: 'The Escrow is not in the Pending status' };
+    return { field: 'escrowAddress', message: 'The Escrow is not in the Pending status' };
   }
 
   const manifestUrl = await Escrow.methods.manifestUrl().call();

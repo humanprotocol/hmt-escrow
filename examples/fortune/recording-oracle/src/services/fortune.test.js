@@ -22,6 +22,7 @@ const worker2 = '0xcd3B766CCDd6AE721141F452C550Ca635964ce71';
 const web3 = new Web3('http://localhost:8545');
 const account = web3.eth.accounts.privateKeyToAccount('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
 const recordingAccount = web3.eth.accounts.privateKeyToAccount('0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d');
+web3.eth.defaultAccount = recordingAccount.address;
 jest.mock('./manifest');
 jest.mock('./reputationClient');
 
@@ -75,12 +76,12 @@ describe('Fortune', () => {
   });
 
   it('Add fortunes successfully', async () => {
-    let err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 1');
+    let err = await addFortune(web3, worker1, escrowAddress, 'fortune 1');
     expect(storage.getEscrow(escrowAddress)).toBeDefined();
     expect(storage.getWorkerResult(escrowAddress, worker1)).toBe('fortune 1');
     expect(storage.getFortunes(escrowAddress).length).toBe(1);
     expect(err).toBeNull();
-    err = await addFortune(web3, recordingAccount, worker2, escrowAddress, 'fortune 2');
+    err = await addFortune(web3, worker2, escrowAddress, 'fortune 2');
     expect(storage.getEscrow(escrowAddress)).toBeDefined();
     expect(storage.getFortunes(escrowAddress).length).toBe(0); // after reaching the fortunes desired the store is cleaned
     expect(getManifest).toHaveBeenCalledTimes(2);
@@ -89,40 +90,42 @@ describe('Fortune', () => {
   });
 
   it('Do not allow two fortunes from the same worker', async () => {
-    let err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 1');
+    let err = await addFortune(web3, worker1, escrowAddress, 'fortune 1');
     expect(storage.getEscrow(escrowAddress)).toBeDefined();
     expect(storage.getWorkerResult(escrowAddress, worker1)).toBe('fortune 1');
     expect(storage.getFortunes(escrowAddress).length).toBe(1);
     expect(err).toBeNull();
-    err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 2');
+    err = await addFortune(web3, worker1, escrowAddress, 'fortune 2');
     expect(storage.getEscrow(escrowAddress)).toBeDefined();
     expect(storage.getFortunes(escrowAddress).length).toBe(1);
     expect(err.message).toBe('0x90F79bf6EB2c4f870365E785982E1f101E93b906 already submitted a fortune');
   });
 
   it('Do not allow empty fortune', async () => {
-    const err = await addFortune(web3, recordingAccount, worker1, escrowAddress, '');
+    const err = await addFortune(web3, worker1, escrowAddress, '');
     expect(storage.getEscrow(escrowAddress)).toBeUndefined();
     expect(err.message).toBe('Non-empty fortune is required');
   });
 
   it('Invalid escrow address', async () => {
-    const err = await addFortune(web3, recordingAccount, worker1, 'escrowAddress', 'fortune 1');
+    const err = await addFortune(web3, worker1, 'escrowAddress', 'fortune 1');
     expect(storage.getEscrow(escrowAddress)).toBeUndefined();
     expect(err.message).toBe('Valid ethereum address required');
   });
 
   it('Invalid recording oracle address', async () => {
-    const err = await addFortune(web3, escrowAddress, worker1, escrowAddress, 'fortune 1');
+    web3.eth.defaultAccount = account.address;
+    const err = await addFortune(web3, worker1, escrowAddress, 'fortune 1');
     expect(storage.getEscrow(escrowAddress)).toBeUndefined();
     expect(err.message).toBe('The Escrow Recording Oracle address mismatches the current one');
+    web3.eth.defaultAccount = recordingAccount.address;
   });
 
   it('Escrow not pending', async () => {
     await escrow.methods.cancel().send({
       from: account.address,
     });
-    const err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 1');
+    const err = await addFortune(web3, worker1, escrowAddress, 'fortune 1');
     expect(err.message).toBe('The Escrow is not in the Pending status');
   });
 });
