@@ -12,7 +12,7 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "test": "hardhat node & PID=$! && jest && kill -9 $PID"
+    "test": "hardhat node & PID=$! && jest || kill -9 $PID && kill -9 $PID"
   },
   "devDependencies": {
     "@jest/globals": "^29.2.2",

@@ -15,6 +15,7 @@ const { getManifest } = require('./manifest');
 let token;
 let escrowFactory;
 let escrowAddress;
+let escrow;
 
 const worker1 = '0x90F79bf6EB2c4f870365E785982E1f101E93b906';
 const worker2 = '0xcd3B766CCDd6AE721141F452C550Ca635964ce71';
@@ -57,7 +58,7 @@ describe('Fortune', () => {
     const value = web3.utils.toWei('10', 'ether');
     await token.methods.transfer(escrowAddress, value).send({ from: account.address });
 
-    const escrow = new web3.eth.Contract(
+    escrow = new web3.eth.Contract(
       Escrow.abi,
       escrowAddress,
     );
@@ -99,9 +100,29 @@ describe('Fortune', () => {
     expect(err.message).toBe('0x90F79bf6EB2c4f870365E785982E1f101E93b906 already submitted a fortune');
   });
 
-  it('Do not allow two fortunes from the same worker', async () => {
+  it('Do not allow empty fortune', async () => {
     const err = await addFortune(web3, recordingAccount, worker1, escrowAddress, '');
     expect(storage.getEscrow(escrowAddress)).toBeUndefined();
     expect(err.message).toBe('Non-empty fortune is required');
+  });
+
+  it('Invalid escrow address', async () => {
+    const err = await addFortune(web3, recordingAccount, worker1, 'escrowAddress', 'fortune 1');
+    expect(storage.getEscrow(escrowAddress)).toBeUndefined();
+    expect(err.message).toBe('Valid ethereum address required');
+  });
+
+  it('Invalid recording oracle address', async () => {
+    const err = await addFortune(web3, escrowAddress, worker1, escrowAddress, 'fortune 1');
+    expect(storage.getEscrow(escrowAddress)).toBeUndefined();
+    expect(err.message).toBe('The Escrow Recording Oracle address mismatches the current one');
+  });
+
+  it('Escrow not pending', async () => {
+    await escrow.methods.cancel().send({
+      from: account.address,
+    });
+    const err = await addFortune(web3, recordingAccount, worker1, escrowAddress, 'fortune 1');
+    expect(err.message).toBe('The Escrow is not in the Pending status');
   });
 });
