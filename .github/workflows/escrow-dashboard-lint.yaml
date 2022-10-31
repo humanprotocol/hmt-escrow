@@ -1,7 +1,5 @@
 name: Escrow dashboard Node.js Lint
-
-on:
-  pull_request:
+on: [push, pull_request]
 jobs:
   escrowdashlint:
     runs-on: ubuntu-latest
