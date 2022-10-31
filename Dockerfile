@@ -15,7 +15,7 @@ RUN pip3 install git+https://chromium.googlesource.com/external/gyp
 # Downgrading npm version to install old packages gyp
 RUN npm install -g npm@6.14.17
 
-COPY package.json package-lock.json /work/
+COPY package.json /work/
 RUN cd /work && npm install
 ENV PATH="/work/node_modules/.bin/:${PATH}"
 

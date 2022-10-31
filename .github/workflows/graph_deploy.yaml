@@ -3,17 +3,11 @@ on:
   push:
     branches:
       - master
-    paths:
-      - contracts/**
-      - hmt_subgraph/**
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./hmt_subgraph
     steps:
       - uses: actions/checkout@v3
       - name: Set up JS

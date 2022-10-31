@@ -1,19 +1,29 @@
 {
   "name": "hmt-escrow",
-  "version": "0.14.5",
+  "version": "0.14.6",
   "description": "Launch escrow contracts to the HUMAN network",
   "main": "truffle.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "compile": "truffle compile; truffle migrate",
+    "build": "npm run generateabis && graph build",
+    "codegen": "graph codegen",
+    "compile": "truffle compile && truffle migrate",
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "create-local": "npm run compile && graph create --node http://localhost:8020/ humanprotocol/humansubgraph",
+    "deploy": "npm run compile && graph deploy --node https://api.thegraph.com/deploy/ humanprotocol/humansubgraph",
+    "deploy-local": "npm run compile && graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 humanprotocol/humansubgraph",
     "fix:js": "eslint --fix test/** migrations/**",
+    "generateabis": "node scripts/compile.js",
     "lint:js": "eslint test/** migrations/**",
     "lint": "npm run lint:js",
     "publish": "truffle publish",
-    "test": "npx truffle test",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "quickstart:matic": "npm run compile && node ./scripts/generatenetworkssubgraphs.js matic && graph create --node http://localhost:8020/ humanprotocol/humansubgraph",
+    "quickstart:goerli": "npm run compile && node ./scripts/generatenetworkssubgraphs.js goerli && graph create --node http://localhost:8020/ humanprotocol/humansubgraph",
+    "quickstart:mumbai": "npm run compile && node ./scripts/generatenetworkssubgraphs.js mumbai && graph create --node http://localhost:8020/ humanprotocol/humansubgraph",
+    "remove-local": "npm run compile && graph remove --node http://localhost:8020/ humanprotocol/humansubgraph",
+    "test": "graph test && npx truffle test"
   },
   "repository": {
     "type": "git",
@@ -28,6 +38,10 @@
   "license": "MIT",
   "homepage": "https://github.com/hCaptcha/hmt-escrow#readme",
   "dependencies": {
+    "@graphprotocol/graph-cli": "0.29.2",
+    "@graphprotocol/graph-ts": "0.27.0",
+    "matchstick-as": "^0.5.0",
+    "solc": "^0.6.2",
     "@openzeppelin/contracts": "3.1.0",
     "ethereumjs-wallet": "^1.0.0",
     "truffle": "^5.5.30",
@@ -36,13 +50,13 @@
   },
   "devDependencies": {
     "dotenv": "^6.0.0",
-    "eslint": "8.26.0",
+    "eslint": "^8.26.0",
     "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-import": "2.8.0",
-    "eslint-plugin-jsx-a11y": "6.0.3",
-    "eslint-plugin-mocha": "4.11.0",
-    "eslint-plugin-node": "5.1.0",
-    "eslint-plugin-react": "7.5.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-mocha": "^4.11.0",
+    "eslint-plugin-node": "^5.1.0",
+    "eslint-plugin-react": "^7.5.1",
     "solidity-coverage": "^0.8.2"
   }
 }

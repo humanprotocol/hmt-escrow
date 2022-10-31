@@ -2,7 +2,7 @@ const path = require("path");
 const solc = require("solc");
 const fs = require("fs-extra");
 
-const contracts_path = "../../contracts";
+const contracts_path = "../contracts";
 /**
  * Makes sure that the build folder is deleted, before every compilation
  * @returns {*} - Path where the compiled sources should be saved.
