@@ -28,3 +28,7 @@ export interface IToken {
   accessToken: string | null;
   refreshToken: string | null;
 }
+
+export interface IRefresh {
+  refreshToken: string;
+}

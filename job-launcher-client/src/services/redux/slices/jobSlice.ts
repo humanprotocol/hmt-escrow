@@ -15,11 +15,9 @@ const initialState: IJob = {
     // requesterQuestion: '',
     // requesterQuestionExample: '',
   },
-  stepTwo: {
-    mount: 0,
-  },
+
   tx: {
-    hash: null,
+    hash: '',
   },
 };
 
@@ -30,9 +28,6 @@ export const jobSlice = createSlice({
     setJobDetails: (state, action: PayloadAction<IJobDetails>) => {
       state.details = action.payload;
     },
-    setPayment: (state, action: PayloadAction<IJob>) => {
-      state.stepTwo = action.payload.stepTwo;
-    },
     setTx: (state, action: PayloadAction<ITx>) => {
       state.tx.hash = action.payload.hash;
     },
@@ -40,7 +35,7 @@ export const jobSlice = createSlice({
 });
 
 // Actions
-export const { setJobDetails, setPayment, setTx } = jobSlice.actions;
+export const { setJobDetails, setTx } = jobSlice.actions;
 
 // Reducer
 const jobsReducer = jobSlice.reducer;
