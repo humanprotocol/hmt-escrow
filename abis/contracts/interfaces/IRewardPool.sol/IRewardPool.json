@@ -1,5 +1,0 @@
-[
-  "function addReward(address,address,uint256)",
-  "function distributeReward(address)",
-  "function getRewards(address) view returns (tuple(address,address,uint256)[])"
-]

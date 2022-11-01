@@ -1,6 +1,9 @@
 version: '2'
 services:
 
+  escrowdashboard:
+    build:
+      context: escrow-dashboard
   job:
     image: humanprotocol/hmt-escrow:latest
     build: .

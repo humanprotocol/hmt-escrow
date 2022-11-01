@@ -1,19 +1,20 @@
-import { Grid, Box } from '@mui/material';
+import { Grid, Box, Typography } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import * as React from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { object, string, TypeOf } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+
+import logoImg from '../../assets/images/logo.svg';
 import FormInput from '../../components/FormInput/FormInput';
-import { BoxShadowContainer } from '../../components/Grid/Grid';
 
 const signUpSchema = object({
-  email: string().nonempty('Email is ').email('Email is invalid'),
-  password: string()
-    .nonempty('Password is ')
-    .min(3, 'Password must be more than 3 characters')
-    .max(32, 'Password must be less than 32 characters'),
-  confirm: string().nonempty('Please confirm your password'),
+  email: string().min(1, 'Email is empty').email('Email is invalid'),
+  password: string().regex(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/,
+    'Password must be more than 8 characters, should include 1 uppercase, 1 lowercase, 1 numeric, and 1 special character.'
+  ),
+  confirm: string().min(1, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirm, {
   path: ['confirm'],
   message: 'Passwords do not match',
@@ -38,64 +39,68 @@ export const SignUpView: React.FC<ISignUp> = ({ onSubmitHandler }) => {
   });
 
   return (
-    <BoxShadowContainer>
-      <FormProvider {...methods}>
-        <Grid
-          item
-          container
-          justifyContent="center"
-          rowSpacing={5}
-          sx={{
-            maxWidth: { sm: '40rem' },
-            marginInline: 'auto',
-          }}
-        >
-          <Grid item xs={12} sm={10}>
-            <Box
-              display="flex"
-              flexDirection="column"
-              component="form"
-              noValidate
-              autoComplete="on"
-              sx={{ margin: '0 auto' }}
-              onSubmit={methods.handleSubmit(onSubmitHandler)}
-            >
-              <FormInput
-                label="Enter your email"
-                type="email"
-                name="email"
-                autoComplete="sign-up-email"
-              />
-              <FormInput
-                type="password"
-                label="Password"
-                name="password"
-                autoComplete="password"
-              />
-              <FormInput
-                type="password"
-                label="Confirm Password"
-                name="confirm"
-                autoComplete="confirm"
-              />
+    <FormProvider {...methods}>
+      <Grid
+        item
+        container
+        justifyContent="center"
+        rowSpacing={5}
+        sx={{
+          maxWidth: { sm: '40rem' },
+          marginInline: 'auto',
+        }}
+      >
+        <Grid item xs={12} sm={10}>
+          <img src={logoImg} alt="logo" />
+          <Typography variant="h2" color="primary" textAlign="center" mb={3}>
+            Register at Job Launcher
+          </Typography>
+          <Box
+            display="flex"
+            flexDirection="column"
+            component="form"
+            noValidate
+            autoComplete="on"
+            sx={{ margin: '0 auto' }}
+            onSubmit={methods.handleSubmit(onSubmitHandler)}
+          >
+            <FormInput
+              label="Enter your email"
+              type="email"
+              name="email"
+              variant="outlined"
+              autoComplete="sign-up-email"
+            />
+            <FormInput
+              type="password"
+              label="Password"
+              name="password"
+              variant="outlined"
+              autoComplete="password"
+            />
+            <FormInput
+              type="password"
+              label="Confirm Password"
+              name="confirm"
+              variant="outlined"
+              autoComplete="confirm"
+            />
 
-              <LoadingButton
-                loading={false}
-                type="submit"
-                variant="contained"
-                sx={{
-                  py: '0.8rem',
-                  mt: 2,
-                  width: '80%',
-                  marginInline: 'auto',
-                }}
-              >
-                Sign Up
-              </LoadingButton>
-            </Box>
-          </Grid>
+            <LoadingButton
+              loading={false}
+              type="submit"
+              variant="contained"
+              sx={{
+                py: '0.8rem',
+                width: '100%',
+                marginInline: 'auto',
+              }}
+            >
+              Sign Up
+            </LoadingButton>
+          </Box>
         </Grid>
-      </FormProvider>
-    </BoxShadowContainer>
+      </Grid>
+    </FormProvider>
   );
 };

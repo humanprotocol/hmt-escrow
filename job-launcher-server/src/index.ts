@@ -12,7 +12,7 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const configService = app.get(ConfigService);
+  const configService: ConfigService = app.get(ConfigService);
 
   const baseUrl = configService.get<string>("FE_URL", "http://localhost:3001");
 
@@ -49,7 +49,7 @@ async function bootstrap() {
   SwaggerModule.setup("swagger", app, document);
 
   const host = configService.get<string>("HOST", "localhost");
-  const port = configService.get<number>("PORT", 3000);
+  const port = configService.get<string>("PORT", "3000");
 
   await app.listen(port, host, () => {
     console.info(`API server is running on http://${host}:${port}`);

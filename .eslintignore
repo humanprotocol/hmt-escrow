@@ -8,5 +8,4 @@
 **/node_modules/*
 **/truffle.js
 **/cache/*
-**/job-launcher-server/*
 **/job-launcher-client/*

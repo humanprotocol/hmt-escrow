@@ -10,7 +10,7 @@ export interface IWeb3Client {
   clients: Map<string, Web3>;
 }
 
-export const getClient = async (options: IWeb3ModuleOptions): Promise<Web3> => {
+export const getClient = (options: IWeb3ModuleOptions): Web3 => {
   const { url } = options;
   return new Web3(url);
 };
@@ -23,16 +23,17 @@ export const createClient = (): Provider => ({
 
     if (Array.isArray(options)) {
       await Promise.all(
-        options.map(async opt => {
+        options.map(opt => {
           const key = opt.name || defaultKey;
           if (clients.has(key)) throw new Web3ClientError("Web3 client already exists");
 
-          clients.set(key, await getClient(opt));
+          clients.set(key, getClient(opt));
+          return true;
         }),
       );
     } else {
       const key = options.name || defaultKey;
-      clients.set(key, await getClient(options));
+      clients.set(key, getClient(options));
     }
 
     return {

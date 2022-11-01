@@ -1,18 +1,20 @@
-export interface INetworkMap {
-  [key: string]: {
-    key: string;
-    title: string;
-    rpcUrl: string;
-    scanner: string;
-    chainName: string;
-    graphqlClientUrl: string;
-    defaultFactoryAddr: string;
-    scannerUrl?: string;
-    chainId?: string;
-  };
+export interface INetwork {
+  key: string;
+  title: string;
+  rpcUrl: string;
+  scanner: string;
+  chainName: string;
+  graphqlClientUrl: string;
+  defaultFactoryAddr: string;
+  scannerUrl?: string;
+  isDeprecated?: boolean;
 }
 
-export const networkMap: any = {
+export interface INetworkMap {
+  [key: string]: INetwork;
+}
+
+export const networkMap: INetworkMap = {
   polygon: {
     title: 'Polygon Mainnet',
     key: 'polygon',
@@ -23,14 +25,6 @@ export const networkMap: any = {
     graphqlClientUrl:
       'https://api.thegraph.com/subgraphs/name/humanprotocol/polygon',
     scannerUrl: 'https://polygonscan.com/address/',
-    chainId: `0x${Number(137).toString(16)}`,
-    nativeCurrency: {
-      name: 'HMT',
-      symbol: 'HMT',
-      decimals: 18,
-    },
-    rpcUrls: ['https://polygon-rpc.com/'],
-    blockExplorerUrls: ['https://polygonscan.com/'],
   },
   rinkeby: {
     title: 'Ethereum Rinkeby',
@@ -42,9 +36,11 @@ export const networkMap: any = {
     graphqlClientUrl:
       'https://api.thegraph.com/subgraphs/name/humanprotocol/rinkeby',
     scannerUrl: 'https://rinkeby.etherscan.io/address/',
+    isDeprecated: true,
   },
   mumbai: {
     title: 'Polygon Mumbai Testnet',
+    chainName: 'Polygon Mumbai Testnet',
     key: 'mumbai',
     scanner: 'https://mumbai.polygonscan.com',
     rpcUrl: 'https://rpc-mumbai.maticvigil.com',
@@ -52,4 +48,5 @@ export const networkMap: any = {
     graphqlClientUrl: '',
   },
 };
+
 export const networks = Object.values(networkMap).map((network) => network);

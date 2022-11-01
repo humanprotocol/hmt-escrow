@@ -31,7 +31,7 @@ export function updateIntermediateStorageEventDayData(
   event: IntermediateStorage
 ): EventDayData {
   const eventDayData = getEventDayData(event);
-  //@ts-ignore
+  // @ts-ignore
   eventDayData.dailyIntermediateStorageEvents += BigInt.fromI32(1);
   eventDayData.save();
 
@@ -40,7 +40,7 @@ export function updateIntermediateStorageEventDayData(
 
 export function updatePendingEventDayData(event: Pending): EventDayData {
   const eventDayData = getEventDayData(event);
-  //@ts-ignore
+  // @ts-ignore
   eventDayData.dailyPendingEvents += BigInt.fromI32(1);
   eventDayData.save();
 
@@ -51,7 +51,7 @@ export function updateBulkTransferEventDayData(
   event: BulkTransfer
 ): EventDayData {
   const eventDayData = getEventDayData(event);
-  //@ts-ignore
+  // @ts-ignore
   eventDayData.dailyBulkTransferEvents += BigInt.fromI32(1);
   eventDayData.save();
 
@@ -60,7 +60,7 @@ export function updateBulkTransferEventDayData(
 
 export function updateEscrowAmountDayData(event: Launched): EventDayData {
   const eventDayData = getEventDayData(event);
-  //@ts-ignore
+  // @ts-ignore
   eventDayData.dailyEscrowAmounts += BigInt.fromI32(1);
   eventDayData.save();
 

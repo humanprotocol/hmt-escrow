@@ -2,15 +2,15 @@
 import { object, string, array, TypeOf } from 'zod';
 import { parseBigDecimal } from './utils';
 
+// const Labels = string();
 export const jobCreationSchema = object({
   price: string()
     .nonempty('Expected value')
     .transform((x) => parseBigDecimal(x)),
-  labels: array(string()).min(1),
-  dataUrl: string()
-    .url()
-    .nonempty('Expected url')
-    .min(3, 'dataUrl must be more than 3 characters'),
+  labels: array(string()).refine((val) => val.length % 2, {
+    message: 'Must be an even number of labels',
+  }),
+  dataUrl: string().url().min(5, 'Url must be more than 3 characters'),
   annotationsPerImage: string()
     .nonempty('Must be a number value')
     .transform((x) => parseBigDecimal(x)),

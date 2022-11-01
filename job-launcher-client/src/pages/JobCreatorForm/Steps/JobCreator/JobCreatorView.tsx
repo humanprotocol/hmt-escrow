@@ -10,8 +10,8 @@ import {
   IJobCreatorFormSchema,
   jobCreationSchema,
 } from './schema';
-import { AutocompleteFormInput } from '../../../../components/FormInput/MultiSelectInput';
 import { Title } from './tooltipHints';
+import MultiFormInput from '../../../../components/FormInput/MultiFormInput';
 
 interface IJobCreatorForm {
   onSubmitHandler: (values: IJobCreatorFormSchema) => void;
@@ -68,31 +68,18 @@ export const JobCreatorFormView: React.FC<IJobCreatorForm> = ({
                 onSubmit={handleSubmit(onSubmitHandler)}
               >
                 <Box>
-                  <FormInput
-                    type="number"
-                    label="price"
-                    name="price"
-                    tooltipTitle={Title.Price}
-                  />
-                  <AutocompleteFormInput
+                  <MultiFormInput
                     name="labels"
+                    label="labels"
                     tooltipTitle={Title.Labels}
                   />
+
                   <FormInput
                     label="data url"
                     type="text"
                     name="dataUrl"
                     autoComplete="dataUrl"
                     tooltipTitle={Title.DataUrl}
-                  />
-                </Box>
-                <Box>
-                  <FormInput
-                    type="string"
-                    label="annotations per image"
-                    name="annotationsPerImage"
-                    autoComplete="annotationsPerImage"
-                    tooltipTitle={Title.AnnotationsPerImage}
                   />
                   <FormInput
                     type="string"
@@ -102,11 +89,24 @@ export const JobCreatorFormView: React.FC<IJobCreatorForm> = ({
                     tooltipTitle={Title.RequesterDescription}
                   />
                   <FormInput
+                    type="string"
+                    label="annotations per image"
+                    name="annotationsPerImage"
+                    autoComplete="annotationsPerImage"
+                    tooltipTitle={Title.AnnotationsPerImage}
+                  />
+                  <FormInput
                     type="number"
                     label="requester accuracy target"
                     name="requesterAccuracyTarget"
                     autoComplete="requesterAccuracyTarget"
                     tooltipTitle={Title.RequesterAccuracyTarget}
+                  />
+                  <FormInput
+                    type="number"
+                    label="price"
+                    name="price"
+                    tooltipTitle={Title.Price}
                   />
                 </Box>
                 <LoadingButton
@@ -137,7 +137,11 @@ export const JobCreatorFormView: React.FC<IJobCreatorForm> = ({
     </BoxContainer>
   );
 };
-
+//  <AutocompleteFormInput
+//                     name="labels"
+//                     label="labels"
+//                     tooltipTitle={Title.Labels}
+//                   />
 //  <FormInput
 //                     type="string"
 //                     label="requester question example"

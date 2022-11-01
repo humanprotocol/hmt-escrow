@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { AppBar, Box, IconButton, Toolbar } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 // icons
 import { RiMenu3Line } from 'react-icons/ri';
@@ -32,6 +33,7 @@ const ContainerStyle = styled(Box)(({ theme }: any) => ({
   display: 'grid',
   gap: theme.spacing(0.5),
   gridAutoFlow: 'column',
+  alignItems: 'center',
 }));
 
 const ToggleButtonStyle = styled(IconButton)(({ theme }: any) => ({
@@ -62,6 +64,7 @@ const HeaderUserMenu = ({ onClick }: any) => {
         </ContainerStyle>
         {isAuth && (
           <ContainerStyle>
+            <ConnectButton />
             <AccountMenu />
           </ContainerStyle>
         )}

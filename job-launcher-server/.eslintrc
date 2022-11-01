@@ -4,7 +4,10 @@
     "@gemunion/eslint-config/rules/jest"
   ],
   "parserOptions": {
-    "project": "./tsconfig.test.json"
+    "project": "./job-launcher-server/tsconfig.test.json"
+  },
+  "rules": {
+    "@typescript-eslint/explicit-module-boundary-types": "off"
   },
   "root": true
 }

@@ -1,8 +1,8 @@
-export function isJson(str: string) {
+export function isJson(str: string): boolean {
   try {
-      JSON.parse(str);
+    JSON.parse(str);
   } catch (e) {
-      return false;
+    return false;
   }
   return true;
 }

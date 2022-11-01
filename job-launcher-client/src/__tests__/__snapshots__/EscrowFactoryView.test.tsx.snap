@@ -1,0 +1,288 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders correctly 1`] = `
+<div
+  className="MuiBox-root css-0"
+>
+  <p
+    className="MuiTypography-root MuiTypography-body1 css-ahj2mt-MuiTypography-root"
+  >
+    Polygon Mainnet
+  </p>
+  <div
+    className="MuiPaper-root MuiPaper-outlined MuiPaper-rounded MuiCard-root css-1v5z4dq-MuiPaper-root-MuiCard-root"
+  >
+    <div
+      className="MuiCardContent-root css-46bh2p-MuiCardContent-root"
+    >
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            Address
+          </p>
+        </span>
+      </div>
+      <p
+        className="MuiTypography-root MuiTypography-body2 css-1ypfif-MuiTypography-root"
+      >
+        0x45eBc3eAE6DA485097054ae10BA1A0f8e8c7f794
+      </p>
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            Latest Escrow
+          </p>
+        </span>
+      </div>
+      <p
+        className="MuiTypography-root MuiTypography-body2 css-1ypfif-MuiTypography-root"
+      >
+        eaac4d45c3c41f449cf7c94622afacbc
+      </p>
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            Amount of jobs
+          </p>
+        </span>
+      </div>
+      <p
+        className="MuiTypography-root MuiTypography-body2 css-1ypfif-MuiTypography-root"
+      >
+        10
+      </p>
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            All Escrows Pending Events
+          </p>
+        </span>
+      </div>
+      <div
+        className="MuiBox-root css-1l4w6pd"
+      >
+        <span
+          className="MuiCircularProgress-root MuiCircularProgress-indeterminate MuiCircularProgress-colorPrimary css-18lrjg1-MuiCircularProgress-root"
+          role="progressbar"
+          style={
+            {
+              "height": "1.5rem",
+              "width": "1.5rem",
+            }
+          }
+        >
+          <svg
+            className="MuiCircularProgress-svg css-1idz92c-MuiCircularProgress-svg"
+            viewBox="22 22 44 44"
+          >
+            <circle
+              className="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate css-176wh8e-MuiCircularProgress-circle"
+              cx={44}
+              cy={44}
+              fill="none"
+              r={20.2}
+              strokeWidth={3.6}
+              style={{}}
+            />
+          </svg>
+        </span>
+      </div>
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            All Escrows BulkTransfer Events
+          </p>
+        </span>
+      </div>
+      <div
+        className="MuiBox-root css-1l4w6pd"
+      >
+        <span
+          className="MuiCircularProgress-root MuiCircularProgress-indeterminate MuiCircularProgress-colorPrimary css-18lrjg1-MuiCircularProgress-root"
+          role="progressbar"
+          style={
+            {
+              "height": "1.5rem",
+              "width": "1.5rem",
+            }
+          }
+        >
+          <svg
+            className="MuiCircularProgress-svg css-1idz92c-MuiCircularProgress-svg"
+            viewBox="22 22 44 44"
+          >
+            <circle
+              className="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate css-176wh8e-MuiCircularProgress-circle"
+              cx={44}
+              cy={44}
+              fill="none"
+              r={20.2}
+              strokeWidth={3.6}
+              style={{}}
+            />
+          </svg>
+        </span>
+      </div>
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            All Escrows IntermediateStorage Events
+          </p>
+        </span>
+      </div>
+      <div
+        className="MuiBox-root css-1l4w6pd"
+      >
+        <span
+          className="MuiCircularProgress-root MuiCircularProgress-indeterminate MuiCircularProgress-colorPrimary css-18lrjg1-MuiCircularProgress-root"
+          role="progressbar"
+          style={
+            {
+              "height": "1.5rem",
+              "width": "1.5rem",
+            }
+          }
+        >
+          <svg
+            className="MuiCircularProgress-svg css-1idz92c-MuiCircularProgress-svg"
+            viewBox="22 22 44 44"
+          >
+            <circle
+              className="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate css-176wh8e-MuiCircularProgress-circle"
+              cx={44}
+              cy={44}
+              fill="none"
+              r={20.2}
+              strokeWidth={3.6}
+              style={{}}
+            />
+          </svg>
+        </span>
+      </div>
+      <div
+        className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+        role="separator"
+      >
+        <span
+          className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+        >
+          <p
+            className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+          >
+            Total Number Of Escrows Events
+          </p>
+        </span>
+      </div>
+      <div
+        className="MuiBox-root css-1l4w6pd"
+      >
+        <span
+          className="MuiCircularProgress-root MuiCircularProgress-indeterminate MuiCircularProgress-colorPrimary css-18lrjg1-MuiCircularProgress-root"
+          role="progressbar"
+          style={
+            {
+              "height": "1.5rem",
+              "width": "1.5rem",
+            }
+          }
+        >
+          <svg
+            className="MuiCircularProgress-svg css-1idz92c-MuiCircularProgress-svg"
+            viewBox="22 22 44 44"
+          >
+            <circle
+              className="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate css-176wh8e-MuiCircularProgress-circle"
+              cx={44}
+              cy={44}
+              fill="none"
+              r={20.2}
+              strokeWidth={3.6}
+              style={{}}
+            />
+          </svg>
+        </span>
+      </div>
+      <div
+        className="MuiBox-root css-xi606m"
+      >
+        <div
+          className="MuiDivider-root MuiDivider-fullWidth MuiDivider-withChildren css-1ws8119-MuiDivider-root"
+          role="separator"
+        >
+          <span
+            className="MuiDivider-wrapper css-qywfm8-MuiDivider-wrapper"
+          >
+            <p
+              className="MuiTypography-root MuiTypography-body2 css-r40f8v-MuiTypography-root"
+            >
+              All deployed escrows
+            </p>
+          </span>
+        </div>
+        <a
+          className="MuiTypography-root MuiTypography-inherit MuiTypography-alignCenter MuiLink-root MuiLink-underlineAlways css-8wztv5-MuiTypography-root-MuiLink-root"
+          href="test- url"
+          onBlur={[Function]}
+          onFocus={[Function]}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          test-scanner
+        </a>
+        <p
+          className="MuiTypography-root MuiTypography-body2 css-1ncpc4g-MuiTypography-root"
+        >
+          Each event has a payload of ERC20 token address and Escrow Address
+        </p>
+        <p
+          className="MuiTypography-root MuiTypography-body2 css-1ncpc4g-MuiTypography-root"
+        >
+          Change the type of the second argument to "Address" to see an Escrow address
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
