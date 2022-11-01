@@ -4,6 +4,9 @@ This is a readonly dashboard of the [Escrow Factory](https://github.com/humanpro
 
 Escrow Factory is used for grouping Escrows in the blockchain. Everything is happening inside Polygon Mainnet. Other networks will be added later
 
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fhumanprotocol%2Fhmt-escrow%2Ftree%2Fmaster%2Fescrow-dashboard)
+
 ## Available Scripts
 
 In the project directory, you can run:
