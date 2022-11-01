@@ -9,14 +9,13 @@ import { NetworkTab } from './NetworkTab';
 
 interface IEscrowContainer {}
 
-export const EscrowContainer: React.FC<
-  IEscrowContainer
-> = (): React.ReactElement => {
-  return (
-    <Box>
-      <ViewTitle title="Network" iconUrl={networkSvg} />
-      <NetworkTab />
-      <EscrowView />
-    </Box>
-  );
-};
+export const EscrowContainer: React.FC<IEscrowContainer> =
+  (): React.ReactElement => {
+    return (
+      <Box>
+        <ViewTitle title="Network" iconUrl={networkSvg} />
+        <NetworkTab />
+        <EscrowView />
+      </Box>
+    );
+  };
