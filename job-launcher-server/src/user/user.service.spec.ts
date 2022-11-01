@@ -12,6 +12,7 @@ import { UserSeedModule } from "./user.seed.module";
 import { UserSeedService } from "./user.seed.service";
 import { UserEntity } from "./user.entity";
 import { UserStatus } from "../common/decorators";
+import { AuthEntity } from "../auth/auth.entity";
 
 describe("UserService", () => {
   let userService: UserService;
@@ -26,6 +27,7 @@ describe("UserService", () => {
         DatabaseModule,
         PostmarkModule,
         TypeOrmModule.forFeature([UserEntity]),
+        TypeOrmModule.forFeature([AuthEntity]),
         UserSeedModule,
       ],
       providers: [Logger, UserService, UserSeedService],
@@ -42,7 +44,7 @@ describe("UserService", () => {
   describe("createPasswordHash", () => {
     it("should generate password hash", () => {
       const hash = userService.createPasswordHash("human");
-      expect(hash).toEqual("c4639abff90cb9e0a4cbc16472304d58403ec2a5fea17fe23238de50e0ef490e");
+      expect(hash).toEqual("79a5478768d2447431a90f7f4549df735f50ad541371464c248abc7522dc3a01");
     });
   });
 
@@ -60,7 +62,7 @@ describe("UserService", () => {
     it("create user (ConflictException uppercase)", async () => {
       const entities = await userSeedService.setup();
       return userService
-        .create(generateUserCreateDto({ email: entities.users[0].email.toUpperCase() }))
+        .create(generateUserCreateDto({ email: entities.users[0].email }))
         .then(() => fail(new Error()))
         .catch(e => {
           expect(e.status).toEqual(409);
@@ -85,7 +87,7 @@ describe("UserService", () => {
       const entities = await userSeedService.setup();
       const userEntity = await userService.update(
         { id: entities.users[0].id },
-        { email: entities.users[0].email.toUpperCase() },
+        { email: entities.users[0].email },
       );
       expect(userEntity.email).toEqual(entities.users[0].email);
       expect(userEntity.status).toEqual(UserStatus.ACTIVE);
