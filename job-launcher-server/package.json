@@ -1,6 +1,6 @@
 {
   "license": "MIT",
-  "name": "@humanprotocol/job-launcher",
+  "name": "@humanprotocol/job-launcher-server",
   "private": true,
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
@@ -12,7 +12,7 @@
   "description": "Job Launcher",
   "version": "0.0.1",
   "engines": {
-    "node": ">=12.13 <=14.19.3"
+    "node": ">=12.13 <=14.20.1"
   },
   "main": "./dist/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "db:restart": "docker-compose down && docker-compose up -d",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "kill": "sudo pkill -9 node",
-    "lint": "eslint . --fix",
+    "lint": "eslint src/**/*.ts --fix",
     "migration:create": "npm run typeorm migration:create -- -n",
     "migration:generate": "npm run typeorm migration:generate -- -n",
     "migration:revert": "npm run typeorm migration:revert",

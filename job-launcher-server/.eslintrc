@@ -1,10 +1,14 @@
 {
   "extends": [
-    "@gemunion/eslint-config/presets/ts",
-    "@gemunion/eslint-config/rules/jest"
+    "airbnb-base",
+    "plugin:jest/recommended",
+    "plugin:node/recommended",
+    "plugin:prettier/recommended"
   ],
+  "parser": "babel-eslint",
   "parserOptions": {
-    "project": "./job-launcher-server/tsconfig.test.json"
+    "ecmaVersion": 2020,
+    "sourceType": "module"
   },
   "rules": {
     "@typescript-eslint/explicit-module-boundary-types": "off"

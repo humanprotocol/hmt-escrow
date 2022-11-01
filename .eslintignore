@@ -9,3 +9,5 @@
 **/truffle.js
 **/cache/*
 **/job-launcher-client/*
+**/escrow-dashboard/*
+**/job-launcher-server/*
