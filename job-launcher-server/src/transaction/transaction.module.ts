@@ -7,7 +7,7 @@ import { Web3Module } from "../web3/web3.module";
 import { TransactionEntity } from "./transaction.entity";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TransactionEntity]), Web3Module, ConfigModule],
+  imports: [TypeOrmModule.forFeature([TransactionEntity]), ConfigModule],
   providers: [Logger, TransactionService],
   exports: [TransactionService],
 })
