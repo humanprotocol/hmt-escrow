@@ -18,17 +18,20 @@ async function main() {
 
   // Deploy Escrow Factory Contract
   const EscrowFactory = await ethers.getContractFactory("EscrowFactory");
-  const escrowFactory = await EscrowFactory.deploy(token.address);
+  const EscrowFactoryContract = await EscrowFactory.deploy(token.address);
+  const escrowFactory = await EscrowFactoryContract.deployed();
 
   // Deploy Staking Conract
   const minimumStake = 1;
   const lockPeriod = 2;
   const Staking= await ethers.getContractFactory("Staking");
-  const staking = await Staking.deploy(token.address, escrowFactory.address, minimumStake, lockPeriod);
+  const StakingContract = await Staking.deploy(token.address, escrowFactory.address, minimumStake, lockPeriod);
+  const staking = await StakingContract.deployed();
 
   // Deploy Staking Conract
   const RewardPool= await ethers.getContractFactory("RewardPool");
-  const rewardPool = await RewardPool.deploy(token.address, staking.address, 1);
+  const RewardPoolContract = await RewardPool.deploy(token.address, staking.address, 1);
+  const rewardPool = await RewardPoolContract.deployed();
 
   console.log("HMToken Address: ", token.address)
   console.log("Escrow Factory Address: ", escrowFactory.address)
