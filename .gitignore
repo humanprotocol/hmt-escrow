@@ -234,7 +234,7 @@ venv/
 venv.bak/
 # vim
 # virtualenv
-# VisualStudioCode 
+# VisualStudioCode
  ../.vscode/
 .vscode
 .vscode/*
@@ -258,3 +258,6 @@ yarn-error.log*
 # Yarn Integrity file
 .yarn/unplugged
 # yarn v2
+artifacts/
+cache/
+typechain-types

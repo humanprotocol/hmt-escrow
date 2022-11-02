@@ -2,16 +2,17 @@
 
 pragma solidity >=0.6.2;
 
-import "./HMTokenInterface.sol";
-import "./SafeMath.sol";
-
+import "./interfaces/HMTokenInterface.sol";
+import "./interfaces/IStaking.sol";
+import "./interfaces/IRewardPool.sol";
+import "./utils/SafeMath.sol";
 
 contract Escrow {
     using SafeMath for uint256;
     event IntermediateStorage(string _url, string _hash);
     event Pending(string manifest, string hash);
     event BulkTransfer(uint256 indexed _txId, uint256 _bulkCount);
-    
+
     enum EscrowStatuses {Launched, Pending, Partial, Paid, Complete, Cancelled}
     EscrowStatuses public status;
 
@@ -19,6 +20,7 @@ contract Escrow {
     address public recordingOracle;
     address public launcher;
     address payable public canceler;
+    address public staking;
 
     uint256 public reputationOracleStake;
     uint256 public recordingOracleStake;
@@ -42,14 +44,16 @@ contract Escrow {
 
     constructor(
         address _eip20,
+        address _staking,
         address payable _canceler,
         uint256 _duration,
         address[] memory _handlers
-    ) public {
+    ) {
         eip20 = _eip20;
         status = EscrowStatuses.Launched;
         duration = _duration.add(block.timestamp); // solhint-disable-line not-rely-on-time
         launcher = msg.sender;
+        staking = _staking;
         canceler = _canceler;
         areTrustedHandlers[_canceler] = true;
         areTrustedHandlers[msg.sender] = true;
@@ -131,6 +135,9 @@ contract Escrow {
         );
         require (status == EscrowStatuses.Paid, "Escrow not in Paid state");
         status = EscrowStatuses.Complete;
+
+        // Distribute Reward
+        IRewardPool(IStaking(staking).rewardPool()).distributeReward(address(this));
     }
 
     function storeResults(string memory _url, string memory _hash) public trusted notExpired {
@@ -218,6 +225,10 @@ contract Escrow {
             finalAmounts.push(amount);
         }
         return (reputationOracleFee, recordingOracleFee);
+    }
+
+    function getStatus() public view returns (EscrowStatuses) {
+        return status;
     }
 
     modifier trusted() {

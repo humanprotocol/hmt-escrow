@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.2;
-import "./HMTokenInterface.sol";
-import "./SafeMath.sol";
-import "./Ownable.sol";
+
+import "./interfaces/HMTokenInterface.sol";
+import "./utils/Ownable.sol";
+import "./utils/SafeMath.sol";
 
 contract HMToken is HMTokenInterface, Ownable {
     using SafeMath for uint256;
@@ -34,7 +35,7 @@ contract HMToken is HMTokenInterface, Ownable {
     uint8 public decimals;
     string public symbol;
 
-    constructor(uint256 _totalSupply, string memory _name, uint8 _decimals, string memory _symbol) public {
+    constructor(uint256 _totalSupply, string memory _name, uint8 _decimals, string memory _symbol) {
         totalSupply = _totalSupply * (10 ** uint256(_decimals));
         name = _name;
         decimals = _decimals;
