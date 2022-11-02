@@ -1,4 +1,4 @@
-import { BadGatewayException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { BadGatewayException, ConflictException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ConfigService } from "@nestjs/config";
 import { FindConditions, FindManyOptions, FindOneOptions, Repository } from "typeorm";
@@ -44,8 +44,8 @@ export class JobService {
     private readonly networkService: NetworkService,
     private readonly storageService: StorageService,
     private readonly web3Service: Web3Service,
-    private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
   ) {
     this.web3 = this.web3Service.getClient(this.configService.get<string>("WEB3_CLIENT_NAME", ""));
     this.recordingOracleAddress = this.configService.get<string>(
@@ -148,7 +148,7 @@ export class JobService {
     const networkId = NetworkId.LOCAL_GANACHE;
 
     if (!await this.storageService.isBucketValid(dataUrl)) {
-      throw new BadGatewayException("Bucket does not to have right permissions");
+      throw new ConflictException("Bucket does not to have right permissions");
     }
 
     if (groundTruthFileUrl) {

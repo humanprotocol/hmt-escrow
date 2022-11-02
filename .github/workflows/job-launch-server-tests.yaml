@@ -21,5 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Set env
+        run: echo "{MIGRATIONS_RUN}={true}" >> $GITHUB_ENV
+      - name: Build
       - run: docker-compose build
+      - name: Run tests
       - run: docker-compose run api npm test

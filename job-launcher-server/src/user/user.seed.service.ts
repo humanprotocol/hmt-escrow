@@ -15,7 +15,6 @@ export class UserSeedService {
 
   public async setup(): Promise<any> {
     const user1 = await this.userEntityRepository.create(generateTestUser()).save();
-
     const user2 = await this.userEntityRepository.create(generateTestUser()).save();
 
     user2.createdAt = subDays(new Date(), 7);

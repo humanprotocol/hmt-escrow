@@ -17,10 +17,8 @@ export class TransactionService {
   constructor(
     @InjectRepository(TransactionEntity)
     private readonly transactionEntityRepository: Repository<TransactionEntity>,
-    private readonly web3Service: Web3Service,
     private readonly configService: ConfigService,
   ) {
-    this.web3 = this.web3Service.getClient(this.configService.get<string>("WEB3_CLIENT_NAME"));
   }
 
   public async getTransactionById(transactionId: number): Promise<TransactionEntity> {

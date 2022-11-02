@@ -95,7 +95,7 @@ services:
       - POSTGRES_SYNC=false
       - JWT_SECRET=secrete
       - POSTGRES_PORT=5432
-      - POSTMARK_API_KEY=53246f5b-733c-47f0-ad70-52f57723848a
+      - POSTMARK_API_KEY=d7f33163-2c1a-46bd-8731-d19da412a3d8
       - EMAIL_FROM=noreply@hmt.ai
       - FE_URL=http://localhost:3001
       - WEB3_CLIENT_NAME=eth
@@ -137,5 +137,4 @@ services:
 
 volumes:
   pgdata:
-  pgadmin-data:
   ganache:
