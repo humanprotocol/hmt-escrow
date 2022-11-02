@@ -1,7 +1,7 @@
 export enum Title {
   Price = 'Job cost paid to workers. This parameter will be recommended to the user based on the selected price recommendation algorithm',
   DataUrl = 'Link to the S3 bucket that stores the images for the annotation',
-  RequesterDescription = 'Job description',
+  RequesterDescription = 'How dataset should be annotated',
   AnnotationsPerImage = 'Number of annotations (workers) for one image in CVAT',
   RequesterAccuracyTarget = 'Accuracy required for the annotation of each image',
   Labels = 'List of image labels',

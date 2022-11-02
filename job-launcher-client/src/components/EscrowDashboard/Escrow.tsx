@@ -1,29 +1,17 @@
 import * as React from 'react';
+import { INetwork } from '../../constants/networkConstants';
 
 import { EscrowFactoryView } from './EscrowFactoryView';
 import { useEscrowHook } from './hooks';
 
 interface IEscrowContainer {
-  escrowFactory: string;
-  setScannerUrl: (url: string) => void;
+  network: INetwork;
 }
 
 export const Escrow: React.FC<IEscrowContainer> = ({
-  escrowFactory,
-  setScannerUrl,
+  network,
 }): React.ReactElement => {
-  const { eventsUrl, latestEscrow, counter, address, scanner } = useEscrowHook(
-    escrowFactory,
-    setScannerUrl
-  );
+  const escrowData = useEscrowHook(network);
 
-  return (
-    <EscrowFactoryView
-      latestEscrow={latestEscrow}
-      eventsUrl={eventsUrl}
-      scanner={scanner}
-      address={address}
-      count={counter}
-    />
-  );
+  return <EscrowFactoryView title={network.title} {...escrowData} />;
 };

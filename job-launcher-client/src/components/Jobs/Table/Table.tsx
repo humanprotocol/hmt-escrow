@@ -1,23 +1,21 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import { useNavigate } from 'react-router-dom';
-import Table from 'rc-table';
-import { useTheme } from '@mui/material';
 
-import { styled } from '@mui/material/styles';
 import { useGetJobsQuery } from '../../../services/redux/api/jobApi';
-import './style.css';
 import { BoxContainer } from '../../Grid';
-import { jobListColumns } from './columns';
 import { Network } from '../../Eth/constants';
 import { Backdrop } from '../../Backdrop';
+import { Table } from '../../Table';
+
+import { jobListColumns } from './columns';
 
 export function TableDataGrid() {
   const [open, setOpen] = React.useState(false);
   const handleClose = (value: boolean) => {
     setOpen(value);
   };
-  const { data, error, isLoading } = useGetJobsQuery('');
+  const { data, error, isLoading } = useGetJobsQuery('/jobs');
   React.useEffect(() => {
     if (isLoading) {
       handleClose(true);
@@ -27,7 +25,6 @@ export function TableDataGrid() {
   }, [isLoading]);
 
   const navigate = useNavigate();
-  const theme = useTheme();
 
   const values: any = [];
   if (!isLoading && data) {
@@ -54,22 +51,6 @@ export function TableDataGrid() {
     });
   }
 
-  const BodyRow = styled('tr')({
-    '& td': {
-      transition: 'all 0.1s',
-    },
-    '&:hover td': {
-      color: theme.palette.secondary.contrastText,
-      cursor: 'pointer',
-    },
-  });
-
-  const components = {
-    body: {
-      row: BodyRow,
-    },
-  };
-
   const onRowClick = (record: any) => {
     const { id } = record;
     navigate(`/job/${id}`);
@@ -80,15 +61,7 @@ export function TableDataGrid() {
       <BoxContainer>
         <Box sx={{ height: 400, width: '100%' }}>
           {data && !isLoading && (
-            <Table
-              columns={jobListColumns}
-              rowKey={(record) => record.id}
-              data={values}
-              components={components}
-              onRow={(record) => ({
-                onClick: onRowClick.bind(null, record),
-              })}
-            />
+            <Table columns={jobListColumns} data={values} onRow={onRowClick} />
           )}
           {error && <div>error</div>}
         </Box>
