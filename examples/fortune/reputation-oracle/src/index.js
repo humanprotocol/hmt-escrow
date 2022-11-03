@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const Web3 = require('web3');
-const { bulkPayOut, getBalance } = require('./services/escrow');
+const { bulkPayOut, bulkPaid, getBalance } = require('./services/escrow');
 const { filterAddressesToReward, calculateRewardForWorker } = require('./services/rewards');
 const { uploadResults } = require('./services/s3');
 
@@ -37,8 +37,11 @@ app.post('/job/results', async (req, res) => {
     const resultsUrl = await uploadResults(fortunes.map(({ fortune }) => fortune), escrowAddress);
     // TODO calculate the URL hash(?)
     const resultHash = resultsUrl;
+    await bulkPayOut(web3, escrowAddress, workerAddresses, rewards, resultsUrl, resultHash)
 
-    await bulkPayOut(web3, escrowAddress, workerAddresses, rewards, resultsUrl, resultHash);
+    if (!await bulkPaid(web3, escrowAddress)) {
+      return res.status(400).send({ message: 'Payout couldn\'t be done' });
+    }
 
     return res.status(200).send({ message: 'Escrow has been completed' });
   } catch (err) {

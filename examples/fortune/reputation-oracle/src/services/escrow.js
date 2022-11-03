@@ -17,4 +17,10 @@ module.exports = {
     await Escrow.methods.bulkPayOut(workerAddresses, rewards, resultsUrl, resultHash, 1).send({ from: web3.eth.defaultAccount, gas: gasNeeded, gasPrice });
   },
 
+  bulkPaid: async (web3, escrowAddress) => {
+    const Escrow = new web3.eth.Contract(EscrowFile.abi, escrowAddress);
+    const result = await Escrow.methods.bulkPaid().call();
+    return result;
+  },
+
 };

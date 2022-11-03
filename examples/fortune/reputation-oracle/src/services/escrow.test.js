@@ -1,5 +1,5 @@
 const Web3 = require('web3');
-const { getBalance, bulkPayOut } = require('./escrow');
+const { getBalance, bulkPayOut, bulkPaid } = require('./escrow');
 const {
   describe, expect, it, beforeAll,
 } = require('@jest/globals');
@@ -76,6 +76,23 @@ describe('Fortune', () => {
     expect(balance).toBe(30000000000000000000);
   });
 
+  it('Bulk payout rewards, higher amount than balance', async () => {
+    await bulkPayOut(
+      web3,
+      escrowAddress,
+      [worker1, worker2, worker3],
+      [web3.utils.toWei('15', 'ether'), web3.utils.toWei('15', 'ether'), web3.utils.toWei('15', 'ether')],
+      'localhost',
+      'localhost',
+    );
+    const result = await bulkPaid(web3, escrowAddress);
+
+    expect(result).toBe(false);
+    expect(await token.methods.balanceOf(worker1).call()).toBe(web3.utils.toWei('0', 'ether'));
+    expect(await token.methods.balanceOf(worker1).call()).toBe(web3.utils.toWei('0', 'ether'));
+    expect(await token.methods.balanceOf(worker1).call()).toBe(web3.utils.toWei('0', 'ether'));
+  });
+
   it('Bulk payout rewards', async () => {
     await bulkPayOut(
       web3,
@@ -85,7 +102,9 @@ describe('Fortune', () => {
       'localhost',
       'localhost',
     );
+    const result = await bulkPaid(web3, escrowAddress);
 
+    expect(result).toBe(true);
     expect(await token.methods.balanceOf(worker1).call()).toBe(web3.utils.toWei('8', 'ether'));
     expect(await token.methods.balanceOf(worker1).call()).toBe(web3.utils.toWei('8', 'ether'));
     expect(await token.methods.balanceOf(worker1).call()).toBe(web3.utils.toWei('8', 'ether'));
