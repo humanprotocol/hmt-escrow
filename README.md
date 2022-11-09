@@ -249,8 +249,16 @@ HMToken - 0xd3a31d57fdd790725d0f6b78095f62e8cd4ab317
 KVStore - 0x7676F326f1e30E96a76B7F1a860d56A9ac988a7d
 ```
 
+## Avalanche Fuji Testnet deployment
+```
+Escrow Factory - 0xfb4469201951C3B9a7F1996c477cb7BDBEcE0A88
+HMToken - 0x9406d5c635AD22b0d76c75E52De57A2177919ca3
+KVStore - 0xd232c1426CF0653cE8a71DC98bCfDf10c471c114
+```
+
 ## Maintainers
 
 * Polygon : [foufrix](https://github.com/foufrix)
 * Moonbeam: [menezesphill](https://github.com/menezesphill)
 * Binance Smart Chain: [leetdev](https://github.com/leetdev)
+* Avalanche: [hrik2001](https://github.com/hrik2001)
