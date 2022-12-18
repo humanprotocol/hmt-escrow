@@ -256,6 +256,13 @@ HMToken - 0x9406d5c635AD22b0d76c75E52De57A2177919ca3
 KVStore - 0xd232c1426CF0653cE8a71DC98bCfDf10c471c114
 ```
 
+## Avalanche Mainnet deployment
+```
+Escrow Factory - 0x9767a578ba7a5FA1563c8229943cB01cd8446BB4
+HMToken - 0x12365293cb6477d4fc2686e46BB97E3Fb64f1550
+KVStore - 0x4B79eaD28F52eD5686bf0e379717e85fc7aD10Df
+```
+
 ## Maintainers
 
 * Polygon : [foufrix](https://github.com/foufrix)

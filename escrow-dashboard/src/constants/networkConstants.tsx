@@ -107,8 +107,8 @@ export const networkMap: INetworkMap = {
     key: 'avalanche',
     scanner: 'https://snowtrace.io',
     rpcUrl: 'https://api.avax.network/ext/bc/C/rpc',
-    defaultFactoryAddr: '',
-    hmtAddr: '',
+    defaultFactoryAddr: '0x9767a578ba7a5FA1563c8229943cB01cd8446BB4',
+    hmtAddr: '0x12365293cb6477d4fc2686e46BB97E3Fb64f1550',
     graphqlClientUrl: 'https://api.thegraph.com',
     // the graph is not implemented yet
     showTokenStats: false,
