@@ -70,6 +70,22 @@ module.exports = {
       timeoutBlocks: 200,
       skipDryRun: true,
     },
+    avalancheTestnet: {
+      provider: () => new HDWalletProvider(MNEMONIC, `https://avalanche-fuji.infura.io/v3/${INFURA_TOKEN}`),
+      network_id: 43113,
+      confirmations: 2,
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
+    avalanche: {
+      provider: () => new HDWalletProvider(MNEMONIC, `https://avalanche-mainnet.infura.io/v3/${INFURA_TOKEN}`),
+      network_id: 43113,
+      confirmations: 2,
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
+      skipDryRun: true,
+    },
   },
   compilers: {
     solc: {
