@@ -91,5 +91,16 @@ export const networkMap: INetworkMap = {
       'https://api.thegraph.com/subgraphs/name/humanprotocol/bsctest',
     showTokenStats: true,
   },
+  skale: {
+    title: 'Skale Human Protocol Chain',
+    key: 'skale',
+    scanner: 'https://wan-red-ain.explorer.mainnet.skalenodes.com/',
+    rpcUrl: 'https://mainnet.skalenodes.com/v1/wan-red-ain',
+    defaultFactoryAddr: '0x1cE8d1820D60fF792bd6E59EbFf3C9b1089808c0',
+    hmtAddr: '0xa91B2C7d9704aeE8918460fc4375866e2c415A67',
+    graphqlClientUrl: 'https://api.thegraph.com/',
+    // the graph is not implemented yet
+    showTokenStats: false,
+  },
 };
 export const networks = Object.values(networkMap).map((network) => network);
