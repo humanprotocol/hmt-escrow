@@ -249,8 +249,17 @@ HMToken - 0xd3a31d57fdd790725d0f6b78095f62e8cd4ab317
 KVStore - 0x7676F326f1e30E96a76B7F1a860d56A9ac988a7d
 ```
 
+## Skale deployment
+
+```
+Escrow Factory - 0x1cE8d1820D60fF792bd6E59EbFf3C9b1089808c0
+HMToken - 0xa91B2C7d9704aeE8918460fc4375866e2c415A67
+KVStore - 0xb251C9F9276d9EB0B2F4C6a7703AE094e0999BB6
+```
+
 ## Maintainers
 
 * Polygon : [foufrix](https://github.com/foufrix)
 * Moonbeam: [menezesphill](https://github.com/menezesphill)
 * Binance Smart Chain: [leetdev](https://github.com/leetdev)
+* Skale: [bardiaziz](https://github.com/AzizBardi)
