@@ -38,8 +38,8 @@ module.exports = {
       network_id: '1287',
     },
     skale: {
-      provider: () => new HDWalletProvider(MNEMONIC, 'https://humanprotocol-integration.skale.network', 0, 10),
-      network_id: '344435',
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://mainnet.skalenodes.com/v1/wan-red-ain'),
+      network_id: '1273227453',
     },
     mumbai: {
       provider: () => new HDWalletProvider(MNEMONIC, `https://polygon-mumbai.infura.io/v3/${INFURA_TOKEN}`),
