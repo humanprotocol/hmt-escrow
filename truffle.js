@@ -37,8 +37,8 @@ module.exports = {
       provider: () => new PrivateKeyProvider(PRIV_KEY, 'https://rpc.testnet.moonbeam.network', 1287),
       network_id: '1287',
     },
-      skale: {
-      provider: () => new HDWalletProvider(PRIV_KEY, 'https://mainnet.skalenodes.com/v1/wan-red-ain'),
+    skale: {
+      provider: () => new HDWalletProvider(MNEMONIC, 'https://mainnet.skalenodes.com/v1/wan-red-ain'),
       network_id: '1273227453',
     },
     mumbai: {
